@@ -41,6 +41,7 @@ function renderSettingsGeneral() {
   $("#settings-upcoming-miles").val(s.upcomingThresholdMiles != null ? s.upcomingThresholdMiles : DEFAULT_SETTINGS.upcomingThresholdMiles);
   $("#settings-overdue-days").val(s.overdueThresholdDays != null ? s.overdueThresholdDays : DEFAULT_SETTINGS.overdueThresholdDays);
   $("#settings-overdue-miles").val(s.overdueThresholdMiles != null ? s.overdueThresholdMiles : DEFAULT_SETTINGS.overdueThresholdMiles);
+  $("#settings-avg-daily-miles").val(s.avgDailyMiles != null ? s.avgDailyMiles : DEFAULT_SETTINGS.avgDailyMiles);
   
   // Render overview vehicles per page setting
   $("#settings-overview-vehicles-per-page").val(s.overviewVehiclesPerPage || "");
@@ -54,7 +55,7 @@ function renderSettingsVehicles() {
   if (!data.vehicles.length) {
     $list.append(
       $("<div>").addClass("settings-vehicles-empty")
-        .html('<i class="bi bi-car-front-fill"></i> No vehicles yet.<br>Add your first vehicle below to get started.')
+        .html("ðŸš— No vehicles yet.<br>Add your first vehicle below to get started.")
     );
     return;
   }
@@ -114,7 +115,7 @@ function renderSettingsVehicles() {
     $summary.append($meta);
     
     // Toggle indicator
-    const $toggle = $("<div>").addClass("settings-vehicle-toggle").html('<i class=\"bi bi-chevron-down\"></i>');
+    const $toggle = $("<div>").addClass("settings-vehicle-toggle").html("â–¼");
     
     $header.append($headerThumb, $summary, $toggle);
     
@@ -187,7 +188,7 @@ function renderSettingsVehicles() {
     // ========== VEHICLE DETAILS SECTION ==========
     const $detailsSection = $("<div>").addClass("settings-vehicle-details-section");
     $detailsSection.append(
-      $("<div>").addClass("settings-section-title").html('<i class=\"bi bi-wrench\"></i> Vehicle Details')
+      $("<div>").addClass("settings-section-title").html("ðŸ”§ Vehicle Details")
     );
     
     const $detailsGrid = $("<div>").addClass("settings-details-grid");
@@ -252,7 +253,7 @@ function renderSettingsVehicles() {
       $("<button>")
         .attr("type", "button")
         .addClass("btn-ghost btn-small find-image-btn")
-        .html('<i class=\"bi bi-search\"></i> Find Vehicle Image Online')
+        .html("ðŸ” Find Vehicle Image Online")
         .on("click", function() {
           openVehicleImageSearch(v);
         })
@@ -266,7 +267,7 @@ function renderSettingsVehicles() {
     
     const $renewalsSection = $("<div>").addClass("settings-renewals-section");
     $renewalsSection.append(
-      $("<div>").addClass("settings-section-title").html('<i class=\"bi bi-calendar-event\"></i> Renewal Dates')
+      $("<div>").addClass("settings-section-title").html("ðŸ“… Renewal Dates")
     );
     
     const $renewalsGrid = $("<div>").addClass("settings-renewals-grid");
@@ -411,7 +412,7 @@ function createVehiclePhotoEditor(vehicle) {
   if (!vehicle.photoPath) {
     $preview.append(
       $("<div>").addClass("photo-upload-overlay").html(
-        '<span class="upload-icon"><i class="bi bi-camera"></i></span><span>Click to add photo</span>'
+        '<span class="upload-icon">ðŸ“·</span><span>Click to add photo</span>'
       )
     );
   }
