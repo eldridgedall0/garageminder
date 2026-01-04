@@ -1,0 +1,29 @@
+/**
+ * Garage Maintenance - Tokens (colors, layout vars)
+ * Split from style.css for modular maintenance
+ */
+:root {
+  /* Colors */
+  --bg: #0b1120;
+  --bg-card: #020617;
+  --bg-elevated: rgba(15, 23, 42, 0.98);
+  --bg-hover: rgba(30, 41, 59, 0.6);
+  --border: #1f2937;
+  --border-light: rgba(55, 65, 81, 0.95);
+  --accent: #38bdf8;
+  --accent-soft: rgba(56, 189, 248, 0.18);
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+  --danger: #f97373;
+  --success: #22c55e;
+  --warning: #facc15;
+  
+  /* Layout */
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow-card: 0 14px 35px rgba(15, 23, 42, 0.9);
+  
+  /* NEW: Sidebar & Width */
+  --app-max-width: 1440px;
+  --sidebar-width: 340px;
+}

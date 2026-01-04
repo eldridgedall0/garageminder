@@ -1,0 +1,198 @@
+/**
+ * Garage Maintenance - App shell (app frame, header, nav, vehicle picker, views, footer)
+ */
+/* ============================================
+   APP CONTAINER - INCREASED WIDTH
+   ============================================ */
+.app {
+  width: 100%;
+  max-width: var(--app-max-width);
+  background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,0.93));
+  border-radius: 24px;
+  border: 1px solid rgba(148,163,184,0.2);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.7);
+  padding: 20px 24px 24px;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title-block h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+.title-block span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.top-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+.nav {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-elevated);
+}
+
+.nav button {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav button:hover {
+  color: var(--text-main);
+  background: var(--bg-hover);
+}
+
+.nav button.active {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: #020617;
+  box-shadow: 0 6px 16px rgba(56,189,248,0.5);
+}
+
+/* ============================================
+   VEHICLE PICKER
+   ============================================ */
+.vehicle-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.vehicle-picker-select-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.vehicle-picker select {
+  min-width: 220px;
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  padding: 8px 14px;
+  outline: none;
+}
+
+.vehicle-picker select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.vehicle-picker-odo-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vehicle-picker-odo-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.vehicle-picker-odo-input {
+  width: 110px;
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  outline: none;
+}
+
+.vehicle-picker-odo-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.vehicle-picker-odo-unit {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.vehicle-picker-odo-btn {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+/* ============================================
+   MAIN & VIEWS
+   ============================================ */
+main {
+  margin-top: 8px;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+footer {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}

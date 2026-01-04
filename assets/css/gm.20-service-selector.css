@@ -1,0 +1,283 @@
+/* ========================================
+   Service Selector - Professional Design
+   (For entry form service checklist)
+   ======================================== */
+
+/* Main wrapper */
+.service-selector-wrapper {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+/* Header with search */
+.service-selector-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.service-selector-search {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+}
+
+.service-selector-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.service-selector-count {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding: 4px 8px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.service-selector-count.has-selection {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+
+/* Services list */
+.service-selector-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.service-selector-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.service-selector-empty a {
+  color: var(--accent);
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.service-selector-empty a:hover {
+  text-decoration: underline;
+}
+
+/* Service item */
+.service-selector-item {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
+}
+
+.service-selector-item:last-child {
+  border-bottom: none;
+}
+
+.service-selector-item:hover {
+  background: var(--bg-hover);
+}
+
+.service-selector-item.selected {
+  background: var(--accent-subtle);
+}
+
+/* Main row */
+.service-selector-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.service-selector-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.service-selector-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.service-selector-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.service-selector-interval {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Details row (shown when selected) */
+.service-selector-details {
+  display: none;
+  padding: 0 12px 12px 38px;
+  gap: 12px;
+}
+
+.service-selector-item.selected .service-selector-details {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.service-selector-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.service-selector-field-group > label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.service-selector-cost-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.service-selector-cost-wrapper .currency-symbol {
+  padding: 0 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+  border-right: 1px solid var(--border-subtle);
+  line-height: 28px;
+}
+
+.service-selector-cost-wrapper .service-cost-input {
+  width: 80px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border: none;
+  background: transparent;
+}
+
+.service-selector-cost-wrapper .service-cost-input:focus {
+  outline: none;
+}
+
+.service-selector-cost-wrapper:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.service-selector-note-group {
+  flex: 1;
+  min-width: 150px;
+}
+
+.service-selector-note-group .service-note-input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+}
+
+.service-selector-note-group .service-note-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+/* Actions row */
+.service-selector-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.service-selector-summary {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.service-selector-summary .cost-summary-label {
+  color: var(--text-muted);
+}
+
+.service-selector-summary .cost-summary-value {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* No matches message */
+.service-selector-no-matches {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .service-selector-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .service-selector-details {
+    padding-left: 12px;
+    flex-direction: column;
+  }
+  
+  .service-selector-note-group {
+    min-width: 100%;
+  }
+  
+  .service-selector-actions {
+    flex-wrap: wrap;
+  }
+  
+  .service-selector-summary {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 4px;
+    justify-content: flex-end;
+  }
+}

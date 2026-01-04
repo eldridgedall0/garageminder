@@ -1,0 +1,125 @@
+[03-Dec-2025 16:27:50 UTC] PHP Fatal error:  Constant expression contains invalid operations in /home2/yesca/public_html/garage/config.php on line 19
+[03-Dec-2025 16:27:56 UTC] PHP Fatal error:  Constant expression contains invalid operations in /home2/yesca/public_html/garage/config.php on line 19
+[03-Dec-2025 16:27:58 UTC] PHP Fatal error:  Constant expression contains invalid operations in /home2/yesca/public_html/garage/config.php on line 19
+[03-Dec-2025 16:27:59 UTC] PHP Fatal error:  Constant expression contains invalid operations in /home2/yesca/public_html/garage/config.php on line 19
+[03-Dec-2025 16:28:16 UTC] PHP Fatal error:  Constant expression contains invalid operations in /home2/yesca/public_html/garage/config.php on line 19
+[03-Dec-2025 16:44:54 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 16:45:03 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 16:45:13 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 16:46:17 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 16:56:54 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 16:57:26 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:05:36 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:06:04 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:06:53 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:13:11 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:14:07 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:14:28 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:14:49 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:14:59 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:20:52 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:21:50 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:26:40 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:27:36 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:27:55 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:27:57 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:27:58 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:27:59 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:28:01 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:28:02 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:28:03 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:28:03 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:28:13 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:29:42 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:29:52 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:29:53 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:43:03 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:43:09 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 17:43:25 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[03-Dec-2025 23:38:22 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[04-Dec-2025 00:33:07 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[04-Dec-2025 00:33:26 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[04-Dec-2025 00:34:06 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[04-Dec-2025 00:38:02 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[04-Dec-2025 00:38:09 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[04-Dec-2025 00:38:19 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[04-Dec-2025 16:17:33 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[04-Dec-2025 16:17:34 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[04-Dec-2025 16:17:58 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[04-Dec-2025 16:17:58 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[04-Dec-2025 16:19:01 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[04-Dec-2025 16:19:01 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[04-Dec-2025 16:19:16 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[04-Dec-2025 16:19:16 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[04-Dec-2025 16:23:13 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[04-Dec-2025 16:23:13 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[04-Dec-2025 17:32:53 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW7LD6SFC69524?format=json - HTTP 200
+[04-Dec-2025 17:32:54 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW7LD6SFC69524 - HTTP 400
+[04-Dec-2025 17:39:46 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW7LD6SFC69524?format=json - HTTP 200
+[04-Dec-2025 17:39:47 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW7LD6SFC69524 - HTTP 400
+[04-Dec-2025 17:40:22 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[04-Dec-2025 17:40:22 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[09-Dec-2025 14:33:59 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[09-Dec-2025 14:33:59 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[10-Dec-2025 20:22:27 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[10-Dec-2025 20:22:27 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[11-Dec-2025 16:32:04 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[11-Dec-2025 16:32:04 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[11-Dec-2025 16:41:24 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 16:42:36 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 16:57:18 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 16:57:37 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 16:58:11 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 16:59:30 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 16:59:46 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 17:01:02 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 17:06:14 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 17:09:42 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 17:13:32 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 17:13:40 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 17:13:41 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[11-Dec-2025 17:23:47 UTC] PHP Fatal error:  Cannot redeclare db_get_pdo() (previously declared in /home2/yesca/public_html/garage/config.php:51) in /home2/yesca/public_html/garage/config.php on line 51
+[12-Dec-2025 22:14:49 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW3LD2SFB01260?format=json - HTTP 200
+[12-Dec-2025 22:14:49 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW3LD2SFB01260 - HTTP 400
+[16-Dec-2025 01:59:14 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW5LD6SFB85353?format=json - HTTP 200
+[16-Dec-2025 01:59:14 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW5LD6SFB85353 - HTTP 400
+[16-Dec-2025 01:59:25 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/2HKRW2H93NH621831?format=json - HTTP 200
+[16-Dec-2025 01:59:25 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=2HKRW2H93NH621831 - HTTP 400
+[16-Dec-2025 02:16:26 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW5LD6SFB85353?format=json - HTTP 200
+[16-Dec-2025 02:16:27 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW5LD6SFB85353 - HTTP 400
+[18-Dec-2025 00:32:26 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/2HKRW2H93NH621831?format=json - HTTP 200
+[18-Dec-2025 00:32:27 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=2HKRW2H93NH621831 - HTTP 400
+[22-Dec-2025 05:57:20 UTC] PHP Warning:  Constant DB_NAME already defined in /home2/yesca/public_html/gm/wp-config.php on line 24
+[22-Dec-2025 05:57:20 UTC] PHP Warning:  Constant DB_USER already defined in /home2/yesca/public_html/gm/wp-config.php on line 27
+[22-Dec-2025 05:57:20 UTC] PHP Warning:  Constant DB_HOST already defined in /home2/yesca/public_html/gm/wp-config.php on line 33
+[22-Dec-2025 05:57:20 UTC] PHP Warning:  Constant DB_CHARSET already defined in /home2/yesca/public_html/gm/wp-config.php on line 36
+[22-Dec-2025 06:03:22 UTC] PHP Warning:  Constant DB_NAME already defined in /home2/yesca/public_html/gm/wp-config.php on line 24
+[22-Dec-2025 06:03:22 UTC] PHP Warning:  Constant DB_USER already defined in /home2/yesca/public_html/gm/wp-config.php on line 27
+[22-Dec-2025 06:03:22 UTC] PHP Warning:  Constant DB_HOST already defined in /home2/yesca/public_html/gm/wp-config.php on line 33
+[22-Dec-2025 06:03:22 UTC] PHP Warning:  Constant DB_CHARSET already defined in /home2/yesca/public_html/gm/wp-config.php on line 36
+[22-Dec-2025 06:03:24 UTC] PHP Warning:  Constant DB_NAME already defined in /home2/yesca/public_html/gm/wp-config.php on line 24
+[22-Dec-2025 06:03:24 UTC] PHP Warning:  Constant DB_USER already defined in /home2/yesca/public_html/gm/wp-config.php on line 27
+[22-Dec-2025 06:03:24 UTC] PHP Warning:  Constant DB_HOST already defined in /home2/yesca/public_html/gm/wp-config.php on line 33
+[22-Dec-2025 06:03:24 UTC] PHP Warning:  Constant DB_CHARSET already defined in /home2/yesca/public_html/gm/wp-config.php on line 36
+[23-Dec-2025 22:47:38 UTC] Restore error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'default-Oil change' for key 'service_types.uniq_user_service_name'
+[23-Dec-2025 22:48:00 UTC] Restore error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'default-Oil change' for key 'service_types.uniq_user_service_name'
+[23-Dec-2025 22:51:37 UTC] Restore error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'default-Oil change' for key 'service_types.uniq_user_service_name'
+[23-Dec-2025 22:52:05 UTC] Restore error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'default-Oil change' for key 'service_types.uniq_user_service_name'
+[23-Dec-2025 22:54:35 UTC] Restore error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'v_1766207857333_vyy48vi9q5' for key 'vehicles.PRIMARY'
+[23-Dec-2025 22:55:03 UTC] Restore error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'v_1766207857333_vyy48vi9q5' for key 'vehicles.PRIMARY'
+[23-Dec-2025 22:55:31 UTC] Restore error: Method not allowed
+[23-Dec-2025 22:55:52 UTC] Restore error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'v_1766207857333_vyy48vi9q5' for key 'vehicles.PRIMARY'
+[29-Dec-2025 02:52:39 UTC] PHP Warning:  Undefined variable $redirect_to in /home2/yesca/public_html/gm/garage/config.php on line 573
+[29-Dec-2025 03:22:48 UTC] PHP Warning:  Undefined variable $pdo in /home2/yesca/public_html/gm/garage/api.php on line 389
+[29-Dec-2025 03:22:50 UTC] PHP Warning:  Undefined variable $pdo in /home2/yesca/public_html/gm/garage/api.php on line 389
+[29-Dec-2025 03:22:52 UTC] PHP Warning:  Undefined variable $pdo in /home2/yesca/public_html/gm/garage/api.php on line 389
+[29-Dec-2025 03:22:57 UTC] PHP Warning:  Undefined variable $pdo in /home2/yesca/public_html/gm/garage/api.php on line 389
+[29-Dec-2025 05:27:59 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW5LD6SFB85353?format=json - HTTP 200
+[29-Dec-2025 05:27:59 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW5LD6SFB85353 - HTTP 400
+[29-Dec-2025 06:04:51 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/2HKRW2H93NH621831?format=json - HTTP 200
+[29-Dec-2025 06:04:53 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=2HKRW2H93NH621831 - HTTP 400
+[29-Dec-2025 21:08:02 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/2HKRW2H93NH621831?format=json - HTTP 200
+[29-Dec-2025 21:08:02 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=2HKRW2H93NH621831 - HTTP 400
+[30-Dec-2025 02:05:26 UTC] NHTSA API Request: https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/1FTFW5LD6SFB85353?format=json - HTTP 200
+[30-Dec-2025 02:05:26 UTC] NHTSA API Request: https://api.nhtsa.gov/recalls/recallsByVehicle?vin=1FTFW5LD6SFB85353 - HTTP 400
+[30-Dec-2025 17:36:32 UTC] PHP Warning:  Undefined variable $redirect_to in /home2/yesca/public_html/gm/garage/config.php on line 495

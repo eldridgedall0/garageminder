@@ -1,0 +1,140 @@
+/**
+ * Garage Maintenance - Entries (history list + entry view/edit)
+ */
+/* ============================================
+   ENTRY LIST
+   ============================================ */
+.entry-list {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.entry-empty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 30px 12px;
+  text-align: center;
+}
+
+.entry-card {
+  border-bottom: 1px solid rgba(31,41,55,0.9);
+}
+
+.entry-card:last-child {
+  border-bottom: none;
+}
+
+.entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  cursor: pointer;
+  gap: 10px;
+  transition: background 0.15s ease;
+}
+
+.entry-header:hover {
+  background: var(--bg-hover);
+}
+
+.entry-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.entry-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.entry-date {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.entry-mileage {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.entry-toggle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.entry-body {
+  display: none;
+  padding: 0 14px 14px;
+}
+
+.entry-body-inner {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.entry-tagline {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.entry-body-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.entry-body-notes {
+  margin-top: 8px;
+}
+
+.entry-body-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Entry View Mode */
+.entry-view-mode { display: block; }
+.entry-edit-mode { display: none; }
+
+.entry-view-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.entry-view-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.entry-view-field label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.entry-view-value {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  padding: 10px 12px;
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: var(--radius);
+  border: 1px solid rgba(55, 65, 81, 0.6);
+  word-wrap: break-word;
+}

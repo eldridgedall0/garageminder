@@ -1,0 +1,10 @@
+# Deny all direct access to attachment files
+# Files can only be accessed through download.php
+# This provides an extra layer of security
+
+Order deny,allow
+Deny from all
+
+# Optional: Allow access only from localhost (for development)
+# Allow from 127.0.0.1
+# Allow from ::1

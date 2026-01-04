@@ -1,0 +1,378 @@
+/**
+ * Garage Maintenance - Settings
+ */
+/* ============================================
+   SETTINGS
+   ============================================ */
+.settings-section {
+  margin-bottom: 20px;
+}
+
+.settings-section h3 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #cbd5f5;
+}
+
+.settings-help {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.settings-list {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row input, .settings-row select {
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.settings-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.settings-add-row input {
+  flex: 1;
+  min-width: 180px;
+}
+
+.settings-vehicle-main,
+.settings-service-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-vehicle-main label,
+.settings-service-main label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+/* ============================================
+   SETTINGS TABS
+   ============================================ */
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.settings-tab-btn {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.settings-tab-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.settings-tab-btn.active {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: #020617;
+  box-shadow: 0 6px 16px rgba(56,189,248,0.5);
+  border-color: transparent;
+}
+
+.settings-tabs-content {
+  margin-top: 4px;
+}
+
+.settings-tab-view {
+  display: none;
+}
+
+.settings-tab-view.active {
+  display: block;
+}
+
+.settings-intervals-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+  gap: 8px;
+}
+
+/* ============================================
+   SETTINGS VEHICLE CARDS
+   ============================================ */
+.settings-vehicles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-vehicle-card {
+  background: var(--bg-elevated);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.settings-vehicle-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.settings-vehicle-card.expanded {
+  border-color: rgba(56, 189, 248, 0.6);
+}
+
+.settings-vehicle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.settings-vehicle-header:hover {
+  background: var(--bg-hover);
+}
+
+.settings-vehicle-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.settings-vehicle-name-display {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-vehicle-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.settings-vehicle-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.settings-vehicle-meta-item .meta-label {
+  opacity: 0.7;
+}
+
+.settings-vehicle-toggle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.settings-vehicle-card.expanded .settings-vehicle-toggle {
+  transform: rotate(180deg);
+}
+
+.settings-vehicle-body {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid rgba(55, 65, 81, 0.6);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.settings-vehicle-card.expanded .settings-vehicle-body {
+  display: block;
+}
+
+.settings-vehicle-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.settings-vehicle-fields .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-vehicle-fields .field.full-width {
+  grid-column: 1 / -1;
+}
+
+.settings-vehicle-fields label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.settings-vehicle-fields input {
+  font-size: 0.9rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.settings-vehicle-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(55, 65, 81, 0.6);
+}
+
+.settings-vehicles-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: var(--radius);
+  border: 1px dashed rgba(55, 65, 81, 0.8);
+}
+
+/* ============================================
+   BACKUP SECTIONS
+   ============================================ */
+.backup-section {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.backup-section-primary {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.backup-section-danger {
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.backup-section-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-main);
+}
+
+.backup-section-primary .backup-section-title {
+  color: var(--accent);
+}
+
+.backup-section-danger .backup-section-title {
+  color: var(--danger);
+}
+
+.backup-section-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* ============================================
+   FORM PREFERENCES
+   ============================================ */
+.form-preference-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(55, 65, 81, 0.5);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.form-preference-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-preference-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.form-preference-toggle:hover {
+  color: var(--text-main);
+}
+
+/* Dashboard History Pager */
+.dashboard-history-pager {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+}
+
+.dashboard-history-pager button {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: transparent;
+  padding: 4px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+.dashboard-history-pager button[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dashboard-history-pager .pager-info {
+  opacity: 0.8;
+}

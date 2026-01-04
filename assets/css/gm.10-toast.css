@@ -1,0 +1,33 @@
+/**
+ * Garage Maintenance - Toast notification
+ */
+/* ============================================
+   TOAST NOTIFICATION
+   ============================================ */
+#gm-toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  background: #16a34a;
+  color: #e5e7eb;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 9999;
+}
+
+#gm-toast.gm-toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#gm-toast.gm-toast-hide {
+  opacity: 0;
+  transform: translateY(12px);
+}
