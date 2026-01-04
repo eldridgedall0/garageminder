@@ -41,6 +41,7 @@ function renderSettingsGeneral() {
   $("#settings-upcoming-miles").val(s.upcomingThresholdMiles != null ? s.upcomingThresholdMiles : DEFAULT_SETTINGS.upcomingThresholdMiles);
   $("#settings-overdue-days").val(s.overdueThresholdDays != null ? s.overdueThresholdDays : DEFAULT_SETTINGS.overdueThresholdDays);
   $("#settings-overdue-miles").val(s.overdueThresholdMiles != null ? s.overdueThresholdMiles : DEFAULT_SETTINGS.overdueThresholdMiles);
+  $("#settings-avg-daily-miles").val(s.avgDailyMiles != null ? s.avgDailyMiles : DEFAULT_SETTINGS.avgDailyMiles);
   
   // Render overview vehicles per page setting
   $("#settings-overview-vehicles-per-page").val(s.overviewVehiclesPerPage || "");
