@@ -1,16 +1,16 @@
 const STORAGE_KEY = "garage_maintenance_data_v2";
     const BACKEND_URL = "api.php";
 
-// Use APP_CONFIG from PHP if available, otherwise use defaults
 const DEFAULT_SETTINGS = {
-  siteTitle: (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.appName) ? APP_CONFIG.appName : "Garage Maintenance",
+  siteTitle: "Garage Maintenance",
   unit: "mi",
   timezone: null,
   keepFormOpen: false,
   upcomingThresholdDays: 14,
   upcomingThresholdMiles: 500,
   overdueThresholdDays: 0,
-  overdueThresholdMiles: 0
+  overdueThresholdMiles: 0,
+  avgDailyMiles: 40
 };
 
     const DEFAULT_DATA = {
