@@ -53,7 +53,7 @@ $(function() {
     const originalText = $btn.html();
     
     try {
-      $btn.prop("disabled", true).html("Ã¢ÂÂ³ Creating backup...");
+      $btn.prop("disabled", true).html("⏳ Creating backup...");
       
       const checkResponse = await fetch('backup-create.php?t=' + Date.now());
       const checkResult = await checkResponse.json();
@@ -62,7 +62,7 @@ $(function() {
         throw new Error(checkResult.message || 'Backup creation failed');
       }
       
-      $btn.html("Ã¢ÂÂ³ Downloading...");
+      $btn.html("⏳ Downloading...");
       
       const downloadUrl = 'backup-create.php?download=1&t=' + Date.now();
       
@@ -73,9 +73,9 @@ $(function() {
       link.click();
       document.body.removeChild(link);
       
-      let message = "Ã¢Å“â€¦ Backup downloaded! (" + checkResult.size_formatted + ")";
+      let message = "✓ Backup downloaded! (" + checkResult.size_formatted + ")";
       if (checkResult.attachment_count > 0) {
-        message = "Ã¢Å“â€¦ Backup: " + checkResult.size_formatted + ", " + checkResult.attachment_count + " attachments";
+        message = "✓ Backup: " + checkResult.size_formatted + ", " + checkResult.attachment_count + " attachments";
       }
       showToast(message);
       
@@ -85,7 +85,7 @@ $(function() {
       
     } catch (error) {
       console.error("Backup error:", error);
-      alert("Ã¢ÂÅ’ Backup failed:\n\n" + error.message);
+      alert("❌ Backup failed:\n\n" + error.message);
     } finally {
       $btn.prop("disabled", false).html(originalText);
     }
@@ -104,11 +104,11 @@ $(function() {
       return;
     }
     
-    const confirmMsg = "Ã¢Å¡Â Ã¯Â¸Â RESTORE FROM BACKUP\n\n" +
+    const confirmMsg = "⚠  RESTORE FROM BACKUP\n\n" +
       "This will:\n" +
-      "Ã¢â‚¬Â¢ Delete ALL current data and attachments\n" +
-      "Ã¢â‚¬Â¢ Replace with data from the backup file\n" +
-      "Ã¢â‚¬Â¢ Cannot be undone!\n\n" +
+      "• Delete ALL current data and attachments\n" +
+      "• Replace with data from the backup file\n" +
+      "• Cannot be undone!\n\n" +
       "Make sure you have a current backup before proceeding.\n\n" +
       "Continue with restore?";
     
@@ -175,24 +175,24 @@ $(function() {
         
         $overlay.remove();
         
-        let successMsg = "Ã¢Å“â€¦ Backup restored successfully!";
+        let successMsg = "✓ Backup restored successfully!";
         if (result.attachments_restored && result.attachments_restored > 0) {
           successMsg += "\n\n" + result.attachments_restored + " attachment(s) restored.";
         }
         if (result.attachments_errors && result.attachments_errors.length > 0) {
-          successMsg += "\n\nÃ¢Å¡Â Ã¯Â¸Â " + result.attachments_errors.length + " attachment(s) had issues.";
+          successMsg += "\n\n⚠  " + result.attachments_errors.length + " attachment(s) had issues.";
         }
         
         alert(successMsg);
       } else {
         $overlay.remove();
-        alert("Ã¢ÂÅ’ Restore failed:\n\n" + (result.message || "Unknown error"));
+        alert("❌ Restore failed:\n\n" + (result.message || "Unknown error"));
       }
       
     } catch (error) {
       console.error("Restore error:", error);
       $overlay.remove();
-      alert("Ã¢ÂÅ’ Restore failed:\n\n" + error.message);
+      alert("❌ Restore failed:\n\n" + error.message);
     }
     
     this.value = "";
@@ -307,7 +307,7 @@ $(function() {
     const open = $body.is(":visible");
     
     $(".entry-body").slideUp(120);
-    $(".entry-toggle").text("Tap to expand Ã¢â€“Â¼");
+    $(".entry-toggle").html('Tap to expand <i class="bi bi-chevron-down"></i>');
     $(".entry-card").removeClass("expanded");
     
     $(".entry-view-mode").show();
@@ -315,7 +315,7 @@ $(function() {
     
     if (!open) {
       $body.slideDown(120);
-      $card.find(".entry-toggle").text("Tap to collapse Ã¢â€“Â²");
+      $card.find(".entry-toggle").html('Tap to collapse <i class="bi bi-chevron-up"></i>');
       $card.addClass("expanded");
     }
   });
@@ -344,7 +344,7 @@ $(function() {
     await saveEntryFromAccordion($card);
     
     $card.find(".entry-body").slideUp(120);
-    $card.find(".entry-toggle").text("Tap to expand Ã¢â€“Â¼");
+    $card.find(".entry-toggle").html('Tap to expand <i class="bi bi-chevron-down"></i>');
     $card.find(".entry-edit-mode").hide();
     $card.find(".entry-view-mode").show();
   });
@@ -418,7 +418,6 @@ $(function() {
     const upcomingMiles = $("#settings-upcoming-miles").val();
     const overdueDays = $("#settings-overdue-days").val();
     const overdueMiles = $("#settings-overdue-miles").val();
-    const avgDailyMiles = $("#settings-avg-daily-miles").val();
     const overviewVehiclesPerPage = $("#settings-overview-vehicles-per-page").val();
 
     if (!data.settings) data.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
@@ -431,7 +430,6 @@ $(function() {
     data.settings.upcomingThresholdMiles = upcomingMiles !== "" ? Number(upcomingMiles) : DEFAULT_SETTINGS.upcomingThresholdMiles;
     data.settings.overdueThresholdDays = overdueDays !== "" ? Number(overdueDays) : DEFAULT_SETTINGS.overdueThresholdDays;
     data.settings.overdueThresholdMiles = overdueMiles !== "" ? Number(overdueMiles) : DEFAULT_SETTINGS.overdueThresholdMiles;
-    data.settings.avgDailyMiles = avgDailyMiles !== "" ? Number(avgDailyMiles) : DEFAULT_SETTINGS.avgDailyMiles;
     
     // Overview settings
     data.settings.overviewVehiclesPerPage = overviewVehiclesPerPage !== "" ? Number(overviewVehiclesPerPage) : null;
@@ -686,7 +684,7 @@ $(function() {
     const file = this.files[0];
     if (!file) return;
     
-    const confirmMsg = "Ã¢Å¡Â Ã¯Â¸Â IMPORT DATA (JSON)\n\n" +
+    const confirmMsg = "⚠  IMPORT DATA (JSON)\n\n" +
       "Note: This imports database data only.\n" +
       "Attachment files are NOT included in JSON backups.\n\n" +
       "For complete backup with attachments, use 'Full Backup (ZIP)'.\n\n" +
