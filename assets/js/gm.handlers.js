@@ -418,6 +418,7 @@ $(function() {
     const upcomingMiles = $("#settings-upcoming-miles").val();
     const overdueDays = $("#settings-overdue-days").val();
     const overdueMiles = $("#settings-overdue-miles").val();
+    const avgDailyMiles = $("#settings-avg-daily-miles").val();
     const overviewVehiclesPerPage = $("#settings-overview-vehicles-per-page").val();
 
     if (!data.settings) data.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
@@ -430,6 +431,7 @@ $(function() {
     data.settings.upcomingThresholdMiles = upcomingMiles !== "" ? Number(upcomingMiles) : DEFAULT_SETTINGS.upcomingThresholdMiles;
     data.settings.overdueThresholdDays = overdueDays !== "" ? Number(overdueDays) : DEFAULT_SETTINGS.overdueThresholdDays;
     data.settings.overdueThresholdMiles = overdueMiles !== "" ? Number(overdueMiles) : DEFAULT_SETTINGS.overdueThresholdMiles;
+    data.settings.avgDailyMiles = avgDailyMiles !== "" ? Number(avgDailyMiles) : DEFAULT_SETTINGS.avgDailyMiles;
     
     // Overview settings
     data.settings.overviewVehiclesPerPage = overviewVehiclesPerPage !== "" ? Number(overviewVehiclesPerPage) : null;
