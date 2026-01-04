@@ -10,7 +10,8 @@ const DEFAULT_SETTINGS = {
   upcomingThresholdDays: 14,
   upcomingThresholdMiles: 500,
   overdueThresholdDays: 0,
-  overdueThresholdMiles: 0
+  overdueThresholdMiles: 0,
+  avgDailyMiles: 40
 };
 
     const DEFAULT_DATA = {
