@@ -457,6 +457,11 @@ ob_end_clean();
                       <input type="number" id="settings-overdue-miles" min="0" step="100" placeholder="0" />
                       <small class="text-muted">Mark as "overdue" after past due by this distance (0 = immediately)</small>
                     </div>
+                    <div class="field">
+                      <label for="settings-avg-daily-miles">Average daily driving (<span class="unit-label">mi</span>)</label>
+                      <input type="number" id="settings-avg-daily-miles" min="1" max="500" step="1" placeholder="40" />
+                      <small class="text-muted">Used to sort mileage-based reminders by urgency (default: 40)</small>
+                    </div>
                   </div>
                 </div>
                 
