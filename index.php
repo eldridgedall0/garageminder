@@ -9,6 +9,9 @@ ob_start();
 
 require_once __DIR__ . '/config.php';
 
+// Get app branding config
+$appConfig = gm_get_app_config();
+
 // Check authentication if multi-user is enabled
 if (defined('ENABLE_MULTI_USER') && ENABLE_MULTI_USER) {
     $userId = gm_get_current_user_id();
@@ -42,8 +45,11 @@ ob_end_clean();
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Got My Wrench</title>
+  <title><?= htmlspecialchars($appConfig['appName']) ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- Bootstrap Icons (reliable icon library - replaces emojis) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   
   <!-- Garage Maintenance modular CSS (order matters) -->
   <link rel="stylesheet" href="assets/css/gm.00-tokens.css" />
@@ -68,6 +74,8 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.19-templates.css" />
   <link rel="stylesheet" href="assets/css/gm.20-service-selector.css" />
   <link rel="stylesheet" href="assets/css/gm.21-vehicle-details.css" />
+  <link rel="stylesheet" href="assets/css/gm.22-mobile-nav.css" />
+  <link rel="stylesheet" href="assets/css/gm.23-pwa.css" />
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -81,33 +89,43 @@ ob_end_clean();
   <meta name="theme-color" content="#0b1120">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="MyWrench.app">
+  <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars($appConfig['appShortName']) ?>">
   
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css" />
+  
+  <!-- App Configuration (injected from PHP) -->
+  <script>
+    const APP_CONFIG = <?= json_encode($appConfig, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+  </script>
+  
+  <style>
+    /* Bootstrap icon styling */
+    /* Icons use Bootstrap Icons - no custom styling needed */
+  </style>
 </head>
 <body>
 
   <div id="db-error-banner" style="display:none;background:#7f1d1d;color:#fff;padding:12px 16px;font-weight:600;">
-    âš  Database connection failed. Check your config.php credentials.
+    <i class="bi bi-exclamation-triangle-fill"></i> Database connection failed. Check your config.php credentials.
   </div>
 
   <div class="app">
     <header>
       <div class="title-block">
         <div class="logo-title-row">
-          <img src="assets/images/icon-64.png" alt="gotmywrench.com" class="app-logo">
+          <img src="assets/images/icon-64.png" alt="<?= htmlspecialchars($appConfig['appDomain']) ?>" class="app-logo">
           <div class="title-text">
-            <h1 class="app-title">TrackMyWrench</h1>
+            <h1 class="app-title"><?= htmlspecialchars($appConfig['appName']) ?></h1>
             <span id="site-title" class="custom-title"></span>
           </div>
         </div>
-        <span class="tagline">Per-vehicle service history, reminders &amp; upcoming maintenance</span>
+        <span class="tagline"><?= htmlspecialchars($appConfig['appTagline']) ?></span>
       </div>
       <div class="top-controls">
         <div class="nav">
-          <button class="nav-btn active" data-view="dashboard">ðŸ“Š Dashboard</button>
-          <button class="nav-btn" data-view="reminders">ðŸ”” Reminders</button>
-          <button class="nav-btn" data-view="settings">âš™ï¸ Settings</button>
+          <button class="nav-btn active" data-view="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</button>
+          <button class="nav-btn" data-view="reminders"><i class="bi bi-bell-fill"></i> Reminders</button>
+          <button class="nav-btn" data-view="settings"><i class="bi bi-gear-fill"></i> Settings</button>
         </div>
         <div class="vehicle-picker" id="vehicle-picker">
           <div class="vehicle-picker-select-row">
@@ -204,7 +222,7 @@ ob_end_clean();
             <!-- Save as Template -->
             <div class="save-template-row">
               <button type="button" class="btn-ghost btn-small save-template-btn" id="save-as-template-btn">
-                ðŸ“‹ Save as Template
+                <i class="bi bi-clipboard-check"></i> Save as Template
               </button>
             </div>
           </form>
@@ -236,7 +254,7 @@ ob_end_clean();
                 
                 <div class="safety-status-row" id="safety-status-container" style="display:none;">
                   <div class="safety-status">
-                    <span class="safety-icon">ðŸ”’</span>
+                    <span class="safety-icon"><i class="bi bi-shield-check"></i></span>
                     <span class="safety-label">Safety:</span>
                     <span id="safety-status-badge" class="safety-badge">â€”</span>
                     <button type="button" class="btn-ghost btn-small" id="check-recalls-btn">Check Recalls</button>
@@ -265,7 +283,7 @@ ob_end_clean();
             <aside class="dashboard-sidebar">
               <section class="card sidebar-card">
                 <div class="card-header">
-                  <h2>ðŸ”” Reminders</h2>
+                  <h2><i class="bi bi-bell-fill"></i> Reminders</h2>
                   <small>Quick View</small>
                 </div>
                 <div class="stats-row">
@@ -372,6 +390,8 @@ ob_end_clean();
           <div class="settings-tabs-content">
             <!-- Tab: General -->
             <div id="settings-tab-general" class="settings-tab-view active">
+                <!-- PWA Install Section -->
+                <div id="pwa-install-container"></div>
               <div class="settings-section">
                 <h3>General</h3>
                 <div class="settings-help">
@@ -381,7 +401,7 @@ ob_end_clean();
                 <div class="field-grid">
                   <div class="field">
                     <label for="settings-site-title">Personalized Custom title</label>
-                    <input type="text" id="settings-site-title" placeholder="Garage Maintenance" />
+                    <input type="text" id="settings-site-title" placeholder="<?= htmlspecialchars($appConfig['appName']) ?>" />
                   </div>
                   <div class="field">
                     <label for="settings-unit">Distance unit</label>
@@ -436,11 +456,6 @@ ob_end_clean();
                       <label for="settings-overdue-miles">Overdue grace period (<span class="unit-label">mi</span>)</label>
                       <input type="number" id="settings-overdue-miles" min="0" step="100" placeholder="0" />
                       <small class="text-muted">Mark as "overdue" after past due by this distance (0 = immediately)</small>
-                    </div>
-                    <div class="field">
-                      <label for="settings-avg-daily-miles">Average daily driving (<span class="unit-label">mi</span>)</label>
-                      <input type="number" id="settings-avg-daily-miles" min="1" max="500" step="1" placeholder="40" />
-                      <small class="text-muted">Used to sort mileage-based reminders by urgency (default: 40)</small>
                     </div>
                   </div>
                 </div>
@@ -528,12 +543,12 @@ ob_end_clean();
                 
                 <!-- Full Backup Section -->
                 <div class="backup-section backup-section-primary">
-                  <div class="backup-section-title">ðŸ—œï¸ Complete Backup (Recommended)</div>
+                  <div class="backup-section-title"><i class="bi bi-archive-fill"></i> Complete Backup (Recommended)</div>
                   <div class="backup-section-desc">Includes all data + attachment files in a single JSON file</div>
                   <div class="button-row" style="justify-content:flex-start; margin-top:4px;">
-                    <button type="button" class="btn-primary btn-small" id="backup-export-full">â¬‡ï¸ Download Full Backup</button>
+                    <button type="button" class="btn-primary btn-small" id="backup-export-full"><i class="bi bi-download"></i> Download Full Backup</button>
                     <label class="btn-primary btn-small" style="cursor:pointer;">
-                      â¬†ï¸ Restore from Full Backup
+                      <i class="bi bi-upload"></i> Restore from Full Backup
                       <input type="file" id="backup-import-full" accept=".json,.zip,application/json,application/zip" style="display:none;" />
                     </label>
                   </div>
@@ -541,12 +556,12 @@ ob_end_clean();
                 
                 <!-- Data-Only Backup Section -->
                 <div class="backup-section">
-                  <div class="backup-section-title">ðŸ“„ Data Only Backup</div>
+                  <div class="backup-section-title"><i class="bi bi-file-earmark-code"></i> Data Only Backup</div>
                   <div class="backup-section-desc">Database only (no attachment files). Smaller file size.</div>
                   <div class="button-row" style="justify-content:flex-start; margin-top:4px;">
-                    <button type="button" class="btn-ghost btn-small" id="backup-export">â¬‡ï¸ Export data (JSON)</button>
+                    <button type="button" class="btn-ghost btn-small" id="backup-export"><i class="bi bi-download"></i> Export data (JSON)</button>
                     <label class="btn-ghost btn-small" style="cursor:pointer;">
-                      â¬†ï¸ Import data (JSON)
+                      <i class="bi bi-upload"></i> Import data (JSON)
                       <input type="file" id="backup-import" accept=".json,.txt,application/json" style="display:none;" />
                     </label>
                   </div>
@@ -554,20 +569,20 @@ ob_end_clean();
                 
                 <!-- Table Export Section -->
                 <div class="backup-section">
-                  <div class="backup-section-title">ðŸ“Š Table Export (Current Vehicle)</div>
+                  <div class="backup-section-title"><i class="bi bi-table"></i> Table Export (Current Vehicle)</div>
                   <div class="backup-section-desc">Export service history table for the currently selected vehicle. Now includes per-service costs breakdown.</div>
                   <div class="button-row" style="justify-content:flex-start; margin-top:4px;">
-                    <button type="button" class="btn-ghost btn-small" id="export-excel">ðŸ“Š Export table (Excel/CSV)</button>
-                    <button type="button" class="btn-ghost btn-small" id="export-word">ðŸ“„ Export table (Word)</button>
-                    <button type="button" class="btn-ghost btn-small" id="export-pdf">ðŸ“• Export table (PDF)</button>
+                    <button type="button" class="btn-ghost btn-small" id="export-excel"><i class="bi bi-file-earmark-spreadsheet"></i> Export table (Excel/CSV)</button>
+                    <button type="button" class="btn-ghost btn-small" id="export-word"><i class="bi bi-file-earmark-text"></i> Export table (Word)</button>
+                    <button type="button" class="btn-ghost btn-small" id="export-pdf"><i class="bi bi-file-earmark-pdf"></i> Export table (PDF)</button>
                   </div>
                 </div>
                 
                 <!-- Danger Zone -->
                 <div class="backup-section backup-section-danger">
-                  <div class="backup-section-title">âš ï¸ Danger Zone</div>
+                  <div class="backup-section-title"><i class="bi bi-exclamation-triangle-fill"></i> Danger Zone</div>
                   <div class="backup-section-desc">This will permanently delete all data and attachments. Cannot be undone!</div>
-                  <button type="button" class="btn-danger btn-small" id="backup-reset">ðŸ—‘ï¸ Clear all data</button>
+                  <button type="button" class="btn-danger btn-small" id="backup-reset"><i class="bi bi-trash3-fill"></i> Clear all data</button>
                 </div>
               </div>
             </div>
@@ -577,8 +592,8 @@ ob_end_clean();
     </main>
 
     <footer>
-      <span>Â© 2025 Garage Maintenance. All rights reserved.</span>
-      <span>Version 2.3</span>
+      <span>&copy; <?= htmlspecialchars($appConfig['copyrightYear']) ?> <?= htmlspecialchars($appConfig['appName']) ?>. All rights reserved.</span>
+      <span>Version <?= htmlspecialchars($appConfig['appVersion']) ?></span>
     </footer>
   </div>
 
@@ -600,6 +615,8 @@ ob_end_clean();
   <script src="assets/js/gm.features.recalls.js"></script>
   <script src="assets/js/gm.features.export.js"></script>
   <script src="assets/js/gm.user.js"></script>
+  <script src="assets/js/gm.mobile-nav.js"></script>
   <script src="assets/js/gm.handlers.js"></script>
+  <script src="assets/js/gm.pwa.js"></script>
 </body>
 </html>
