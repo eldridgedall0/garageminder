@@ -7,6 +7,9 @@ const GM_DB_USER    = 'yesca_gm';
 const GM_DB_PASS    = '0nP;e(8KIo;][@5r';
 const GM_DB_CHARSET = 'utf8mb4';
 
+// Wordpress Subscription Integration
+require_once(__DIR__ . '/wp-subscription-integration.php');
+
 // ========================================
 // APP BRANDING CONFIGURATION
 // ========================================
