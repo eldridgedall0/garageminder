@@ -11,6 +11,8 @@ require_once __DIR__ . '/config.php';
 
 // Get app branding config
 $appConfig = gm_get_app_config();
+$themeMode = gm_get_user_theme_mode();
+$themeColors = gm_get_theme_colors($themeMode);
 
 // Check authentication if multi-user is enabled
 if (defined('ENABLE_MULTI_USER') && ENABLE_MULTI_USER) {
@@ -85,8 +87,8 @@ ob_end_clean();
   <link rel="icon" type="image/png" sizes="512x512" href="assets/images/icon-512.png">
   
   <!-- Web App Manifest -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0b1120">
+  <link rel="manifest" href="manifest.php">
+  <meta name="theme-color" content="<?= htmlspecialchars($themeColors['theme_color']) ?>">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars($appConfig['appShortName']) ?>">
@@ -94,16 +96,20 @@ ob_end_clean();
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css" />
   
   <!-- App Configuration (injected from PHP) -->
-  <script>
-    const APP_CONFIG = <?= json_encode($appConfig, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-  </script>
+<script>
+  const APP_CONFIG = <?= json_encode(array_merge($appConfig, [
+      'themeMode' => $themeMode,
+      'themeColors' => $themeColors,
+      'profileUrl' => gm_get_auth_urls()['profile_url'] ?? '/my-profile/',
+  ]), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+</script>
   
   <style>
     /* Bootstrap icon styling */
     /* Icons use Bootstrap Icons - no custom styling needed */
   </style>
 </head>
-<body>
+<body class="gm-theme-<?= htmlspecialchars($themeMode) ?>">
 
   <div id="db-error-banner" style="display:none;background:#7f1d1d;color:#fff;padding:12px 16px;font-weight:600;">
     <i class="bi bi-exclamation-triangle-fill"></i> Database connection failed. Check your config.php credentials.
@@ -625,3 +631,4 @@ ob_end_clean();
   <script src="assets/js/gm.pwa.js"></script>
 </body>
 </html>
+
