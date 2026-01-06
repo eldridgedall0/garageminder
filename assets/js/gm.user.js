@@ -2,6 +2,8 @@
  * Garage Maintenance - User Menu Component
  * Handles user authentication display and menu for multi-user mode
  * User menu is integrated into the main navigation bar after Settings
+ * 
+ * Updated: Now displays actual membership level name from WordPress
  */
 
 (function() {
@@ -30,6 +32,83 @@
         authUrls = data.authUrls || null;
 
         renderUserMenu();
+    }
+
+    /**
+     * Get the display text for subscription badge
+     * Uses the actual membership level name from WordPress
+     * 
+     * @param {Object} user - Current user object with subscription data
+     * @returns {Object} { text: string, cssClass: string }
+     */
+    function getSubscriptionBadgeInfo(user) {
+        if (!user) {
+            return { text: 'Free', cssClass: 'inactive' };
+        }
+
+        const hasSubscription = user.has_subscription;
+        const levelName = user.subscription_level_name || null;
+        const tier = user.subscription_tier || 'free';
+
+        // If we have an actual level name from WordPress, use it
+        if (levelName) {
+            return {
+                text: hasSubscription ? `✓ ${levelName}` : levelName,
+                cssClass: hasSubscription ? 'active' : 'inactive'
+            };
+        }
+
+        // Fallback to tier-based display
+        if (hasSubscription) {
+            switch (tier) {
+                case 'fleet':
+                    return { text: '✓ Fleet', cssClass: 'active fleet' };
+                case 'paid':
+                    return { text: '✓ Pro', cssClass: 'active' };
+                default:
+                    return { text: '✓ Pro', cssClass: 'active' };
+            }
+        }
+
+        return { text: 'Free', cssClass: 'inactive' };
+    }
+
+    /**
+     * Get the account status text for dropdown header
+     * 
+     * @param {Object} user - Current user object with subscription data
+     * @returns {Object} { text: string, cssClass: string }
+     */
+    function getAccountStatusInfo(user) {
+        if (!user) {
+            return { text: 'Free Account', cssClass: 'free' };
+        }
+
+        const hasSubscription = user.has_subscription;
+        const levelName = user.subscription_level_name || null;
+        const tier = user.subscription_tier || 'free';
+
+        // If we have an actual level name from WordPress, use it
+        if (levelName) {
+            if (hasSubscription) {
+                return { text: `✓ ${levelName} Account`, cssClass: '' };
+            }
+            return { text: `${levelName} Account`, cssClass: 'free' };
+        }
+
+        // Fallback to tier-based display
+        if (hasSubscription) {
+            switch (tier) {
+                case 'fleet':
+                    return { text: '✓ Fleet Account', cssClass: 'fleet' };
+                case 'paid':
+                    return { text: '✓ Pro Account', cssClass: '' };
+                default:
+                    return { text: '✓ Pro Account', cssClass: '' };
+            }
+        }
+
+        return { text: 'Free Account', cssClass: 'free' };
     }
 
     /**
@@ -63,23 +142,21 @@
             const initials = getInitials(displayName);
             const hasSubscription = currentUser.has_subscription;
 
+            // Get dynamic badge and status info
+            const badgeInfo = getSubscriptionBadgeInfo(currentUser);
+            const statusInfo = getAccountStatusInfo(currentUser);
+
             menu.innerHTML = `
                 <button type="button" class="user-menu-trigger nav-btn" aria-haspopup="true" aria-expanded="false">
                     <span class="user-avatar">${escapeHtml(initials)}</span>
                     <span class="user-name">${escapeHtml(displayName)}</span>
-                    ${hasSubscription 
-                        ? '<span class="subscription-badge active">✓ Pro</span>'
-                        : '<span class="subscription-badge inactive">Free</span>'
-                    }
+                    <span class="subscription-badge ${badgeInfo.cssClass}">${escapeHtml(badgeInfo.text)}</span>
                     <span class="user-menu-arrow">▼</span>
                 </button>
                 <div class="user-menu-dropdown">
                     <div class="user-menu-header">
                         <div class="user-email">${escapeHtml(currentUser.email || '')}</div>
-                        ${hasSubscription 
-                            ? '<div class="user-subscription-status">✓ Pro Account</div>'
-                            : '<div class="user-subscription-status free">Free Account</div>'
-                        }
+                        <div class="user-subscription-status ${statusInfo.cssClass}">${escapeHtml(statusInfo.text)}</div>
                     </div>
                     <div class="user-menu-items">
                         <a href="${authUrls?.profile_url || '/wp-admin/profile.php'}" class="user-menu-item">
@@ -87,7 +164,7 @@
                         </a>
                         ${!hasSubscription ? `
                         <a href="${authUrls?.subscribe_url || '/subscribe/'}" class="user-menu-item user-menu-upgrade">
-                            ⭐ Upgrade to Pro
+                            ⭐ Upgrade
                         </a>
                         ` : ''}
                         <div class="user-menu-divider"></div>
@@ -195,7 +272,9 @@
         render: renderUserMenu,
         handleAuthError: handleAuthError,
         getCurrentUser: function() { return currentUser; },
-        isMultiUser: function() { return multiUserEnabled; }
+        isMultiUser: function() { return multiUserEnabled; },
+        getSubscriptionBadgeInfo: getSubscriptionBadgeInfo,
+        getAccountStatusInfo: getAccountStatusInfo
     };
 
     // Auto-initialize when DOM is ready
