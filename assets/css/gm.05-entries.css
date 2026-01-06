@@ -1,6 +1,10 @@
 /**
- * Garage Maintenance - Entries (history list + entry view/edit)
- * Theme-aware version using CSS custom properties
+ * GarageMinder - Entries (history list + entry view/edit)
+ * 
+ * FIXES:
+ * - Issue #6: Professional service badge styling with 3-badge limit and "+X more"
+ * - Issue #7: Remove "main" class distinction - all badges look the same
+ * - Issue #8: Hide badges when entry is expanded
  */
 
 /* ============================================
@@ -48,13 +52,14 @@
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+  flex: 1;
 }
 
 .entry-title-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  align-items: baseline;
+  align-items: center;
 }
 
 .entry-date {
@@ -73,11 +78,28 @@
   color: var(--gm-text-muted);
   white-space: nowrap;
   transition: color var(--gm-transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Use Bootstrap icon for toggle */
+.entry-toggle i {
+  font-size: 0.7rem;
+  transition: transform var(--gm-transition-fast);
+}
+
+.entry-card.expanded .entry-toggle i {
+  transform: rotate(180deg);
 }
 
 .entry-body {
   display: none;
   padding: 0 14px 14px;
+}
+
+.entry-card.expanded .entry-body {
+  display: block;
 }
 
 .entry-body-inner {
@@ -143,15 +165,26 @@
   word-wrap: break-word;
 }
 
-/* Entry services display */
+/* ============================================
+   SERVICE BADGES - Issues #6, #7, #8
+   ============================================ */
 .entry-services {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 6px;
+  align-items: center;
 }
 
-.entry-service-tag {
+/* ISSUE #8: Hide badges when entry is expanded */
+.entry-card.expanded .entry-services {
+  display: none;
+}
+
+/* ISSUE #7: All service badges look the same - no "main" distinction */
+.entry-service-tag,
+.entry-service-tag.main,
+.service-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -159,8 +192,51 @@
   background: var(--gm-accent-subtle);
   color: var(--gm-accent-text);
   border-radius: var(--gm-radius-full);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 500;
+  border: 1px solid var(--gm-accent-soft);
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ISSUE #6: "+X more" badge styling */
+.entry-service-more,
+.service-badge-more {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--gm-bg-elevated);
+  color: var(--gm-text-muted);
+  border-radius: var(--gm-radius-full);
+  font-size: 0.72rem;
+  font-weight: 500;
+  border: 1px solid var(--gm-border);
+  cursor: default;
+}
+
+/* Services display in expanded view */
+.entry-services-expanded {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.entry-services-expanded .entry-service-tag {
+  max-width: none;
+}
+
+/* ============================================
+   EXPANDED ENTRY STYLING
+   ============================================ */
+.entry-card.expanded {
+  background: var(--gm-bg-card-hover);
+}
+
+.entry-card.expanded .entry-header {
+  border-bottom: 1px solid var(--gm-border-subtle);
 }
 
 /* Responsive */
@@ -168,5 +244,11 @@
   .entry-body-fields,
   .entry-view-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .entry-service-tag {
+    max-width: 100px;
+    font-size: 0.7rem;
+    padding: 3px 8px;
   }
 }

@@ -1,6 +1,8 @@
 /**
- * Garage Maintenance - User Menu Styles
- * Theme-aware version using CSS custom properties
+ * GarageMinder - User Menu Styles
+ * 
+ * FIXES:
+ * - Issue #11: Remove underline on hover for dropdown links
  */
 
 /* ============================================
@@ -185,7 +187,7 @@
 }
 
 /* ============================================
-   DROPDOWN ITEMS
+   DROPDOWN ITEMS - Issue #11 FIX
    ============================================ */
 .user-menu-items {
   padding: 6px 0;
@@ -198,12 +200,22 @@
   padding: 10px 16px;
   font-size: 0.85rem;
   color: var(--gm-text-primary);
-  text-decoration: none;
+  text-decoration: none !important; /* Issue #11: Never underline */
   transition: background var(--gm-transition-fast);
 }
 
+/* Issue #11: Ensure no underline on hover */
 .user-menu-item:hover {
   background: var(--gm-bg-hover);
+  text-decoration: none !important;
+}
+
+.user-menu-item:focus {
+  text-decoration: none !important;
+}
+
+.user-menu-item:visited {
+  text-decoration: none !important;
 }
 
 .user-menu-upgrade {
@@ -212,6 +224,7 @@
 
 .user-menu-upgrade:hover {
   background: var(--gm-warning-bg);
+  text-decoration: none !important;
 }
 
 .user-menu-logout {
@@ -220,6 +233,7 @@
 
 .user-menu-logout:hover {
   background: var(--gm-error-bg);
+  text-decoration: none !important;
 }
 
 /* ============================================
@@ -236,7 +250,7 @@
   background: transparent;
   border: none;
   border-radius: var(--gm-radius-full);
-  text-decoration: none;
+  text-decoration: none !important;
   transition: all var(--gm-transition);
   margin-left: 4px;
 }
@@ -244,6 +258,7 @@
 .user-menu-login-btn:hover {
   color: var(--gm-text-primary);
   background: var(--gm-bg-hover);
+  text-decoration: none !important;
 }
 
 /* ============================================

@@ -3,6 +3,9 @@
  * 
  * Theme-aware CSS custom properties
  * Dark theme is default, light theme applied via .gm-theme-light class on body
+ * 
+ * FIXES:
+ * - Issue #1: Light theme body background now uses solid color instead of dark gradient
  */
 
 /* ========================================
@@ -18,6 +21,9 @@
   --gm-bg-input-focus: #1e293b;
   --gm-bg-header: #0f172a;
   --gm-bg-footer: #0b1120;
+  
+  /* Body gradient for dark theme ONLY */
+  --gm-bg-body-gradient: radial-gradient(circle at center top, rgb(31, 41, 55), rgb(2, 6, 23) 55%);
   
   /* Secondary/elevated backgrounds */
   --gm-bg-elevated: #1e293b;
@@ -136,7 +142,6 @@
   
   /* ===========================================
      BACKWARD COMPATIBILITY ALIASES (Dark Mode)
-     Map old variable names to new gm-* names
      =========================================== */
   --border: var(--gm-border);
   --border-light: var(--gm-border-light);
@@ -175,11 +180,12 @@
 }
 
 /* ========================================
-   LIGHT THEME
+   LIGHT THEME - ISSUE #1 FIX
    ======================================== */
 .gm-theme-light {
-  /* Primary backgrounds */
+  /* Primary backgrounds - NO gradient for light theme */
   --gm-bg-body: #f8fafc;
+  --gm-bg-body-gradient: none !important;
   --gm-bg-card: #ffffff;
   --gm-bg-card-hover: #f1f5f9;
   --gm-bg-input: #ffffff;

@@ -1,6 +1,8 @@
 /**
- * Service Selector - Professional Design
- * Theme-aware version using CSS custom properties
+ * GarageMinder - Service Selector
+ * 
+ * FIXES:
+ * - Issue #10: Hide service-selector-interval labels
  */
 
 /* Main wrapper */
@@ -131,11 +133,9 @@
   text-overflow: ellipsis;
 }
 
+/* ISSUE #10: Hide interval labels */
 .service-selector-interval {
-  font-size: 0.7rem;
-  color: var(--gm-text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
+  display: none !important;
 }
 
 /* Details row (shown when selected) */

@@ -1,7 +1,8 @@
 /**
  * GarageMinder Shell/Layout Styles
  * 
- * Header, footer, navigation, and main app structure
+ * FIXES:
+ * - Issue #9: Professional vehicle picker with inline odometer update for desktop
  */
 
 /* App container */
@@ -71,7 +72,7 @@ header {
 .tagline {
   font-size: var(--gm-font-size-sm);
   color: var(--gm-text-muted);
-  margin-left: 60px; /* Align with title text (logo width + gap) */
+  margin-left: 60px;
 }
 
 /* Top controls (nav + vehicle picker) */
@@ -122,14 +123,157 @@ header {
 }
 
 /* ========================================
-   VEHICLE PICKER
+   VEHICLE PICKER - Issue #9 Redesign
    ======================================== */
 .vehicle-picker {
   display: flex;
-  flex-direction: column;
-  gap: var(--gm-space-1);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--gm-bg-card);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-lg);
 }
 
+.vehicle-picker-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gm-text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.vehicle-picker-label i {
+  font-size: 1rem;
+  color: var(--gm-accent);
+}
+
+.vehicle-picker select {
+  min-width: 180px;
+  padding: 8px 12px;
+  background-color: var(--gm-bg-input);
+  color: var(--gm-text-primary);
+  border: 1px solid var(--gm-border-input);
+  border-radius: var(--gm-radius);
+  font-size: var(--gm-font-size-sm);
+  cursor: pointer;
+}
+
+.vehicle-picker select:focus {
+  border-color: var(--gm-accent);
+  box-shadow: var(--gm-focus-ring);
+  outline: none;
+}
+
+/* Odometer section - inline for desktop */
+.vehicle-picker-odo-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--gm-border);
+}
+
+.vehicle-picker-odo-label {
+  color: var(--gm-text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.vehicle-picker-odo-input-group {
+  display: flex;
+  align-items: center;
+  background: var(--gm-bg-input);
+  border: 1px solid var(--gm-border-input);
+  border-radius: var(--gm-radius);
+  overflow: hidden;
+  transition: border-color var(--gm-transition-fast), box-shadow var(--gm-transition-fast);
+}
+
+.vehicle-picker-odo-input-group:focus-within {
+  border-color: var(--gm-accent);
+  box-shadow: var(--gm-focus-ring);
+}
+
+.vehicle-picker-odo-input {
+  width: 90px;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--gm-text-primary);
+  font-size: 0.85rem;
+  font-family: var(--gm-font-mono);
+  text-align: right;
+}
+
+.vehicle-picker-odo-input:focus {
+  outline: none;
+}
+
+.vehicle-picker-odo-unit {
+  padding: 6px 8px;
+  background: var(--gm-bg-subtle);
+  color: var(--gm-text-muted);
+  font-size: 0.75rem;
+  border-left: 1px solid var(--gm-border-subtle);
+}
+
+.vehicle-picker-odo-save {
+  padding: 6px 12px;
+  background: var(--gm-accent);
+  color: var(--gm-text-inverse);
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--gm-transition-fast);
+}
+
+.vehicle-picker-odo-save:hover {
+  background: var(--gm-accent-hover);
+}
+
+.vehicle-picker-odo-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mobile layout for vehicle picker */
+@media (max-width: 900px) {
+  .vehicle-picker {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .vehicle-picker-label {
+    display: none;
+  }
+  
+  .vehicle-picker select {
+    width: 100%;
+    min-width: 0;
+  }
+  
+  .vehicle-picker-odo-section {
+    border-left: none;
+    padding-left: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--gm-border);
+    justify-content: space-between;
+  }
+}
+
+/* Hide odometer section on very small mobile - Issue #9 only desktop */
+@media (max-width: 650px) {
+  .vehicle-picker-odo-section {
+    display: none;
+  }
+}
+
+/* Old vehicle picker styles (deprecated but keep for compatibility) */
 .vehicle-picker-select-row {
   display: flex;
   align-items: center;
@@ -138,20 +282,10 @@ header {
   font-size: var(--gm-font-size-sm);
 }
 
-.vehicle-picker select {
-  min-width: 180px;
-  padding: var(--gm-space-2) var(--gm-space-3);
-  background-color: var(--gm-bg-input);
-  color: var(--gm-text-primary);
-  border: 1px solid var(--gm-border-input);
-  border-radius: var(--gm-radius);
-  font-size: var(--gm-font-size-sm);
-}
-
 #vehicle-picker-odo {
   font-size: var(--gm-font-size-xs);
   color: var(--gm-text-muted);
-  padding-left: 60px; /* Align with select */
+  padding-left: 60px;
 }
 
 /* ========================================

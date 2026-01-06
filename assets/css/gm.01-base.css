@@ -1,7 +1,8 @@
 /**
  * GarageMinder Base Styles
  * 
- * Applies theme tokens to foundational elements
+ * FIXES:
+ * - Issue #1: Body background now uses theme variable, light theme gets solid color
  */
 
 /* Reset & Base */
@@ -18,14 +19,23 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* ISSUE #1 FIX: Use theme-aware background */
 body {
   font-family: var(--gm-font-family);
   font-size: var(--gm-font-size-base);
   line-height: var(--gm-line-height-normal);
   color: var(--gm-text-primary);
   background-color: var(--gm-bg-body);
+  background-image: var(--gm-bg-body-gradient);
   min-height: 100vh;
   transition: background-color var(--gm-transition), color var(--gm-transition);
+}
+
+/* Light theme override - ensure no gradient */
+.gm-theme-light body,
+body.gm-theme-light {
+  background-image: none !important;
+  background-color: #f8fafc !important;
 }
 
 /* Links */

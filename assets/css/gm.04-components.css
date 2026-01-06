@@ -1,8 +1,8 @@
 /**
  * GarageMinder Components
  * 
- * Buttons, forms, modals, and reusable UI components
- * Theme-aware with fixed modal centering
+ * FIXES:
+ * - Issue #4: Modal close button uses Bootstrap icon instead of invalid character
  */
 
 /* ========================================
@@ -173,7 +173,7 @@ input[type="checkbox"] {
 }
 
 /* ========================================
-   MODALS - FIXED CENTERING
+   MODALS - Issue #4 FIX
    ======================================== */
 .modal-overlay {
   position: fixed;
@@ -217,21 +217,53 @@ input[type="checkbox"] {
   margin: 0;
 }
 
+/* ISSUE #4 FIX: Modal close button using CSS content instead of character */
 .modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 0;  /* Hide any text content */
   color: var(--gm-text-muted);
   cursor: pointer;
-  padding: var(--gm-space-1);
+  padding: var(--gm-space-2);
   line-height: 1;
   border-radius: var(--gm-radius);
   transition: all var(--gm-transition-fast);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Use CSS to draw the X */
+.modal-close::before,
+.modal-close::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 1px;
+}
+
+.modal-close::before {
+  transform: rotate(45deg);
+}
+
+.modal-close::after {
+  transform: rotate(-45deg);
 }
 
 .modal-close:hover {
   color: var(--gm-text-primary);
   background: var(--gm-bg-hover);
+}
+
+/* Alternative: If using Bootstrap Icons, use this class */
+.modal-close.bi-x-lg::before,
+.modal-close.bi-x-lg::after {
+  display: none;
 }
 
 .modal-body {
@@ -278,10 +310,12 @@ input[type="checkbox"] {
   font-size: var(--gm-font-size-sm);
   cursor: pointer;
   transition: background-color var(--gm-transition-fast);
+  text-decoration: none !important;
 }
 
 .dropdown-item:hover {
   background-color: var(--gm-bg-card-hover);
+  text-decoration: none !important;
 }
 
 /* ========================================
