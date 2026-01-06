@@ -152,7 +152,7 @@ function updateVehicleOdometerQuick() {
   renderDashboardRemindersSnippet();
   renderRemindersPage();
   
-  showToast(`Odometer updated to ${odoValue !== null ? odoValue.toLocaleString() : "–"}`);
+  showToast(`Odometer updated to ${odoValue !== null ? odoValue.toLocaleString() : "-"}`);
 }
 
 // ============================================
@@ -337,7 +337,7 @@ function renderOverviewStats(stats) {
     $("<div>").addClass("overview-stat-card")
       .append(
         $("<div>").addClass("stat-icon").html('<i class=\"bi bi-calendar-event\"></i>'),
-        $("<div>").addClass("stat-value").text(stats.lastServiceDate ? formatDateNice(stats.lastServiceDate) : "–"),
+        $("<div>").addClass("stat-value").text(stats.lastServiceDate ? formatDateNice(stats.lastServiceDate) : "-"),
         $("<div>").addClass("stat-label").text("Last Service")
       )
   );
@@ -378,7 +378,7 @@ function renderVehicleHealthCards() {
   if (totalPages > 1) {
     $header.append(
       $("<span>").addClass("section-page-info").text(
-        ` (${startIdx + 1}–${endIdx} of ${totalVehicles})`
+        ` (${startIdx + 1}-${endIdx} of ${totalVehicles})`
       )
     );
   }
@@ -525,7 +525,7 @@ function createVehicleHealthCard(vehicle) {
     ),
     $("<div>").addClass("health-stat-item").append(
       $("<div>").addClass("health-stat-label").text("Last Service"),
-      $("<div>").addClass("health-stat-value").text(lastServiceDate ? formatDateNice(lastServiceDate) : "–")
+      $("<div>").addClass("health-stat-value").text(lastServiceDate ? formatDateNice(lastServiceDate) : "-")
     ),
     $("<div>").addClass("health-stat-item").append(
       $("<div>").addClass("health-stat-label").text("Total Spend"),
@@ -748,7 +748,7 @@ function renderRecentActivity() {
         $("<div>").addClass("activity-vehicle").text(vehicleName),
         $("<div>").addClass("activity-services").text(services),
         $("<div>").addClass("activity-cost").text(
-          totalCost > 0 ? "$" + totalCost.toFixed(2) : "–"
+          totalCost > 0 ? "$" + totalCost.toFixed(2) : "-"
         )
       );
     
@@ -1206,10 +1206,31 @@ function renderDashboardHistory() {
     $header.append(
       $main.append(
         $titleRow,
-        $("<div>").addClass("service-badges").append(
-          $("<span>").addClass("service-badge main").text(mainService),
-          ...otherServiceNames.map(s => $("<span>").addClass("service-badge").text(s))
-        )
+        // FIX Issues #6 & #7: Limit badges to 3, remove "main" class distinction
+        (function() {
+          const $badges = $("<div>").addClass("service-badges");
+          const allNames = [mainService, ...otherServiceNames];
+          const maxVisible = 3;
+          
+          // Add visible badges (all same styling - no "main" class)
+          allNames.slice(0, maxVisible).forEach(s => {
+            $badges.append($("<span>").addClass("service-badge").text(s));
+          });
+          
+          // Add "+X more" if there are hidden badges
+          if (allNames.length > maxVisible) {
+            const hiddenCount = allNames.length - maxVisible;
+            const hiddenNames = allNames.slice(maxVisible).join(", ");
+            $badges.append(
+              $("<span>")
+                .addClass("service-badge-more")
+                .text("+" + hiddenCount + " more")
+                .attr("title", hiddenNames)
+            );
+          }
+          
+          return $badges;
+        })()
       ),
       $("<div>").addClass("entry-toggle").html('Tap to expand <i class="bi bi-chevron-down"></i>')
     );
@@ -1233,11 +1254,11 @@ function renderDashboardHistory() {
     $viewGrid.append(
       $("<div>").addClass("entry-view-field").append(
         $("<label>").text("Service date"),
-        $("<div>").addClass("entry-view-value").text(formatDateNice(entry.date) || "–")
+        $("<div>").addClass("entry-view-value").text(formatDateNice(entry.date) || "-")
       ),
       $("<div>").addClass("entry-view-field").append(
         $("<label>").text(`Odometer (${unit})`),
-        $("<div>").addClass("entry-view-value").text(entry.odo != null ? entry.odo.toLocaleString() + " " + unit : "–")
+        $("<div>").addClass("entry-view-value").text(entry.odo != null ? entry.odo.toLocaleString() + " " + unit : "-")
       )
     );
 
@@ -1262,7 +1283,7 @@ function renderDashboardHistory() {
       });
       $servicesField.append($servicesList);
     } else {
-      $servicesField.append($("<div>").addClass("entry-view-value").text("–"));
+      $servicesField.append($("<div>").addClass("entry-view-value").text("-"));
     }
     $viewGrid.append($servicesField);
 
@@ -1270,7 +1291,7 @@ function renderDashboardHistory() {
     $viewGrid.append(
       $("<div>").addClass("entry-view-field").append(
         $("<label>").text("Total Cost"),
-        $("<div>").addClass("entry-view-value").text(totalCost > 0 ? "$" + totalCost.toFixed(2) : "–")
+        $("<div>").addClass("entry-view-value").text(totalCost > 0 ? "$" + totalCost.toFixed(2) : "-")
       )
     );
     
@@ -1484,13 +1505,12 @@ function toggleEntryForm(forceOpen) {
   if (forceOpen === true || !isOpen) {
     $form.slideDown(300);
     $btn.addClass("form-open");
-    $btn.find("span:first").text("×");
-    $btn.contents().filter(function() { return this.nodeType === 3; }).last().replaceWith(" Hide Form");
+    // FIX Issue #4 & #5: Use HTML for the X to avoid encoding issues
+    $btn.html('<i class="bi bi-x-circle"></i> Hide Form');
   } else {
     $form.slideUp(300);
     $btn.removeClass("form-open");
-    $btn.find("span:first").text("+");
-    $btn.contents().filter(function() { return this.nodeType === 3; }).last().replaceWith(" Add New Service Entry");
+    $btn.html('<i class="bi bi-plus-circle"></i> Add New Service Entry');
   }
 }
 
@@ -1501,8 +1521,8 @@ function toggleEntryForm(forceOpen) {
 function resetEntryFormButton() {
   const $btn = $("#toggle-entry-form");
   $btn.removeClass("form-open");
-  $btn.find("span:first").text("+");
-  $btn.contents().filter(function() { return this.nodeType === 3; }).last().replaceWith(" Add New Service Entry");
+  // FIX Issue #4 & #5: Use HTML for consistent icon display
+  $btn.html('<i class="bi bi-plus-circle"></i> Add New Service Entry');
 }
 
 // ============================================

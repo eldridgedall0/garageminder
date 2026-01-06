@@ -229,6 +229,21 @@ $(function() {
     $(".view").removeClass("active");
     $("#view-" + view).addClass("active");
 
+    // FIX Issue #12: Reset entry form button state when navigating away from dashboard
+    if (view !== "dashboard") {
+      // Hide the form and reset button to closed state
+      $("#dashboard-entry-form").hide();
+      if (typeof resetEntryFormButton === "function") {
+        resetEntryFormButton();
+      } else {
+        // Fallback if function not available
+        const $btn = $("#toggle-entry-form");
+        $btn.removeClass("form-open");
+        $btn.find("span:first").text("+");
+        $btn.contents().filter(function() { return this.nodeType === 3; }).last().replaceWith(" Add New Service Entry");
+      }
+    }
+
     if (view === "dashboard") {
       renderDashboard();
     } else if (view === "reminders") {

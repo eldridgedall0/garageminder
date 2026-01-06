@@ -7,11 +7,11 @@ function renderRemindersPage() {
       if (!activeVehicleId || activeVehicleId === "all") {
         $list.append(
           $("<div>").addClass("entry-empty")
-            .html('<span style="font-size:1.5rem;">ðŸš—</span><br>Select a specific vehicle to view and manage reminders.')
+            .html('<i class="bi bi-car-front" style="font-size:1.5rem;"></i><br>Select a specific vehicle to view and manage reminders.')
         );
-        $("#rem-total").text("â€”");
-        $("#rem-upcoming").text("â€”");
-        $("#rem-overdue").text("â€”");
+        $("#rem-total").text("-");
+        $("#rem-upcoming").text("-");
+        $("#rem-overdue").text("-");
         
         // Hide the add reminder form when no specific vehicle is selected
         $("#reminder-form").closest(".settings-section").hide();

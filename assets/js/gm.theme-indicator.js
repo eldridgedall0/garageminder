@@ -15,16 +15,21 @@
 
   /**
    * Render the theme indicator HTML
+   * FIX Issue #2: Now detects actual theme from body class, not just APP_CONFIG
    */
   function renderThemeIndicator() {
-    // Get theme info from APP_CONFIG (injected by PHP)
-    const themeMode = (window.APP_CONFIG && APP_CONFIG.themeMode) || 'dark';
+    // Detect actual theme from body class (more reliable than APP_CONFIG)
+    const isLightTheme = document.body.classList.contains('gm-theme-light');
+    const themeMode = isLightTheme ? 'light' : 'dark';
     const profileUrl = (window.APP_CONFIG && APP_CONFIG.profileUrl) || '/my-profile/';
     
-    // Determine icon based on theme
-    const themeIcon = themeMode === 'light' 
+    // Determine icon based on actual theme
+    const themeIcon = isLightTheme 
       ? '<i class="bi bi-sun-fill"></i>' 
       : '<i class="bi bi-moon-stars-fill"></i>';
+    
+    // Capitalize for display
+    const themeModeDisplay = themeMode.charAt(0).toUpperCase() + themeMode.slice(1);
     
     // Create the HTML
     return `
@@ -35,7 +40,7 @@
           </div>
           <div class="theme-indicator-text">
             <span class="theme-indicator-label">Current Theme</span>
-            <span class="theme-indicator-value">${themeMode} Mode</span>
+            <span class="theme-indicator-value">${themeModeDisplay} Mode</span>
           </div>
         </div>
         <a href="${profileUrl}" class="theme-indicator-link" target="_blank" rel="noopener">
@@ -137,5 +142,28 @@
     }
   }, 500);
 
-})();
+  // FIX Issue #2: Re-render indicator when theme changes
+  function updateThemeIndicator() {
+    const existing = document.getElementById('gm-theme-indicator');
+    if (existing) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = renderThemeIndicator();
+      const newIndicator = tempDiv.firstElementChild;
+      existing.parentNode.replaceChild(newIndicator, existing);
+    }
+  }
 
+  // Watch for body class changes (theme switches)
+  const themeObserver = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'class') {
+        updateThemeIndicator();
+      }
+    });
+  });
+  
+  if (document.body) {
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+
+})();
