@@ -274,7 +274,7 @@ ob_end_clean();
                   <div class="recall-modal-content">
                     <div class="recall-modal-header">
                       <h3>Safety Recalls</h3>
-                      <button type="button" class="recall-modal-close" id="close-recall-modal">Ã—</button>
+                      <button type="button" class="recall-modal-close" id="close-recall-modal"><i class="bi bi-x"></i></button>
                     </div>
                     <div class="recall-modal-body" id="recall-modal-body">
                       <!-- Content inserted by JavaScript -->
@@ -634,6 +634,7 @@ ob_end_clean();
   <script src="assets/js/gm.fixes.js"></script>
 </body>
 </html>
+
 
 
 
