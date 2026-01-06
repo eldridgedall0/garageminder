@@ -2,6 +2,8 @@
  * Garage Maintenance - Mobile Navigation Drawer
  * Full-screen slide-out navigation for mobile devices
  * Includes: Navigation, Vehicle Picker, User Menu
+ * 
+ * Updated: Now displays actual membership level name from WordPress
  */
 
 (function() {
@@ -497,7 +499,47 @@
     }
 
     /**
+     * Get subscription badge info for mobile drawer
+     * Uses the actual membership level name from WordPress
+     * 
+     * @param {Object} user - Current user object with subscription data
+     * @returns {Object} { text: string, cssClass: string }
+     */
+    function getDrawerBadgeInfo(user) {
+        if (!user) {
+            return { text: 'Free Account', cssClass: 'free' };
+        }
+
+        const hasSubscription = user.has_subscription;
+        const levelName = user.subscription_level_name || null;
+        const tier = user.subscription_tier || 'free';
+
+        // If we have an actual level name from WordPress, use it
+        if (levelName) {
+            if (hasSubscription) {
+                return { text: `✓ ${levelName} Account`, cssClass: 'pro' };
+            }
+            return { text: `${levelName} Account`, cssClass: 'free' };
+        }
+
+        // Fallback to tier-based display
+        if (hasSubscription) {
+            switch (tier) {
+                case 'fleet':
+                    return { text: '✓ Fleet Account', cssClass: 'pro fleet' };
+                case 'paid':
+                    return { text: '✓ Pro Account', cssClass: 'pro' };
+                default:
+                    return { text: '✓ Pro Account', cssClass: 'pro' };
+            }
+        }
+
+        return { text: 'Free Account', cssClass: 'free' };
+    }
+
+    /**
      * Update drawer user section (multi-user only)
+     * Updated: Now uses actual membership level name from WordPress
      */
     function updateDrawerUserSection() {
         const container = document.getElementById('drawer-user-section');
@@ -520,6 +562,9 @@
             const displayName = user.display_name || user.email || 'User';
             const initials = getInitials(displayName);
             const hasSubscription = user.has_subscription;
+            
+            // Get dynamic badge info using actual membership level name
+            const badgeInfo = getDrawerBadgeInfo(user);
 
             container.innerHTML = `
                 <div class="drawer-divider"></div>
@@ -528,10 +573,7 @@
                     <div class="drawer-user-details">
                         <div class="drawer-user-name">${escapeHtml(displayName)}</div>
                         <div class="drawer-user-email">${escapeHtml(user.email || '')}</div>
-                        ${hasSubscription 
-                            ? '<div class="drawer-user-badge pro">✓ Pro Account</div>'
-                            : '<div class="drawer-user-badge free">Free Account</div>'
-                        }
+                        <div class="drawer-user-badge ${badgeInfo.cssClass}">${escapeHtml(badgeInfo.text)}</div>
                     </div>
                 </div>
                 <div class="drawer-user-actions">
@@ -540,7 +582,7 @@
                     </a>
                     ${!hasSubscription ? `
                     <a href="${authUrls.subscribe_url || '/subscribe/'}" class="drawer-user-link upgrade">
-                        ⭐ Upgrade to Pro
+                        ⭐ Upgrade
                     </a>
                     ` : ''}
                     <a href="${authUrls.logout_url || '/wp-login.php?action=logout'}" class="drawer-user-link logout">
