@@ -1,6 +1,6 @@
 /**
  * Garage Maintenance - Responsive rules
- * Updated to work with mobile navigation drawer
+ * Updated to work with mobile navigation drawer and theme system
  */
 
 /* ============================================
@@ -109,12 +109,6 @@
     justify-content: flex-end;
     width: auto;
     gap: 8px;
-  }
-  
-  /* Hide desktop nav and vehicle picker (shown in drawer) */
-  .nav:not(.mobile-nav-hamburger),
-  #vehicle-picker {
-    /* Hidden via JS with .desktop-only class */
   }
 }
 
@@ -262,5 +256,32 @@
     min-width: 70px;
     padding: 6px 8px;
     font-size: 0.75rem;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - MODALS
+   ============================================ */
+@media (max-width: 600px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+  
+  .modal-content {
+    padding: var(--gm-space-4);
+    max-height: 90vh;
+  }
+  
+  .modal-header {
+    margin-bottom: var(--gm-space-3);
+    padding-bottom: var(--gm-space-2);
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+  }
+  
+  .modal-footer button {
+    width: 100%;
   }
 }

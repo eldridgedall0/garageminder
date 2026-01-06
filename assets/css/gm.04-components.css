@@ -2,6 +2,7 @@
  * GarageMinder Components
  * 
  * Buttons, forms, modals, and reusable UI components
+ * Theme-aware with fixed modal centering
  */
 
 /* ========================================
@@ -23,6 +24,13 @@ button,
   transition: all var(--gm-transition-fast);
   border: none;
   text-decoration: none;
+  background-color: var(--gm-btn-secondary-bg);
+  color: var(--gm-btn-secondary-text);
+}
+
+button:hover,
+.btn:hover {
+  background-color: var(--gm-btn-secondary-bg-hover);
 }
 
 /* Primary button */
@@ -165,10 +173,9 @@ input[type="checkbox"] {
 }
 
 /* ========================================
-   MODALS
+   MODALS - FIXED CENTERING
    ======================================== */
-.modal-overlay,
-.recall-modal-overlay {
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -176,14 +183,14 @@ input[type="checkbox"] {
   bottom: 0;
   background-color: var(--gm-bg-modal-overlay);
   z-index: var(--gm-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
-.modal-content,
-.recall-modal-content {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.modal-content {
+  position: relative;
   background-color: var(--gm-bg-modal);
   border: 1px solid var(--gm-border);
   border-radius: var(--gm-radius-lg);
@@ -191,12 +198,12 @@ input[type="checkbox"] {
   max-width: 90vw;
   max-height: 85vh;
   overflow-y: auto;
-  z-index: calc(var(--gm-z-modal) + 1);
+  z-index: 1;
   box-shadow: var(--gm-shadow-lg);
+  width: 100%;
 }
 
-.modal-header,
-.recall-modal-header {
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -205,14 +212,12 @@ input[type="checkbox"] {
   border-bottom: 1px solid var(--gm-border);
 }
 
-.modal-header h3,
-.recall-modal-header h3 {
+.modal-header h3 {
   color: var(--gm-text-primary);
   margin: 0;
 }
 
-.modal-close,
-.recall-modal-close {
+.modal-close {
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -220,11 +225,26 @@ input[type="checkbox"] {
   cursor: pointer;
   padding: var(--gm-space-1);
   line-height: 1;
+  border-radius: var(--gm-radius);
+  transition: all var(--gm-transition-fast);
 }
 
-.modal-close:hover,
-.recall-modal-close:hover {
+.modal-close:hover {
   color: var(--gm-text-primary);
+  background: var(--gm-bg-hover);
+}
+
+.modal-body {
+  color: var(--gm-text-primary);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gm-space-3);
+  margin-top: var(--gm-space-4);
+  padding-top: var(--gm-space-3);
+  border-top: 1px solid var(--gm-border);
 }
 
 /* ========================================
@@ -279,7 +299,7 @@ input[type="checkbox"] {
   transform: translateX(-50%);
   padding: var(--gm-space-1) var(--gm-space-2);
   background-color: var(--gm-bg-tooltip);
-  color: var(--gm-text-inverse);
+  color: #ffffff;
   font-size: var(--gm-font-size-xs);
   border-radius: var(--gm-radius-sm);
   white-space: nowrap;
@@ -287,11 +307,6 @@ input[type="checkbox"] {
   visibility: hidden;
   transition: opacity var(--gm-transition-fast);
   z-index: var(--gm-z-tooltip);
-}
-
-/* Light theme tooltip needs different text color */
-.gm-theme-light .tooltip::after {
-  color: #ffffff;
 }
 
 .tooltip:hover::after {
@@ -365,6 +380,38 @@ input[type="checkbox"] {
   background-color: var(--gm-info-bg);
   color: var(--gm-info-text);
   border: 1px solid var(--gm-info);
+}
+
+/* ========================================
+   SERVICE CHIPS (Checkboxes in forms)
+   ======================================== */
+.service-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--gm-bg-elevated);
+  border: 1px solid var(--gm-border);
+  border-radius: var(--gm-radius-full);
+  font-size: var(--gm-font-size-sm);
+  color: var(--gm-text-secondary);
+  cursor: pointer;
+  transition: all var(--gm-transition-fast);
+}
+
+.service-chip:hover {
+  border-color: var(--gm-accent-soft);
+  background: var(--gm-bg-hover);
+}
+
+.service-chip.selected {
+  background: var(--gm-accent-subtle);
+  border-color: var(--gm-accent);
+  color: var(--gm-accent);
+}
+
+.service-chip input[type="checkbox"] {
+  margin: 0;
 }
 
 /* ========================================

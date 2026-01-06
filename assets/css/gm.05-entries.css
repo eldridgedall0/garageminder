@@ -1,26 +1,28 @@
 /**
  * Garage Maintenance - Entries (history list + entry view/edit)
+ * Theme-aware version using CSS custom properties
  */
+
 /* ============================================
    ENTRY LIST
    ============================================ */
 .entry-list {
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
+  border-radius: var(--gm-radius-lg);
+  border: 1px solid var(--gm-border);
+  background: var(--gm-bg-elevated);
   max-height: 500px;
   overflow-y: auto;
 }
 
 .entry-empty {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   padding: 30px 12px;
   text-align: center;
 }
 
 .entry-card {
-  border-bottom: 1px solid rgba(31,41,55,0.9);
+  border-bottom: 1px solid var(--gm-border-subtle);
 }
 
 .entry-card:last-child {
@@ -34,11 +36,11 @@
   padding: 12px 14px;
   cursor: pointer;
   gap: 10px;
-  transition: background 0.15s ease;
+  transition: background var(--gm-transition-fast);
 }
 
 .entry-header:hover {
-  background: var(--bg-hover);
+  background: var(--gm-bg-hover);
 }
 
 .entry-main {
@@ -58,17 +60,19 @@
 .entry-date {
   font-size: 1rem;
   font-weight: 500;
+  color: var(--gm-text-primary);
 }
 
 .entry-mileage {
   font-size: 0.82rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
 }
 
 .entry-toggle {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   white-space: nowrap;
+  transition: color var(--gm-transition-fast);
 }
 
 .entry-body {
@@ -79,14 +83,14 @@
 .entry-body-inner {
   margin-top: 8px;
   padding: 12px 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: rgba(15, 23, 42, 0.5);
+  border-radius: var(--gm-radius);
+  border: 1px solid var(--gm-border-subtle);
+  background: var(--gm-bg-subtle);
 }
 
 .entry-tagline {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   margin-bottom: 8px;
 }
 
@@ -126,15 +130,43 @@
 
 .entry-view-field label {
   font-size: 0.82rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
 }
 
 .entry-view-value {
   font-size: 0.9rem;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   padding: 10px 12px;
-  background: rgba(31, 41, 55, 0.5);
-  border-radius: var(--radius);
-  border: 1px solid rgba(55, 65, 81, 0.6);
+  background: var(--gm-bg-subtle);
+  border-radius: var(--gm-radius);
+  border: 1px solid var(--gm-border-subtle);
   word-wrap: break-word;
+}
+
+/* Entry services display */
+.entry-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.entry-service-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--gm-accent-subtle);
+  color: var(--gm-accent-text);
+  border-radius: var(--gm-radius-full);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .entry-body-fields,
+  .entry-view-grid {
+    grid-template-columns: 1fr;
+  }
 }

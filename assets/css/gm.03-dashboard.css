@@ -1,6 +1,8 @@
 /**
  * Garage Maintenance - Dashboard layout
+ * Theme-aware version using CSS custom properties
  */
+
 /* ============================================
    DASHBOARD LAYOUT WITH SIDEBAR
    ============================================ */
@@ -31,7 +33,7 @@
 .sidebar-footer {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid var(--border-light);
+  border-top: 1px solid var(--gm-border-light);
   text-align: center;
 }
 
@@ -54,13 +56,13 @@
   gap: 8px;
   padding: 10px 20px;
   font-size: 0.95rem;
-  transition: all 0.2s ease;
+  transition: all var(--gm-transition);
 }
 
 #toggle-form-icon {
   font-size: 1.2rem;
   font-weight: bold;
-  transition: transform 0.2s ease;
+  transition: transform var(--gm-transition);
 }
 
 #toggle-entry-form.form-open #toggle-form-icon {
@@ -75,4 +77,16 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-sidebar {
+    position: static;
+    order: -1;
+  }
 }

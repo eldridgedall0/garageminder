@@ -1,7 +1,6 @@
 /**
  * Garage Maintenance - Service Cost/Note Styling
- * New styles for per-service cost and note fields
- * Add this to gm_17-service-costs.css or append to existing CSS
+ * Theme-aware version using CSS custom properties
  */
 
 /* ============================================
@@ -18,8 +17,8 @@
 
 /* Filter match highlight for service-chip inside service-item */
 .service-item .service-chip.filter-match {
-  border-color: rgba(56, 189, 248, 0.5);
-  background: rgba(56, 189, 248, 0.08);
+  border-color: var(--gm-accent-soft);
+  background: var(--gm-accent-subtle);
 }
 
 .service-check-row {
@@ -32,9 +31,9 @@
   gap: 8px;
   padding: 8px 0 8px 28px;
   margin-top: 4px;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--gm-bg-subtle);
   border-radius: 8px;
-  border: 1px solid rgba(55, 65, 81, 0.5);
+  border: 1px solid var(--gm-border-subtle);
 }
 
 .service-cost-field {
@@ -47,7 +46,7 @@
 
 .service-field-label {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   font-weight: 500;
 }
 
@@ -57,6 +56,9 @@
   font-size: 0.85rem !important;
   border-radius: 6px !important;
   text-align: right;
+  background: var(--gm-bg-input) !important;
+  border: 1px solid var(--gm-border-input) !important;
+  color: var(--gm-text-primary) !important;
 }
 
 .service-note-field {
@@ -69,10 +71,13 @@
   padding: 6px 10px !important;
   font-size: 0.85rem !important;
   border-radius: 6px !important;
+  background: var(--gm-bg-input) !important;
+  border: 1px solid var(--gm-border-input) !important;
+  color: var(--gm-text-primary) !important;
 }
 
 .service-note-input::placeholder {
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   opacity: 0.6;
 }
 
@@ -86,20 +91,20 @@
   gap: 8px;
   padding: 8px 12px;
   margin-top: 8px;
-  background: rgba(56, 189, 248, 0.08);
+  background: var(--gm-accent-subtle);
   border-radius: 8px;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  border: 1px solid var(--gm-accent-soft);
 }
 
 .cost-summary-label {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
 }
 
 .cost-summary-value {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--gm-accent);
 }
 
 /* ============================================
@@ -110,9 +115,9 @@
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
-  background: rgba(31, 41, 55, 0.5);
-  border-radius: var(--radius);
-  border: 1px solid rgba(55, 65, 81, 0.6);
+  background: var(--gm-bg-subtle);
+  border-radius: var(--gm-radius);
+  border: 1px solid var(--gm-border-subtle);
 }
 
 .entry-service-row {
@@ -121,7 +126,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(55, 65, 81, 0.4);
+  border-bottom: 1px solid var(--gm-border-subtle);
 }
 
 .entry-service-row:last-child {
@@ -135,7 +140,7 @@
 
 .entry-service-name {
   font-size: 0.9rem;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   font-weight: 500;
   flex: 1;
   min-width: 120px;
@@ -144,19 +149,19 @@
 .entry-service-cost {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--gm-accent);
   padding: 2px 8px;
-  background: rgba(56, 189, 248, 0.12);
+  background: var(--gm-accent-subtle);
   border-radius: 4px;
 }
 
 .entry-service-note {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   font-style: italic;
   width: 100%;
   padding-left: 12px;
-  border-left: 2px solid rgba(55, 65, 81, 0.6);
+  border-left: 2px solid var(--gm-border-subtle);
   margin-top: 4px;
 }
 
@@ -203,6 +208,6 @@
 .entry-cost-label-updated::after {
   content: " (taxes, fees, etc.)";
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   font-weight: 400;
 }

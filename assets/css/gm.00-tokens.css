@@ -3,14 +3,6 @@
  * 
  * Theme-aware CSS custom properties
  * Dark theme is default, light theme applied via .gm-theme-light class on body
- * 
- * Color palette for light theme (from WordPress tmw-theme):
- * - Background: #f8fafc
- * - Card: #ffffff
- * - Text: #1e293b
- * - Muted: #64748b
- * - Accent: #0284c7
- * - Border: #e2e8f0
  */
 
 /* ========================================
@@ -33,6 +25,8 @@
   --gm-bg-modal-overlay: rgba(0, 0, 0, 0.7);
   --gm-bg-dropdown: #1a2438;
   --gm-bg-tooltip: #334155;
+  --gm-bg-subtle: rgba(15, 23, 42, 0.5);
+  --gm-bg-hover: #334155;
   
   /* Text colors */
   --gm-text-primary: #ffffff;
@@ -48,12 +42,17 @@
   --gm-accent-hover: #0ea5e9;
   --gm-accent-active: #0284c7;
   --gm-accent-muted: rgba(56, 189, 248, 0.15);
+  --gm-accent-soft: rgba(56, 189, 248, 0.2);
+  --gm-accent-subtle: rgba(56, 189, 248, 0.12);
+  --gm-accent-text: #7dd3fc;
   
   /* Border colors */
   --gm-border: #334155;
   --gm-border-light: #1e293b;
   --gm-border-focus: #38bdf8;
   --gm-border-input: #475569;
+  --gm-border-subtle: rgba(55, 65, 81, 0.6);
+  --gm-border-default: #475569;
   
   /* Status colors */
   --gm-success: #22c55e;
@@ -67,6 +66,7 @@
   --gm-error: #ef4444;
   --gm-error-bg: rgba(239, 68, 68, 0.15);
   --gm-error-text: #fca5a5;
+  --gm-danger: #ef4444;
   
   --gm-info: #3b82f6;
   --gm-info-bg: rgba(59, 130, 246, 0.15);
@@ -126,10 +126,52 @@
   /* Focus ring */
   --gm-focus-ring: 0 0 0 2px rgba(56, 189, 248, 0.5);
   
-  /* Transitions */
-  --gm-transition-fast: 0.15s ease;
-  --gm-transition: 0.2s ease;
-  --gm-transition-slow: 0.3s ease;
+  /* Gradients for dark mode */
+  --gm-gradient-accent: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  --gm-gradient-card-highlight: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(15, 23, 42, 0.98) 50%);
+  
+  /* Mobile nav drawer */
+  --gm-drawer-bg: #0f172a;
+  --gm-drawer-border: rgba(148, 163, 184, 0.15);
+  
+  /* ===========================================
+     BACKWARD COMPATIBILITY ALIASES (Dark Mode)
+     Map old variable names to new gm-* names
+     =========================================== */
+  --border: var(--gm-border);
+  --border-light: var(--gm-border-light);
+  --border-subtle: var(--gm-border-subtle);
+  --border-default: var(--gm-border-default);
+  --border-color: var(--gm-border);
+  
+  --bg-elevated: var(--gm-bg-elevated);
+  --bg-card: var(--gm-bg-card);
+  --bg-hover: var(--gm-bg-hover);
+  --bg-subtle: var(--gm-bg-subtle);
+  --surface-alt: var(--gm-bg-elevated);
+  
+  --text-main: var(--gm-text-primary);
+  --text-muted: var(--gm-text-muted);
+  --text-primary: var(--gm-text-primary);
+  --text: var(--gm-text-primary);
+  
+  --accent: var(--gm-accent);
+  --accent-soft: var(--gm-accent-soft);
+  --accent-subtle: var(--gm-accent-subtle);
+  --accent-text: var(--gm-accent-text);
+  
+  --success: var(--gm-success);
+  --warning: var(--gm-warning);
+  --danger: var(--gm-danger);
+  
+  --radius: var(--gm-radius);
+  --radius-sm: var(--gm-radius-sm);
+  --radius-md: var(--gm-radius-md);
+  --radius-lg: var(--gm-radius-lg);
+  
+  --input-bg: var(--gm-bg-input);
+  --primary: var(--gm-accent);
+  --success-bg: var(--gm-success-bg);
 }
 
 /* ========================================
@@ -151,6 +193,8 @@
   --gm-bg-modal-overlay: rgba(0, 0, 0, 0.5);
   --gm-bg-dropdown: #ffffff;
   --gm-bg-tooltip: #1e293b;
+  --gm-bg-subtle: #f1f5f9;
+  --gm-bg-hover: rgba(0, 0, 0, 0.05);
   
   /* Text colors */
   --gm-text-primary: #1e293b;
@@ -166,12 +210,17 @@
   --gm-accent-hover: #0369a1;
   --gm-accent-active: #075985;
   --gm-accent-muted: rgba(2, 132, 199, 0.1);
+  --gm-accent-soft: rgba(2, 132, 199, 0.15);
+  --gm-accent-subtle: rgba(2, 132, 199, 0.1);
+  --gm-accent-text: #0369a1;
   
   /* Border colors */
   --gm-border: #e2e8f0;
   --gm-border-light: #f1f5f9;
   --gm-border-focus: #0284c7;
   --gm-border-input: #cbd5e1;
+  --gm-border-subtle: #e2e8f0;
+  --gm-border-default: #cbd5e1;
   
   /* Status colors */
   --gm-success: #16a34a;
@@ -185,6 +234,7 @@
   --gm-error: #dc2626;
   --gm-error-bg: rgba(220, 38, 38, 0.1);
   --gm-error-text: #b91c1c;
+  --gm-danger: #dc2626;
   
   --gm-info: #2563eb;
   --gm-info-bg: rgba(37, 99, 235, 0.1);
@@ -243,6 +293,47 @@
   
   /* Focus ring */
   --gm-focus-ring: 0 0 0 2px rgba(2, 132, 199, 0.3);
+  
+  /* Gradients for light mode */
+  --gm-gradient-accent: linear-gradient(135deg, #0284c7, #0369a1);
+  --gm-gradient-card-highlight: linear-gradient(135deg, rgba(2, 132, 199, 0.05), #ffffff 50%);
+  
+  /* Mobile nav drawer */
+  --gm-drawer-bg: #ffffff;
+  --gm-drawer-border: #e2e8f0;
+  
+  /* ===========================================
+     BACKWARD COMPATIBILITY ALIASES (Light Mode)
+     =========================================== */
+  --border: var(--gm-border);
+  --border-light: var(--gm-border-light);
+  --border-subtle: var(--gm-border-subtle);
+  --border-default: var(--gm-border-default);
+  --border-color: var(--gm-border);
+  
+  --bg-elevated: var(--gm-bg-elevated);
+  --bg-card: var(--gm-bg-card);
+  --bg-hover: var(--gm-bg-hover);
+  --bg-subtle: var(--gm-bg-subtle);
+  --surface-alt: var(--gm-bg-subtle);
+  
+  --text-main: var(--gm-text-primary);
+  --text-muted: var(--gm-text-muted);
+  --text-primary: var(--gm-text-primary);
+  --text: var(--gm-text-primary);
+  
+  --accent: var(--gm-accent);
+  --accent-soft: var(--gm-accent-soft);
+  --accent-subtle: var(--gm-accent-subtle);
+  --accent-text: var(--gm-accent-text);
+  
+  --success: var(--gm-success);
+  --warning: var(--gm-warning);
+  --danger: var(--gm-danger);
+  
+  --input-bg: var(--gm-bg-input);
+  --primary: var(--gm-accent);
+  --success-bg: var(--gm-success-bg);
 }
 
 /* ========================================
@@ -295,4 +386,15 @@
   --gm-z-modal: 300;
   --gm-z-toast: 400;
   --gm-z-tooltip: 500;
+  
+  /* Transitions */
+  --gm-transition-fast: 0.15s ease;
+  --gm-transition: 0.2s ease;
+  --gm-transition-slow: 0.3s ease;
+  
+  /* Layout */
+  --app-max-width: 1400px;
+  --sidebar-width: 320px;
+  --mobile-nav-breakpoint: 768px;
+  --drawer-width: 300px;
 }

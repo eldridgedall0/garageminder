@@ -150,6 +150,7 @@ code {
   background-color: var(--gm-bg-elevated);
   padding: 0.125em 0.375em;
   border-radius: var(--gm-radius-sm);
+  color: var(--gm-text-primary);
 }
 
 /* Tables */
@@ -180,4 +181,10 @@ tr:nth-child(odd) {
 
 tr:hover {
   background-color: var(--gm-row-hover);
+}
+
+/* Select dropdown styling for light theme */
+.gm-theme-light select option {
+  background-color: var(--gm-bg-dropdown);
+  color: var(--gm-text-primary);
 }

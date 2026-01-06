@@ -1,6 +1,6 @@
 /**
  * Garage Maintenance - Overview/Fleet Dashboard Styles
- * Styles for "All Vehicles" view with health cards, spending breakdown, etc.
+ * Theme-aware version using CSS custom properties
  */
 
 /* ============================================
@@ -13,7 +13,7 @@
 .overview-section-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   margin-bottom: 16px;
   display: flex;
   align-items: center;
@@ -35,44 +35,44 @@
 }
 
 .overview-stat-card {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(15, 23, 42, 0.95));
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  background: var(--gm-gradient-card-highlight);
+  border-radius: var(--gm-radius);
+  border: 1px solid var(--gm-border);
   padding: 20px;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: all var(--gm-transition);
 }
 
 .overview-stat-card:hover {
-  border-color: rgba(56, 189, 248, 0.4);
+  border-color: var(--gm-accent-soft);
   transform: translateY(-2px);
 }
 
 .overview-stat-card.stat-overdue {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(15, 23, 42, 0.95));
-  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, var(--gm-error-bg), var(--gm-bg-card) 50%);
+  border-color: var(--gm-error);
 }
 
 .overview-stat-card.stat-overdue .stat-value {
-  color: #fca5a5;
+  color: var(--gm-error-text);
 }
 
 .overview-stat-card.stat-upcoming {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(15, 23, 42, 0.95));
-  border-color: rgba(251, 191, 36, 0.3);
+  background: linear-gradient(135deg, var(--gm-warning-bg), var(--gm-bg-card) 50%);
+  border-color: var(--gm-warning);
 }
 
 .overview-stat-card.stat-upcoming .stat-value {
-  color: #fcd34d;
+  color: var(--gm-warning-text);
 }
 
 .overview-stat-card.stat-ok {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(15, 23, 42, 0.95));
-  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(135deg, var(--gm-success-bg), var(--gm-bg-card) 50%);
+  border-color: var(--gm-success);
 }
 
 .overview-stat-card.stat-ok .stat-value {
-  color: #86efac;
+  color: var(--gm-success-text);
 }
 
 .stat-icon {
@@ -83,13 +83,13 @@
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   margin-top: 4px;
 }
 
@@ -104,15 +104,14 @@
 }
 
 .vehicle-health-card {
-  /* Flexible: grow to fill space, shrink if needed, min 300px */
   flex: 1 1 300px;
   max-width: 100%;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  background: var(--gm-bg-card);
+  border-radius: var(--gm-radius-lg);
+  border: 1px solid var(--gm-border);
   padding: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--gm-transition);
   position: relative;
   overflow: hidden;
 }
@@ -137,8 +136,6 @@
   max-width: calc(33.333% - 14px);
 }
 
-/* 4+ cards: natural flex with min-width, will wrap */
-
 .vehicle-health-card::before {
   content: '';
   position: absolute;
@@ -146,15 +143,15 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--accent), #0ea5e9);
+  background: var(--gm-gradient-accent);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--gm-transition);
 }
 
 .vehicle-health-card:hover {
-  border-color: rgba(56, 189, 248, 0.5);
+  border-color: var(--gm-accent-soft);
   transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--gm-shadow-lg);
 }
 
 .vehicle-health-card:hover::before {
@@ -162,29 +159,29 @@
 }
 
 .vehicle-health-card.status-overdue {
-  border-color: rgba(239, 68, 68, 0.4);
+  border-color: var(--gm-error);
 }
 
 .vehicle-health-card.status-overdue::before {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
+  background: linear-gradient(90deg, var(--gm-error), var(--gm-btn-danger-bg-hover));
   opacity: 1;
 }
 
 .vehicle-health-card.status-upcoming {
-  border-color: rgba(251, 191, 36, 0.4);
+  border-color: var(--gm-warning);
 }
 
 .vehicle-health-card.status-upcoming::before {
-  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  background: linear-gradient(90deg, var(--gm-warning), var(--gm-warning));
   opacity: 1;
 }
 
 .vehicle-health-card.status-ok {
-  border-color: rgba(34, 197, 94, 0.3);
+  border-color: var(--gm-success);
 }
 
 .vehicle-health-card.status-ok::before {
-  background: linear-gradient(90deg, #22c55e, #16a34a);
+  background: linear-gradient(90deg, var(--gm-success), var(--gm-success));
   opacity: 1;
 }
 
@@ -199,13 +196,13 @@
 .health-card-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   margin: 0;
 }
 
 .health-card-meta {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   margin-top: 4px;
 }
 
@@ -214,27 +211,27 @@
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border-radius: 999px;
+  border-radius: var(--gm-radius-full);
   font-size: 0.75rem;
   font-weight: 600;
 }
 
 .health-status-badge.status-ok {
-  background: rgba(34, 197, 94, 0.15);
-  color: #86efac;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--gm-success-bg);
+  color: var(--gm-success-text);
+  border: 1px solid var(--gm-success);
 }
 
 .health-status-badge.status-upcoming {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fcd34d;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: var(--gm-warning-bg);
+  color: var(--gm-warning-text);
+  border: 1px solid var(--gm-warning);
 }
 
 .health-status-badge.status-overdue {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--gm-error-bg);
+  color: var(--gm-error-text);
+  border: 1px solid var(--gm-error);
 }
 
 .health-status-badge .status-dot {
@@ -244,15 +241,15 @@
 }
 
 .health-status-badge.status-ok .status-dot {
-  background: #22c55e;
+  background: var(--gm-success);
 }
 
 .health-status-badge.status-upcoming .status-dot {
-  background: #fbbf24;
+  background: var(--gm-warning);
 }
 
 .health-status-badge.status-overdue .status-dot {
-  background: #ef4444;
+  background: var(--gm-error);
 }
 
 /* Health Card Stats */
@@ -271,21 +268,21 @@
 
 .health-stat-label {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
 }
 
 .health-stat-value {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
 }
 
 .health-stat-value.overdue {
-  color: #fca5a5;
+  color: var(--gm-error-text);
 }
 
 .health-stat-value.upcoming {
-  color: #fcd34d;
+  color: var(--gm-warning-text);
 }
 
 /* Health Card Renewals */
@@ -294,7 +291,7 @@
   flex-wrap: wrap;
   gap: 10px;
   padding-top: 12px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--gm-border);
 }
 
 .renewal-item {
@@ -303,9 +300,9 @@
   gap: 8px;
   font-size: 0.8rem;
   padding: 6px 12px;
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--gm-bg-subtle);
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--gm-border);
 }
 
 .renewal-item .renewal-icon {
@@ -313,28 +310,28 @@
 }
 
 .renewal-item .renewal-label {
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
 }
 
 .renewal-item .renewal-value {
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
 }
 
 .renewal-item.status-ok .renewal-value {
-  color: #86efac;
+  color: var(--gm-success-text);
 }
 
 .renewal-item.status-upcoming .renewal-value {
-  color: #fcd34d;
+  color: var(--gm-warning-text);
 }
 
 .renewal-item.status-overdue .renewal-value {
-  color: #fca5a5;
+  color: var(--gm-error-text);
 }
 
 .renewal-item.status-notset .renewal-value {
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   font-style: italic;
   font-weight: 400;
 }
@@ -345,7 +342,7 @@
   justify-content: flex-end;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--gm-border);
 }
 
 .health-card-action {
@@ -353,26 +350,26 @@
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  color: var(--accent);
+  color: var(--gm-accent);
   background: none;
   border: none;
   cursor: pointer;
   padding: 6px 12px;
   border-radius: 6px;
-  transition: all 0.15s ease;
+  transition: all var(--gm-transition-fast);
 }
 
 .health-card-action:hover {
-  background: var(--accent-soft);
+  background: var(--gm-accent-subtle);
 }
 
 /* ============================================
    SPENDING BREAKDOWN SECTION
    ============================================ */
 .spending-breakdown {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  background: var(--gm-bg-card);
+  border-radius: var(--gm-radius-lg);
+  border: 1px solid var(--gm-border);
   padding: 20px;
   margin-bottom: 24px;
 }
@@ -389,7 +386,7 @@
 .spending-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   margin: 0;
 }
 
@@ -404,17 +401,17 @@
 
 .spending-total-label {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
 }
 
 .spending-total-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
 }
 
 .spending-total-value.highlight {
-  color: var(--accent);
+  color: var(--gm-accent);
 }
 
 /* Spending Categories */
@@ -433,7 +430,7 @@
 
 .spending-category-name {
   font-size: 0.85rem;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -442,14 +439,14 @@
 .spending-category-bar {
   width: 200px;
   height: 8px;
-  background: rgba(55, 65, 81, 0.5);
+  background: var(--gm-bg-subtle);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .spending-category-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), #0ea5e9);
+  background: var(--gm-gradient-accent);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -457,7 +454,7 @@
 .spending-category-value {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   min-width: 80px;
   text-align: right;
 }
@@ -466,15 +463,15 @@
    RECENT ACTIVITY LIST
    ============================================ */
 .recent-activity {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  background: var(--gm-bg-card);
+  border-radius: var(--gm-radius-lg);
+  border: 1px solid var(--gm-border);
   overflow: hidden;
 }
 
 .recent-activity-header {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--gm-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -483,7 +480,7 @@
 .recent-activity-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   margin: 0;
 }
 
@@ -497,8 +494,8 @@
   align-items: center;
   gap: 16px;
   padding: 14px 20px;
-  border-bottom: 1px solid rgba(55, 65, 81, 0.5);
-  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--gm-border-subtle);
+  transition: background var(--gm-transition-fast);
   cursor: pointer;
 }
 
@@ -507,26 +504,26 @@
 }
 
 .recent-activity-item:hover {
-  background: var(--bg-hover);
+  background: var(--gm-bg-hover);
 }
 
 .activity-date {
   min-width: 90px;
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
 }
 
 .activity-vehicle {
   min-width: 140px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--gm-accent);
 }
 
 .activity-services {
   flex: 1;
   font-size: 0.85rem;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -535,7 +532,7 @@
 .activity-cost {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--gm-text-primary);
   min-width: 80px;
   text-align: right;
 }
@@ -543,7 +540,7 @@
 .recent-activity-empty {
   padding: 40px 20px;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   font-size: 0.9rem;
 }
 
@@ -643,13 +640,13 @@
 .settings-renewals-section {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px dashed rgba(55, 65, 81, 0.8);
+  border-top: 1px dashed var(--gm-border-subtle);
 }
 
 .settings-renewals-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -678,12 +675,12 @@
   gap: 16px;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--gm-border);
 }
 
 .overview-pager .pager-info {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   min-width: 100px;
   text-align: center;
 }
@@ -700,6 +697,6 @@
 .section-page-info {
   font-size: 0.85rem;
   font-weight: 400;
-  color: var(--text-muted);
+  color: var(--gm-text-muted);
   margin-left: 8px;
 }
