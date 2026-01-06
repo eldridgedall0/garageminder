@@ -196,7 +196,6 @@
   font-weight: 500;
   border: 1px solid var(--gm-accent-soft);
   white-space: nowrap;
-  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
