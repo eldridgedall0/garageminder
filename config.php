@@ -305,9 +305,11 @@ function gm_get_current_user_id(): ?string {
     
     return null;
 }
-
 /**
- * Get current WordPress user info
+ * Get current WordPress user info (INCLUDING SUBSCRIPTION DATA)
+ * 
+ * Returns user info along with subscription tier and membership level name
+ * from WordPress membership plugin (Simple Membership, etc.)
  */
 function gm_get_current_user_info(): ?array {
     if (!gm_load_wordpress()) {
@@ -323,6 +325,13 @@ function gm_get_current_user_info(): ?array {
         return null;
     }
     
+    // Get subscription tier (uses wp-subscription-integration.php)
+    $tier = gm_get_user_subscription_tier((string)$user->ID);
+    $hasSubscription = ($tier !== 'free');
+    
+    // Get membership level name from WordPress
+    $levelName = gm_get_membership_level_name($user->ID);
+    
     return [
         'id' => $user->ID,
         'username' => $user->user_login,
@@ -331,7 +340,126 @@ function gm_get_current_user_info(): ?array {
         'first_name' => $user->first_name,
         'last_name' => $user->last_name,
         'avatar_url' => function_exists('get_avatar_url') ? get_avatar_url($user->ID, ['size' => 64]) : null,
+        // Subscription data
+        'has_subscription' => $hasSubscription,
+        'subscription_tier' => $tier,
+        'subscription_level_name' => $levelName,
     ];
+}
+
+/**
+ * Get user's membership level name from WordPress membership plugin
+ * 
+ * Supports: Simple Membership, Paid Memberships Pro, WooCommerce Subscriptions, etc.
+ * Falls back to tier name if level name not available.
+ *
+ * @param int $userId WordPress user ID
+ * @return string Membership level name
+ */
+function gm_get_membership_level_name(int $userId): string {
+    if (!gm_load_wordpress()) {
+        return 'Free';
+    }
+    
+    // Try theme helper function first (if available from tmw-theme)
+    if (function_exists('tmw_get_membership_adapter')) {
+        $adapter = tmw_get_membership_adapter();
+        if ($adapter && method_exists($adapter, 'get_level_name')) {
+            $levelName = $adapter->get_level_name($userId);
+            if ($levelName) {
+                return $levelName;
+            }
+        }
+    }
+    
+    // Simple Membership Plugin - direct query
+    if (class_exists('SimpleWpMembership') || defined('SIMPLE_WP_MEMBERSHIP_VER')) {
+        global $wpdb;
+        
+        // Get user's member data
+        $member_table = $wpdb->prefix . 'swpm_members_tbl';
+        $level_table = $wpdb->prefix . 'swpm_membership_tbl';
+        
+        // Check if tables exist
+        if ($wpdb->get_var("SHOW TABLES LIKE '$member_table'") === $member_table) {
+            $user = get_user_by('ID', $userId);
+            if ($user) {
+                // Try by username first
+                $member = $wpdb->get_row($wpdb->prepare(
+                    "SELECT membership_level FROM $member_table WHERE user_name = %s",
+                    $user->user_login
+                ));
+                
+                // If not found, try by email
+                if (!$member) {
+                    $member = $wpdb->get_row($wpdb->prepare(
+                        "SELECT membership_level FROM $member_table WHERE email = %s",
+                        $user->user_email
+                    ));
+                }
+                
+                if ($member && $member->membership_level) {
+                    // Get the level alias (display name)
+                    $level = $wpdb->get_row($wpdb->prepare(
+                        "SELECT alias FROM $level_table WHERE id = %d",
+                        $member->membership_level
+                    ));
+                    
+                    if ($level && !empty($level->alias)) {
+                        return $level->alias;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Paid Memberships Pro
+    if (function_exists('pmpro_getMembershipLevelForUser')) {
+        $level = pmpro_getMembershipLevelForUser($userId);
+        if ($level && !empty($level->name)) {
+            return $level->name;
+        }
+    }
+    
+    // WooCommerce Memberships
+    if (function_exists('wc_memberships_get_user_active_memberships')) {
+        $memberships = wc_memberships_get_user_active_memberships($userId);
+        if (!empty($memberships)) {
+            $plan = $memberships[0]->get_plan();
+            if ($plan) {
+                return $plan->get_name();
+            }
+        }
+    }
+    
+    // MemberPress
+    if (class_exists('MeprUser')) {
+        $mepr_user = new MeprUser($userId);
+        $subscriptions = $mepr_user->active_product_subscriptions();
+        if (!empty($subscriptions)) {
+            $product = new MeprProduct($subscriptions[0]);
+            return $product->post_title;
+        }
+    }
+    
+    // Check user meta fallback
+    $levelName = get_user_meta($userId, 'tmw_membership_level_name', true);
+    if ($levelName) {
+        return $levelName;
+    }
+    
+    // Ultimate fallback: use tier name with proper casing
+    $tier = gm_get_user_subscription_tier((string)$userId);
+    
+    switch ($tier) {
+        case 'fleet':
+            return 'Fleet';
+        case 'paid':
+            return 'Pro';
+        case 'free':
+        default:
+            return 'Free';
+    }
 }
 
 /**
