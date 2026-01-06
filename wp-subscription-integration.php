@@ -135,17 +135,6 @@ function gm_get_tier_limits(string $tier = 'free'): array {
 }
 
 /**
- * Get current user's subscription limits
- *
- * @param string|null $userId WordPress user ID (null for current user)
- * @return array Limits array
- */
-function gm_get_user_limits(?string $userId = null): array {
-    $tier = gm_get_user_subscription_tier($userId);
-    return gm_get_tier_limits($tier);
-}
-
-/**
  * Check if user can perform a feature action
  *
  * @param string $feature Feature name (e.g., 'recalls', 'export', 'attachments')
