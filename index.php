@@ -78,6 +78,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.21-vehicle-details.css" />
   <link rel="stylesheet" href="assets/css/gm.22-mobile-nav.css" />
   <link rel="stylesheet" href="assets/css/gm.23-pwa.css" />
+  <link rel="stylesheet" href="assets/css/gm.24-theme-indicator.css" />
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -631,4 +632,5 @@ ob_end_clean();
   <script src="assets/js/gm.pwa.js"></script>
 </body>
 </html>
+
 
