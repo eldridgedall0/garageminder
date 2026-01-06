@@ -631,8 +631,10 @@ ob_end_clean();
   <script src="assets/js/gm.handlers.js"></script>
   <script src="assets/js/gm.pwa.js"></script>
   <script src="assets/js/gm.theme-indicator.js"></script>
+  <script src="assets/js/gm.fixes.js"></script>
 </body>
 </html>
+
 
 
 
