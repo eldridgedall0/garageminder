@@ -335,6 +335,58 @@ function gm_get_current_user_info(): ?array {
 }
 
 /**
+ * Get current user's theme mode preference from WordPress
+ * Returns 'dark' or 'light'
+ */
+function gm_get_user_theme_mode(): string {
+    if (!gm_load_wordpress()) {
+        return 'dark'; // Default for non-WP mode
+    }
+    
+    // Use WordPress theme function if available (from tmw-theme)
+    if (function_exists('tmw_get_theme_mode')) {
+        return tmw_get_theme_mode();
+    }
+    
+    // Fallback: check user meta directly
+    $user_id = gm_get_current_user_id();
+    if ($user_id && $user_id !== 'default' && function_exists('get_user_meta')) {
+        $mode = get_user_meta($user_id, 'tmw_theme_mode', true);
+        if ($mode && in_array($mode, ['dark', 'light'], true)) {
+            return $mode;
+        }
+    }
+    
+    // Check site-wide default from WordPress settings
+    if (function_exists('get_option')) {
+        $settings = get_option('tmw_settings', []);
+        if (!empty($settings['default_theme']) && in_array($settings['default_theme'], ['dark', 'light'], true)) {
+            return $settings['default_theme'];
+        }
+    }
+    
+    return 'dark'; // Ultimate fallback
+}
+
+/**
+ * Get theme colors for dynamic manifest/PWA
+ */
+function gm_get_theme_colors(string $mode): array {
+    if ($mode === 'light') {
+        return [
+            'theme_color' => '#f8fafc',
+            'background_color' => '#f8fafc',
+        ];
+    }
+    
+    // Dark mode (default)
+    return [
+        'theme_color' => '#0b1120',
+        'background_color' => '#0b1120',
+    ];
+}
+
+/**
  * Check if user has required subscription
  */
 function gm_user_has_subscription(string $userId): bool {
