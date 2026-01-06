@@ -1,8 +1,11 @@
 /**
  * GarageMinder - User Menu Styles
  * 
+ * Updated: Added fleet tier badge styling and dynamic level name support
+ * 
  * FIXES:
  * - Issue #11: Remove underline on hover for dropdown links
+ * - Issue #XX: Badge should show actual membership level name from WordPress
  */
 
 /* ============================================
@@ -102,24 +105,38 @@
 
 /* ============================================
    SUBSCRIPTION BADGE
+   Updated: Now supports dynamic level names and fleet tier
    ============================================ */
 .subscription-badge {
   font-size: 0.6rem;
-  padding: 2px 5px;
+  padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Active subscription (Pro, Paid tiers) */
 .subscription-badge.active {
   background: var(--gm-success-bg);
   color: var(--gm-success-text);
 }
 
+/* Free tier */
 .subscription-badge.inactive {
   background: var(--gm-warning-bg);
   color: var(--gm-warning-text);
+}
+
+/* Fleet tier - special premium styling */
+.subscription-badge.active.fleet {
+  background: linear-gradient(135deg, var(--gm-accent-primary) 0%, var(--gm-accent-secondary) 100%);
+  color: var(--gm-text-inverse);
+  box-shadow: 0 2px 6px var(--gm-accent-soft);
 }
 
 /* ============================================
@@ -175,6 +192,12 @@
 
 .user-subscription-status.free {
   color: var(--gm-warning-text);
+}
+
+/* Fleet tier status styling */
+.user-subscription-status.fleet {
+  color: var(--gm-accent-primary);
+  font-weight: 600;
 }
 
 /* ============================================
@@ -273,6 +296,10 @@
   
   .user-menu-trigger {
     padding: 6px 10px 6px 14px;
+  }
+  
+  .subscription-badge {
+    max-width: 80px;
   }
 }
 
