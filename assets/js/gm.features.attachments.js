@@ -1,6 +1,7 @@
 /**
  * Garage Maintenance - Attachments & Entry Features
- * Updated: Multi-user ready with proper async save/upload flow
+ * Updated with Google Drive integration
+ * Multi-user ready with proper async save/upload flow
  */
 
 const ATTACH_ALLOWED_EXT = ["pdf", "doc", "docx", "jpg", "jpeg", "png", "gif", "webp"];
@@ -25,6 +26,62 @@ function isAttachmentFileAllowed(file) {
     if (type && type.startsWith("image/")) return true;
     if (ext && ATTACH_ALLOWED_EXT.indexOf(ext) !== -1) return true;
     return false;
+}
+
+/**
+ * Check if user can use local uploads (paid feature)
+ */
+function canUseLocalUpload() {
+    // Check GM_USER capabilities
+    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities) {
+        return GM_USER.capabilities.can_use_local === true;
+    }
+    // Check subscription tier
+    if (typeof GM_USER !== 'undefined') {
+        const tier = GM_USER.subscription_tier || 'free';
+        return tier !== 'free';
+    }
+    return true; // Default allow in single-user mode
+}
+
+/**
+ * Check if user can use Google Drive
+ */
+function canUseGoogleDrive() {
+    if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Get attachment limits
+ */
+function getAttachmentLimits() {
+    let maxCount = 2;
+    let maxSizeMB = 5;
+    
+    if (typeof GM_CONFIG !== 'undefined') {
+        maxCount = GM_CONFIG.maxAttachments || 2;
+        maxSizeMB = GM_CONFIG.maxAttachmentSizeMB || 5;
+    } else if (typeof ATTACH_MAX_COUNT !== 'undefined') {
+        maxCount = ATTACH_MAX_COUNT;
+    }
+    
+    if (typeof ATTACH_MAX_SIZE_MB !== 'undefined') {
+        maxSizeMB = ATTACH_MAX_SIZE_MB;
+    }
+    
+    // Check user capabilities for max attachments
+    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities) {
+        maxCount = GM_USER.capabilities.max_attachments_per_entry || maxCount;
+    }
+    
+    return {
+        maxCount,
+        maxSizeMB,
+        maxBytes: maxSizeMB * 1024 * 1024
+    };
 }
 
 async function addOrUpdateEntryFromForm() {
@@ -62,9 +119,9 @@ async function addOrUpdateEntryFromForm() {
     vehicleId: activeVehicleId,
     date: date,
     odo: odo !== "" ? Number(odo) : null,
-    services: services, // Now contains objects with {name, cost, note}
+    services: services,
     notes: $("#entry-notes").val().trim() || "",
-    cost: miscCost !== "" ? Number(miscCost) : null, // Misc/other cost
+    cost: miscCost !== "" ? Number(miscCost) : null,
     nextDate: nextDate,
     nextOdo: nextOdo !== "" ? Number(nextOdo) : null,
     updatedAt: now
@@ -88,7 +145,7 @@ async function addOrUpdateEntryFromForm() {
 
   resetRemindersForEntry(payload);
   
-  // Check if we have files to upload
+  // Check if we have LOCAL files to upload (not Google Drive - that's handled separately)
   const fileInput = document.getElementById("entry-files");
   const hasFiles = fileInput && fileInput.files && fileInput.files.length > 0;
   
@@ -96,9 +153,11 @@ async function addOrUpdateEntryFromForm() {
     // IMPORTANT: Wait for save to complete before uploading files
     await saveData();
     
-    // Handle file uploads after entry is saved
-    if (hasFiles) {
+    // Handle local file uploads after entry is saved
+    if (hasFiles && canUseLocalUpload()) {
       await uploadEntryFiles(payload.id, fileInput.files);
+    } else if (hasFiles && !canUseLocalUpload()) {
+      showToast("Local uploads require a paid subscription. Use Google Drive instead.");
     }
   } catch (err) {
     console.error("Error saving entry:", err);
@@ -124,6 +183,12 @@ async function addOrUpdateEntryFromForm() {
 async function uploadEntryFiles(entryId, fileList) {
   const files = Array.from(fileList || []);
   if (!files.length) return;
+
+  // Check if user can upload locally
+  if (!canUseLocalUpload()) {
+    showToast("Local uploads require a paid subscription");
+    return;
+  }
 
   const { maxCount, maxSizeMB, maxBytes } = getAttachmentLimits();
   
@@ -154,7 +219,7 @@ async function uploadEntryFiles(entryId, fileList) {
     const response = await fetch('upload.php', {
       method: 'POST',
       body: formData,
-      credentials: 'same-origin' // Include cookies for auth
+      credentials: 'same-origin'
     });
 
     // Check for auth error
@@ -206,12 +271,12 @@ async function saveEntryFromAccordion($card) {
   entry.nextDate = nextDate;
   entry.nextOdo = nextOdoVal !== "" ? Number(nextOdoVal) : null;
   entry.notes = notes;
-  entry.services = services; // Now contains objects with {name, cost, note}
+  entry.services = services;
   entry.updatedAt = now;
 
   resetRemindersForEntry(entry);
   
-  // Check if we have files to upload
+  // Check if we have LOCAL files to upload
   const fileInput = $card.find(".entry-attach-files")[0];
   const hasFiles = fileInput && fileInput.files && fileInput.files.length > 0;
   
@@ -219,8 +284,8 @@ async function saveEntryFromAccordion($card) {
     // IMPORTANT: Wait for save to complete before uploading files
     await saveData();
     
-    // Handle new file uploads after entry is saved
-    if (hasFiles) {
+    // Handle new local file uploads after entry is saved
+    if (hasFiles && canUseLocalUpload()) {
       await uploadEntryFiles(entry.id, fileInput.files);
     }
   } catch (err) {
@@ -240,7 +305,6 @@ function deleteEntryByCard($card) {
   data.entries = data.entries.filter(e => e.id !== id);
   saveData();
   
-  // Keep current page, but adjust if it becomes invalid
   renderDashboard();
   renderRemindersPage();
 }
@@ -495,9 +559,11 @@ async function deleteAttachment(attachmentId, entryId) {
       showToast("Attachment deleted");
       
       // Remove from local data
-      const entry = data.entries.find(e => e.id === entryId);
-      if (entry && entry.attachments) {
-        entry.attachments = entry.attachments.filter(a => a.id !== attachmentId);
+      if (entryId) {
+        const entry = data.entries.find(e => e.id === entryId);
+        if (entry && entry.attachments) {
+          entry.attachments = entry.attachments.filter(a => a.id !== attachmentId);
+        }
       }
       
       return true;
@@ -511,3 +577,143 @@ async function deleteAttachment(attachmentId, entryId) {
     return false;
   }
 }
+
+/**
+ * Render attachment upload area with Google Drive and Local options
+ */
+function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container) {
+  const canDrive = canUseGoogleDrive();
+  const canLocal = canUseLocalUpload();
+  const remainingSlots = Math.max(0, maxCount - currentCount);
+  
+  // Clear existing
+  $container.empty();
+  
+  if (remainingSlots <= 0) {
+    $container.append(
+      $('<div>').addClass('attachment-limit-reached text-muted')
+        .text(`Maximum ${maxCount} attachments reached`)
+    );
+    return;
+  }
+  
+  const $uploadArea = $('<div>').addClass('attachment-upload-container');
+  
+  // Google Drive button (available to all users if enabled)
+  if (canDrive && typeof GDrive !== 'undefined') {
+    const $driveBtn = $('<button>')
+      .addClass('btn-ghost btn-attachment-drive')
+      .attr('type', 'button')
+      .html('<i class="bi bi-google"></i> Add from Google Drive')
+      .on('click', function(e) {
+        e.preventDefault();
+        GDrive.openPicker(entryId, async function(files, eId) {
+          await GDrive.attachGoogleDriveFiles ? 
+            window.attachGoogleDriveFiles(files, eId) : 
+            attachGoogleDriveFiles(files, eId);
+        });
+      });
+    
+    $uploadArea.append($driveBtn);
+  }
+  
+  // Local upload (paid users only)
+  if (canLocal) {
+    const $localInput = $('<input>')
+      .attr({
+        type: 'file',
+        multiple: true,
+        accept: ATTACH_ALLOWED_EXT.map(e => '.' + e).join(',')
+      })
+      .addClass('entry-attach-files')
+      .css('display', 'none');
+    
+    const $localBtn = $('<button>')
+      .addClass('btn-ghost btn-attachment-local')
+      .attr('type', 'button')
+      .html('<i class="bi bi-upload"></i> Upload File')
+      .on('click', function(e) {
+        e.preventDefault();
+        $localInput.click();
+      });
+    
+    $uploadArea.append($localBtn, $localInput);
+  } else if (canDrive) {
+    // Show upgrade hint for free users
+    const $upgradeHint = $('<div>')
+      .addClass('attachment-upgrade-hint text-muted')
+      .html('<i class="bi bi-lock"></i> <a href="javascript:void(0)" class="upgrade-link">Upgrade</a> to upload files directly');
+    
+    $upgradeHint.find('.upgrade-link').on('click', function() {
+      if (typeof GM_AUTH_URLS !== 'undefined' && GM_AUTH_URLS.subscribe_url) {
+        window.location.href = GM_AUTH_URLS.subscribe_url;
+      }
+    });
+    
+    $uploadArea.append($upgradeHint);
+  }
+  
+  // Show allowed file types
+  const maxSizeMB = (typeof ATTACH_MAX_SIZE_MB !== 'undefined') ? ATTACH_MAX_SIZE_MB : 5;
+  const $hint = $('<div>')
+    .addClass('attachment-hint text-muted')
+    .text(`Allowed: ${ATTACH_ALLOWED_EXT.join(', ').toUpperCase()} (max ${maxSizeMB}MB)`);
+  
+  $uploadArea.append($hint);
+  $container.append($uploadArea);
+}
+
+// Make function available globally for Google Drive module
+window.attachGoogleDriveFiles = async function(files, entryId) {
+  if (!files || !files.length) return;
+  
+  showToast('Attaching files from Google Drive...');
+  
+  try {
+    const response = await fetch('google-drive-upload.php?action=attach', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        entry_id: entryId,
+        files: files
+      })
+    });
+    
+    if (response.status === 401) {
+      showToast('Session expired. Please log in again.');
+      window.location.reload();
+      return;
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast(`${result.count} file(s) attached from Google Drive`);
+      
+      // Update local data
+      const entry = data.entries.find(e => e.id === entryId);
+      if (entry) {
+        if (!entry.attachments) entry.attachments = [];
+        result.attached.forEach(att => {
+          entry.attachments.push(att);
+        });
+      }
+      
+      // Refresh the UI
+      loadData();
+      renderDashboard();
+    } else {
+      showToast('Failed to attach files: ' + (result.message || result.error || 'Unknown error'));
+    }
+    
+    if (result.errors && result.errors.length) {
+      console.warn('Attachment errors:', result.errors);
+    }
+  } catch (error) {
+    console.error('Google Drive attach error:', error);
+    showToast('Failed to attach files: ' + error.message);
+  }
+};
