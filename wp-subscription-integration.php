@@ -90,6 +90,9 @@ function gm_get_tier_limits(string $tier = 'free'): array {
             'enable_vehicle_photos' => false,
             'enable_api' => false,
             'team_members' => 0,
+            'attachments_per_entry' => 2,     // Free users get 2 attachments via Google Drive
+    'enable_local_upload' => false,   // Free users can't upload locally
+    'enable_gdrive' => true,          // Free users can use Google Drive
         ],
         'paid' => [
             'max_vehicles' => 10,
@@ -101,6 +104,9 @@ function gm_get_tier_limits(string $tier = 'free'): array {
             'enable_vehicle_photos' => true,
             'enable_api' => false,
             'team_members' => 0,
+        'attachments_per_entry' => 2,
+    'enable_local_upload' => true,    // Paid users can upload locally
+    'enable_gdrive' => true,          // Paid users can also use Google Drive
         ],
         'fleet' => [
             'max_vehicles' => -1, // Unlimited
@@ -112,6 +118,9 @@ function gm_get_tier_limits(string $tier = 'free'): array {
             'enable_vehicle_photos' => true,
             'enable_api' => true,
             'team_members' => 10,
+        'attachments_per_entry' => 2,
+    'enable_local_upload' => true,    // Paid users can upload locally
+    'enable_gdrive' => true,          // Paid users can also use Google Drive
         ],
     ];
     
