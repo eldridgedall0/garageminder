@@ -217,10 +217,9 @@ ob_end_clean();
             </div>
 
             <div class="field" style="margin-top:6px;">
-              <label for="entry-files">Attachments (optional)</label>
-              <input id="entry-files" type="file" multiple accept=".pdf,.doc,.docx,image/*" />
-              <div class="text-muted" style="font-size:0.7rem;">
-                <span id="entry-attach-limit-text">Attachments: PDF, Word, and image files only. Limits apply per entry.</span>
+              <label>Attachments (optional)</label>
+              <div id="new-entry-attachment-area">
+                <!-- Will be populated by renderAttachmentUploadArea() -->
               </div>
             </div>
 
@@ -646,4 +645,3 @@ ob_end_clean();
   <script src="assets/js/gm.fixes.js"></script>
 </body>
 </html>
-
