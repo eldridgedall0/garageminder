@@ -79,6 +79,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.22-mobile-nav.css" />
   <link rel="stylesheet" href="assets/css/gm.23-pwa.css" />
   <link rel="stylesheet" href="assets/css/gm.24-theme-indicator.css" />
+  <link rel="stylesheet" href="assets/css/gm.25-gdrive.css" />
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -98,11 +99,21 @@ ob_end_clean();
   
   <!-- App Configuration (injected from PHP) -->
 <script>
-  const APP_CONFIG = <?= json_encode(array_merge($appConfig, [
+  const GM_CONFIG = <?= json_encode(array_merge($appConfig, [
       'themeMode' => $themeMode,
       'themeColors' => $themeColors,
       'profileUrl' => gm_get_auth_urls()['profile_url'] ?? '/my-profile/',
+      'googleDriveEnabled' => defined('GOOGLE_DRIVE_ENABLED') && GOOGLE_DRIVE_ENABLED,
+      'maxAttachments' => defined('ENTRY_MAX_ATTACHMENTS') ? ENTRY_MAX_ATTACHMENTS : 2,
+      'maxAttachmentSizeMB' => defined('ENTRY_MAX_ATTACHMENT_SIZE_MB') ? ENTRY_MAX_ATTACHMENT_SIZE_MB : 5,
   ]), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+  
+  const APP_CONFIG = GM_CONFIG; // Backwards compatibility
+  
+  const GM_USER = <?= json_encode(gm_get_current_user_info() ?? ['id' => 'default'], JSON_HEX_TAG) ?>;
+  const GM_AUTH_URLS = <?= json_encode(gm_get_auth_urls(), JSON_HEX_TAG) ?>;
+  const ATTACH_MAX_SIZE_MB = <?= defined('ENTRY_MAX_ATTACHMENT_SIZE_MB') ? ENTRY_MAX_ATTACHMENT_SIZE_MB : 5 ?>;
+  const ATTACH_MAX_COUNT = <?= defined('ENTRY_MAX_ATTACHMENTS') ? ENTRY_MAX_ATTACHMENTS : 2 ?>;
 </script>
   
   <style>
@@ -628,9 +639,11 @@ ob_end_clean();
   <script src="assets/js/gm.features.export.js"></script>
   <script src="assets/js/gm.user.js"></script>
   <script src="assets/js/gm.mobile-nav.js"></script>
+  <script src="assets/js/gm.features.gdrive.js"></script>
   <script src="assets/js/gm.handlers.js"></script>
   <script src="assets/js/gm.pwa.js"></script>
   <script src="assets/js/gm.theme-indicator.js"></script>
   <script src="assets/js/gm.fixes.js"></script>
 </body>
 </html>
+
