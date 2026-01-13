@@ -1103,6 +1103,10 @@ function renderDashboard() {
 
 function renderNewEntryFormDefaults(editEntry) {
   const today = getTodayIsoInSettingsTz();
+  
+  // Get attachment limits
+  const { maxCount } = getAttachmentLimits();
+  
   if (!editEntry) {
     $("#entry-id").val("");
     $("#entry-submit-label").text("Save entry");
@@ -1113,7 +1117,12 @@ function renderNewEntryFormDefaults(editEntry) {
     $("#entry-next-date").val("");
     $("#entry-next-odo").val("");
     $("#entry-notes").val("");
-    $("#entry-files").val("");
+    
+    // Render attachment upload area for new entry (no existing attachments)
+    const $attachArea = $("#new-entry-attachment-area");
+    if ($attachArea.length) {
+      renderAttachmentUploadArea(null, 0, maxCount, $attachArea);
+    }
     
     const $checklistContainer = $("#service-checklist-container");
     $checklistContainer.empty();
@@ -1127,7 +1136,13 @@ function renderNewEntryFormDefaults(editEntry) {
     $("#entry-next-date").val(editEntry.nextDate || "");
     $("#entry-next-odo").val(editEntry.nextOdo != null ? editEntry.nextOdo : "");
     $("#entry-notes").val(editEntry.notes || "");
-    $("#entry-files").val("");
+
+    // Render attachment upload area for existing entry
+    const existingAttachments = editEntry.attachments || [];
+    const $attachArea = $("#new-entry-attachment-area");
+    if ($attachArea.length) {
+      renderAttachmentUploadArea(editEntry.id, existingAttachments.length, maxCount, $attachArea);
+    }
 
     // Normalize services and separate known from unknown
     const services = normalizeServices(editEntry.services || []);
@@ -1334,7 +1349,7 @@ function renderDashboardHistory() {
       );
     }
 
-    // Attachments
+    // Attachments - with Google Drive source indicators
     const attachments = entry.attachments || [];
     if (attachments.length) {
       const $attSection = $("<div>").addClass("entry-view-field").css("margin-top", "8px").append(
@@ -1343,13 +1358,29 @@ function renderDashboardHistory() {
       const $alist = $("<div>").addClass("attachments-list");
       attachments.forEach(att => {
         const $item = $("<div>").addClass("attachment-item");
+        
+        // Source indicator for Google Drive vs Local
+        const isGoogleDrive = att.source === 'google_drive';
+        const sourceIcon = isGoogleDrive ? 'bi-google' : 'bi-file-earmark';
+        const sourceClass = isGoogleDrive ? 'source-gdrive' : 'source-local';
+        const sourceTitle = isGoogleDrive ? 'Google Drive' : 'Local file';
+        
         const $meta = $("<div>").addClass("attachment-meta").append(
-          $("<div>").text(att.name || "Attachment"),
-          att.size != null ? $("<div>").addClass("text-muted").css("font-size","0.7rem").text(formatBytes(att.size)) : null
+          $("<div>").addClass("attachment-name").append(
+            $("<i>").addClass(`bi ${sourceIcon} source-icon ${sourceClass}`).attr("title", sourceTitle),
+            $("<span>").text(att.name || "Attachment")
+          ),
+          att.size != null ? $("<div>").addClass("attachment-size text-muted").text(formatBytes(att.size)) : null
         );
-        const $actions = $("<div>").addClass("button-row").css({marginTop:0});
+        const $actions = $("<div>").addClass("attachment-actions");
         $actions.append(
-          $("<button>").addClass("btn-ghost btn-small entry-attach-download").attr("type","button").text("Download").data("att-id", att.id)
+          $("<button>").addClass("attachment-btn download")
+            .attr("type","button")
+            .attr("title", "Download")
+            .html('<i class="bi bi-download"></i>')
+            .data("att-id", att.id)
+            .data("att-name", att.name)
+            .data("att-source", att.source || 'local')
         );
         $item.append($meta, $actions);
         $alist.append($item);
@@ -1423,18 +1454,40 @@ function renderDashboardHistory() {
 
     const $attSection = $("<div>").addClass("entry-body-attachments field").css("margin-top","4px").append($("<label>").text(labelText));
 
+    // Render existing attachments with source indicators
     if (attachments.length) {
       const $alist = $("<div>").addClass("attachments-list");
       attachments.forEach(att => {
         const $item = $("<div>").addClass("attachment-item");
+        
+        // Source indicator for Google Drive vs Local
+        const isGoogleDrive = att.source === 'google_drive';
+        const sourceIcon = isGoogleDrive ? 'bi-google' : 'bi-file-earmark';
+        const sourceClass = isGoogleDrive ? 'source-gdrive' : 'source-local';
+        const sourceTitle = isGoogleDrive ? 'Google Drive' : 'Local file';
+        
         const $meta = $("<div>").addClass("attachment-meta").append(
-          $("<div>").text(att.name || "Attachment"),
-          att.size != null ? $("<div>").addClass("text-muted").css("font-size","0.7rem").text(formatBytes(att.size)) : null
+          $("<div>").addClass("attachment-name").append(
+            $("<i>").addClass(`bi ${sourceIcon} source-icon ${sourceClass}`).attr("title", sourceTitle),
+            $("<span>").text(att.name || "Attachment")
+          ),
+          att.size != null ? $("<div>").addClass("attachment-size text-muted").text(formatBytes(att.size)) : null
         );
-        const $actions = $("<div>").addClass("button-row").css({marginTop:0});
+        const $actions = $("<div>").addClass("attachment-actions");
         $actions.append(
-          $("<button>").addClass("btn-ghost btn-small entry-attach-download").attr("type","button").text("Download").data("att-id", att.id),
-          $("<button>").addClass("btn-danger btn-small entry-attach-delete").attr("type","button").text("Delete").data("att-id", att.id)
+          $("<button>").addClass("attachment-btn download")
+            .attr("type","button")
+            .attr("title", "Download")
+            .html('<i class="bi bi-download"></i>')
+            .data("att-id", att.id)
+            .data("att-name", att.name)
+            .data("att-source", att.source || 'local'),
+          $("<button>").addClass("attachment-btn delete")
+            .attr("type","button")
+            .attr("title", "Delete")
+            .html('<i class="bi bi-trash"></i>')
+            .data("att-id", att.id)
+            .data("entry-id", entry.id)
         );
         $item.append($meta, $actions);
         $alist.append($item);
@@ -1444,11 +1497,10 @@ function renderDashboardHistory() {
       $attSection.append($("<div>").addClass("text-muted").css("font-size","0.75rem").text("No attachments."));
     }
 
-    const $addAttachField = $("<div>").addClass("field").css("margin-top","4px").append(
-      $("<input>").attr({type:"file", multiple:true}).addClass("entry-attach-files"),
-      $("<div>").addClass("text-muted").css("font-size","0.7rem").text("Add files to store with this entry.")
-    );
-    $attSection.append($addAttachField);
+    // Add new attachment area with Google Drive / Local options
+    const $addAttachArea = $("<div>").addClass("field entry-add-attach-area").css("margin-top","8px");
+    renderAttachmentUploadArea(entry.id, used, maxCount, $addAttachArea);
+    $attSection.append($addAttachArea);
 
     const $editButtons = $("<div>").addClass("entry-body-buttons").append(
       $("<button>").addClass("btn-ghost btn-small entry-btn-cancel").attr("type","button").text("Cancel"),
@@ -1614,4 +1666,110 @@ function renderDashboardRemindersSnippet() {
 
   $("#rem-snippet-upcoming").text(upcoming);
   $("#rem-snippet-overdue").text(overdue);
+}
+
+/**
+ * Render attachment upload area with Google Drive and Local options
+ * Used by both new entry form and edit entry form
+ */
+function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container) {
+  // Check capabilities
+  const canDrive = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled === true);
+  const canLocal = (function() {
+    // Check user capabilities if available
+    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities) {
+      return GM_USER.capabilities.can_use_local === true;
+    }
+    // Check subscription tier
+    if (typeof GM_USER !== 'undefined' && GM_USER.subscription_tier) {
+      return GM_USER.subscription_tier !== 'free';
+    }
+    // Default: allow in single-user mode
+    return true;
+  })();
+  
+  const remainingSlots = Math.max(0, maxCount - currentCount);
+  
+  // Clear container
+  $container.empty();
+  
+  // Check if limit reached
+  if (remainingSlots <= 0) {
+    $container.append(
+      $('<div>').addClass('attachment-limit-reached text-muted')
+        .text(`Maximum ${maxCount} attachments reached`)
+    );
+    return;
+  }
+  
+  const $uploadArea = $('<div>').addClass('attachment-upload-container');
+  
+  // Google Drive button (available to all users if enabled)
+  if (canDrive) {
+    const $driveBtn = $('<button>')
+      .addClass('btn-ghost btn-attachment-drive')
+      .attr('type', 'button')
+      .html('<i class="bi bi-google"></i> Add from Google Drive')
+      .on('click', function(e) {
+        e.preventDefault();
+        if (typeof GDrive !== 'undefined' && GDrive.openPicker) {
+          GDrive.openPicker(entryId, function(files, eId) {
+            if (typeof window.attachGoogleDriveFiles === 'function') {
+              window.attachGoogleDriveFiles(files, eId);
+            } else {
+              showToast('Google Drive attachment not available');
+            }
+          });
+        } else {
+          showToast('Google Drive is loading... Please try again.');
+        }
+      });
+    
+    $uploadArea.append($driveBtn);
+  }
+  
+  // Local upload button (paid users only)
+  if (canLocal) {
+    const $localInput = $('<input>')
+      .attr({
+        type: 'file',
+        multiple: true,
+        accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp'
+      })
+      .addClass('entry-attach-files')
+      .css('display', 'none');
+    
+    const $localBtn = $('<button>')
+      .addClass('btn-ghost btn-attachment-local')
+      .attr('type', 'button')
+      .html('<i class="bi bi-upload"></i> Upload File')
+      .on('click', function(e) {
+        e.preventDefault();
+        $localInput.click();
+      });
+    
+    $uploadArea.append($localBtn, $localInput);
+  } else if (canDrive) {
+    // Show upgrade hint for free users who can use Google Drive
+    const $upgradeHint = $('<div>')
+      .addClass('attachment-upgrade-hint text-muted')
+      .html('<i class="bi bi-lock"></i> <a href="javascript:void(0)" class="upgrade-link">Upgrade</a> to upload files directly');
+    
+    $upgradeHint.find('.upgrade-link').on('click', function() {
+      if (typeof GM_AUTH_URLS !== 'undefined' && GM_AUTH_URLS.subscribe_url) {
+        window.location.href = GM_AUTH_URLS.subscribe_url;
+      }
+    });
+    
+    $uploadArea.append($upgradeHint);
+  }
+  
+  // File type hint
+  const maxSizeMB = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachmentSizeMB) ? GM_CONFIG.maxAttachmentSizeMB : 5;
+  const $hint = $('<div>')
+    .addClass('attachment-hint text-muted')
+    .text(`PDF, Word, images (max ${maxSizeMB}MB)`);
+  
+  $uploadArea.append($hint);
+  $container.append($uploadArea);
 }
