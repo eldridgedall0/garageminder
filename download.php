@@ -1,8 +1,10 @@
 <?php
 /**
  * Secure File Download Handler - Multi-user Ready
+ * Updated with Google Drive support
+ * 
  * Validates user access and serves attachment files
- * Supports both entry attachments and vehicle photos
+ * Supports both entry attachments (local & Google Drive) and vehicle photos
  * Files are stored outside web root for security
  */
 
@@ -112,7 +114,8 @@ try {
     
     // Get attachment details AND verify user owns the entry
     $stmt = $pdo->prepare("
-        SELECT a.`id`, a.`entry_id`, a.`name`, a.`mime_type`, a.`size`, a.`file_path`
+        SELECT a.`id`, a.`entry_id`, a.`name`, a.`mime_type`, a.`size`, a.`file_path`,
+               a.`source`, a.`external_url`, a.`drive_file_id`
         FROM `entry_attachments` a
         JOIN `entries` e ON a.`entry_id` = e.`id`
         JOIN `vehicles` v ON e.`vehicle_id` = v.`id`
@@ -125,6 +128,20 @@ try {
         http_response_code(404);
         die('Attachment not found or access denied');
     }
+    
+    // ========================================
+    // GOOGLE DRIVE ATTACHMENT
+    // ========================================
+    if ($attachment['source'] === 'google_drive') {
+        // Redirect to Google Drive validation endpoint
+        // This will check if the file is still accessible and redirect appropriately
+        header('Location: google-drive-validate.php?id=' . urlencode($attachmentId));
+        exit;
+    }
+    
+    // ========================================
+    // LOCAL FILE ATTACHMENT
+    // ========================================
     
     // Construct full file path
     $filePath = ATTACHMENTS_PATH . '/' . $attachment['file_path'];
