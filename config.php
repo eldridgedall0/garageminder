@@ -48,6 +48,25 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 // ========================================
+// GOOGLE DRIVE INTEGRATION
+// ========================================
+const GOOGLE_DRIVE_ENABLED = true;
+const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = 'YOUR_CLIENT_SECRET';
+const GOOGLE_REDIRECT_URI = 'https://trackmywrench.com/garage/google-drive-auth.php';
+const GOOGLE_DRIVE_FOLDER_NAME = 'TrackMyWrench Attachments';
+const GOOGLE_DRIVE_ALLOWED_TYPES = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+];
+
+// ========================================
 // MULTI-USER SETTINGS (WordPress Integration)
 // ========================================
 const ENABLE_MULTI_USER = true;  // Set to true to enable WordPress authentication
