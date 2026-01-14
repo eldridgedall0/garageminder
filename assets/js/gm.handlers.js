@@ -224,6 +224,27 @@ $(function() {
     $("#entry-files").click();
   });
   
+  // File input change - show selected files as feedback
+  $("#entry-files").on("change", function() {
+    const files = this.files;
+    const $preview = $("#selected-files-preview");
+    
+    $preview.empty();
+    if (files && files.length > 0) {
+      const $list = $("<div>").css({"padding": "8px", "background": "var(--gm-bg-subtle)", "border-radius": "4px"});
+      $list.append($("<div>").css({"font-weight": "500", "margin-bottom": "4px"}).text(`${files.length} file(s) selected (will upload on save):`));
+      for (let i = 0; i < files.length; i++) {
+        const size = (files[i].size / 1024).toFixed(1);
+        const $fileRow = $("<div>").css({"color": "var(--gm-text-secondary)", "display": "flex", "align-items": "center", "gap": "8px"});
+        $fileRow.append(
+          $("<span>").html(`<i class="bi bi-file-earmark"></i> ${files[i].name} <span class="text-muted">(${size} KB)</span>`)
+        );
+        $list.append($fileRow);
+      }
+      $preview.append($list);
+    }
+  });
+  
   // Google Drive button - opens Google Drive picker
   $("#btn-gdrive-attach").on("click", function(e) {
     e.preventDefault();
@@ -324,6 +345,8 @@ $(function() {
   $("#entry-reset").on("click", function() {
     renderNewEntryFormDefaults();
     initDatePickers($(document));
+    // Clear file preview
+    $("#selected-files-preview").empty();
   });
 
   $("#service-checklist-container").on("change", "input[type='checkbox']", function() {
@@ -400,13 +423,23 @@ $(function() {
 
   // Delete attachment
   $("#entry-list").on("click", ".entry-attach-delete", async function(e) {
+    e.preventDefault();
     e.stopPropagation();
     const $btn = $(this);
     const attId = $btn.data("att-id");
     
+    console.log("Delete attachment clicked, attId:", attId);
+    
+    if (!attId) {
+      showToast("Error: No attachment ID");
+      return;
+    }
+    
     if (!confirm("Delete this attachment?")) return;
     
     try {
+      $btn.prop("disabled", true).text("Deleting...");
+      
       const formData = new FormData();
       formData.append('attachment_id', attId);
       
@@ -416,18 +449,21 @@ $(function() {
       });
       
       const result = await response.json();
+      console.log("Delete result:", result);
       
       if (result.success) {
         showToast("Attachment deleted");
-        loadData();
+        await loadData();
         renderDashboard();
         renderRemindersPage();
       } else {
         showToast("Delete failed: " + (result.message || "Unknown error"));
+        $btn.prop("disabled", false).html('<i class="bi bi-trash"></i> Delete');
       }
     } catch (error) {
       console.error("Delete error:", error);
       showToast("Delete failed: " + error.message);
+      $btn.prop("disabled", false).html('<i class="bi bi-trash"></i> Delete');
     }
   });
 
