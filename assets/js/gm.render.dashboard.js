@@ -1115,6 +1115,7 @@ function renderNewEntryFormDefaults(editEntry) {
     $("#entry-next-odo").val("");
     $("#entry-notes").val("");
     $("#entry-files").val(""); // Clear file input
+    $("#selected-files-preview").empty(); // Clear selected files preview
     
     const $checklistContainer = $("#service-checklist-container");
     $checklistContainer.empty();
@@ -1129,6 +1130,7 @@ function renderNewEntryFormDefaults(editEntry) {
     $("#entry-next-odo").val(editEntry.nextOdo != null ? editEntry.nextOdo : "");
     $("#entry-notes").val(editEntry.notes || "");
     $("#entry-files").val(""); // Clear file input
+    $("#selected-files-preview").empty(); // Clear selected files preview
 
     // Normalize services and separate known from unknown
     const services = normalizeServices(editEntry.services || []);
@@ -1360,10 +1362,10 @@ function renderDashboardHistory() {
         );
         const $actions = $("<div>").addClass("attachment-actions");
         $actions.append(
-          $("<button>").addClass("attachment-btn download")
+          $("<button>").addClass("btn-ghost btn-small entry-attach-download")
             .attr("type","button")
             .attr("title", "Download")
-            .html('<i class="bi bi-download"></i>')
+            .html('<i class="bi bi-download"></i> Download')
             .data("att-id", att.id)
             .data("att-name", att.name)
             .data("att-source", att.source || 'local')
@@ -1461,17 +1463,17 @@ function renderDashboardHistory() {
         );
         const $actions = $("<div>").addClass("attachment-actions");
         $actions.append(
-          $("<button>").addClass("attachment-btn download")
+          $("<button>").addClass("btn-ghost btn-small entry-attach-download")
             .attr("type","button")
             .attr("title", "Download")
-            .html('<i class="bi bi-download"></i>')
+            .html('<i class="bi bi-download"></i> Download')
             .data("att-id", att.id)
             .data("att-name", att.name)
             .data("att-source", att.source || 'local'),
-          $("<button>").addClass("attachment-btn delete")
+          $("<button>").addClass("btn-danger btn-small entry-attach-delete")
             .attr("type","button")
             .attr("title", "Delete")
-            .html('<i class="bi bi-trash"></i>')
+            .html('<i class="bi bi-trash"></i> Delete')
             .data("att-id", att.id)
             .data("entry-id", entry.id)
         );
@@ -1514,6 +1516,12 @@ function renderDashboardHistory() {
       $addAttachArea.append($driveBtn);
     }
     
+    // Container for showing selected files
+    const $selectedFiles = $("<div>").addClass("selected-files-list").css({
+      "margin-top": "8px",
+      "font-size": "0.8rem"
+    });
+    
     // Local upload button and hidden file input
     const $fileInput = $("<input>")
       .attr({
@@ -1523,7 +1531,25 @@ function renderDashboardHistory() {
       })
       .addClass("entry-attach-files")
       .css("display", "none")
-      .data("entry-id", entry.id);
+      .data("entry-id", entry.id)
+      .on("change", function() {
+        // Show selected files as feedback
+        const files = this.files;
+        $selectedFiles.empty();
+        if (files && files.length > 0) {
+          const $list = $("<div>").css({"padding": "8px", "background": "var(--gm-bg-subtle)", "border-radius": "4px"});
+          $list.append($("<div>").css({"font-weight": "500", "margin-bottom": "4px"}).text(`${files.length} file(s) selected (will upload on save):`));
+          for (let i = 0; i < files.length; i++) {
+            const size = (files[i].size / 1024).toFixed(1);
+            $list.append(
+              $("<div>").css({"color": "var(--gm-text-secondary)"}).html(
+                `<i class="bi bi-file-earmark"></i> ${files[i].name} <span class="text-muted">(${size} KB)</span>`
+              )
+            );
+          }
+          $selectedFiles.append($list);
+        }
+      });
     
     const $localBtn = $("<button>")
       .addClass("btn-ghost btn-attachment-local")
@@ -1534,7 +1560,7 @@ function renderDashboardHistory() {
         $(this).siblings(".entry-attach-files").click();
       });
     
-    $addAttachArea.append($localBtn, $fileInput);
+    $addAttachArea.append($localBtn, $fileInput, $selectedFiles);
     
     // File hint
     const maxSizeMB = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachmentSizeMB) ? GM_CONFIG.maxAttachmentSizeMB : 5;
