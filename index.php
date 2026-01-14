@@ -218,11 +218,30 @@ ob_end_clean();
 
             <div class="field" style="margin-top:6px;">
               <label>Attachments (optional)</label>
-              <div id="new-entry-attachment-area">
-                <!-- Will be populated by renderAttachmentUploadArea() -->
+              <div class="attachment-upload-area">
+                <!-- Google Drive Button (shown if enabled) -->
+                <?php if (defined('GOOGLE_DRIVE_ENABLED') && GOOGLE_DRIVE_ENABLED): ?>
+                <button type="button" class="btn-ghost btn-attachment-gdrive" id="btn-gdrive-attach">
+                  <i class="bi bi-google"></i> Add from Google Drive
+                </button>
+                <?php endif; ?>
+                
+                <!-- Local Upload Button -->
+                <button type="button" class="btn-ghost btn-attachment-local" id="btn-local-attach">
+                  <i class="bi bi-upload"></i> Upload File
+                </button>
+                <input type="file" id="entry-files" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp" style="display:none;" />
+                
+                <!-- Upgrade hint for free users (hidden by default, shown via JS) -->
+                <div id="attachment-upgrade-hint" class="attachment-upgrade-hint text-muted" style="display:none;">
+                  <i class="bi bi-lock"></i> <a href="javascript:void(0)" class="upgrade-link">Upgrade</a> for local file uploads
+                </div>
+                
+                <div class="text-muted" style="font-size:0.7rem; margin-top:4px;">
+                  PDF, Word, and image files. Max <?= defined('ENTRY_MAX_ATTACHMENT_SIZE_MB') ? ENTRY_MAX_ATTACHMENT_SIZE_MB : 5 ?>MB per file.
+                </div>
               </div>
             </div>
-
             <div class="button-row">
               <button type="button" class="btn-ghost btn-small" id="entry-reset">Clear</button>
               <button type="submit" class="btn-primary"><span id="entry-submit-label">Save entry</span></button>
