@@ -1483,9 +1483,65 @@ function renderDashboardHistory() {
       $attSection.append($("<div>").addClass("text-muted").css("font-size","0.75rem").text("No attachments."));
     }
 
-    // Add new attachment area with Google Drive / Local options
-    const $addAttachArea = $("<div>").addClass("field entry-add-attach-area").css("margin-top","8px");
-    renderAttachmentUploadArea(entry.id, used, maxCount, $addAttachArea);
+    // Add new attachment area with Google Drive / Local upload buttons (static HTML approach)
+    const $addAttachArea = $("<div>").addClass("field entry-add-attach-area attachment-upload-area").css("margin-top","8px");
+    
+    // Check if Google Drive is enabled
+    const canDrive = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled === true);
+    
+    // Google Drive button
+    if (canDrive) {
+      const $driveBtn = $("<button>")
+        .addClass("btn-ghost btn-attachment-gdrive")
+        .attr("type", "button")
+        .html('<i class="bi bi-google"></i> Add from Google Drive')
+        .data("entry-id", entry.id)
+        .on("click", function(e) {
+          e.preventDefault();
+          const entryId = $(this).data("entry-id");
+          if (typeof GDrive !== 'undefined' && GDrive.openPicker) {
+            GDrive.openPicker(entryId, function(files, eId) {
+              if (typeof window.attachGoogleDriveFiles === 'function') {
+                window.attachGoogleDriveFiles(files, eId);
+              } else {
+                showToast('Google Drive attachment handler not available');
+              }
+            });
+          } else {
+            showToast('Google Drive is not configured');
+          }
+        });
+      $addAttachArea.append($driveBtn);
+    }
+    
+    // Local upload button and hidden file input
+    const $fileInput = $("<input>")
+      .attr({
+        type: "file",
+        multiple: true,
+        accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+      })
+      .addClass("entry-attach-files")
+      .css("display", "none")
+      .data("entry-id", entry.id);
+    
+    const $localBtn = $("<button>")
+      .addClass("btn-ghost btn-attachment-local")
+      .attr("type", "button")
+      .html('<i class="bi bi-upload"></i> Upload File')
+      .on("click", function(e) {
+        e.preventDefault();
+        $(this).siblings(".entry-attach-files").click();
+      });
+    
+    $addAttachArea.append($localBtn, $fileInput);
+    
+    // File hint
+    const maxSizeMB = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachmentSizeMB) ? GM_CONFIG.maxAttachmentSizeMB : 5;
+    $addAttachArea.append(
+      $("<div>").addClass("text-muted").css("font-size", "0.7rem").text(`PDF, Word, images (max ${maxSizeMB}MB)`)
+    );
+    
     $attSection.append($addAttachArea);
 
     const $editButtons = $("<div>").addClass("entry-body-buttons").append(
