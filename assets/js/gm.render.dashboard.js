@@ -1104,21 +1104,6 @@ function renderDashboard() {
 function renderNewEntryFormDefaults(editEntry) {
   const today = getTodayIsoInSettingsTz();
   
-  // Get attachment limits - with fallback if function not available
-  let maxCount = 2; // Default
-  if (typeof getAttachmentLimits === 'function') {
-    try {
-      const limits = getAttachmentLimits();
-      maxCount = limits.maxCount || 2;
-    } catch (e) {
-      console.warn('getAttachmentLimits error:', e);
-    }
-  } else if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachments) {
-    maxCount = GM_CONFIG.maxAttachments;
-  } else if (typeof ATTACH_MAX_COUNT !== 'undefined') {
-    maxCount = ATTACH_MAX_COUNT;
-  }
-  
   if (!editEntry) {
     $("#entry-id").val("");
     $("#entry-submit-label").text("Save entry");
@@ -1129,12 +1114,7 @@ function renderNewEntryFormDefaults(editEntry) {
     $("#entry-next-date").val("");
     $("#entry-next-odo").val("");
     $("#entry-notes").val("");
-    
-    // Render attachment upload area for new entry (no existing attachments)
-    const $attachArea = $("#new-entry-attachment-area");
-    if ($attachArea.length && typeof renderAttachmentUploadArea === 'function') {
-      renderAttachmentUploadArea(null, 0, maxCount, $attachArea);
-    }
+    $("#entry-files").val(""); // Clear file input
     
     const $checklistContainer = $("#service-checklist-container");
     $checklistContainer.empty();
@@ -1148,13 +1128,7 @@ function renderNewEntryFormDefaults(editEntry) {
     $("#entry-next-date").val(editEntry.nextDate || "");
     $("#entry-next-odo").val(editEntry.nextOdo != null ? editEntry.nextOdo : "");
     $("#entry-notes").val(editEntry.notes || "");
-
-    // Render attachment upload area for existing entry
-    const existingAttachments = editEntry.attachments || [];
-    const $attachArea = $("#new-entry-attachment-area");
-    if ($attachArea.length && typeof renderAttachmentUploadArea === 'function') {
-      renderAttachmentUploadArea(editEntry.id, existingAttachments.length, maxCount, $attachArea);
-    }
+    $("#entry-files").val(""); // Clear file input
 
     // Normalize services and separate known from unknown
     const services = normalizeServices(editEntry.services || []);
