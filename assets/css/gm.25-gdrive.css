@@ -380,6 +380,25 @@
 }
 
 /* ============================================
+   SELECTED FILES LIST
+   ============================================ */
+.selected-files-list {
+  font-size: 0.85rem;
+}
+
+.selected-files-list > div {
+  padding: 8px 12px;
+  background: var(--gm-bg-subtle);
+  border-radius: var(--gm-radius);
+  border: 1px solid var(--gm-border);
+}
+
+.selected-files-list .bi-file-earmark {
+  color: var(--gm-accent);
+  margin-right: 4px;
+}
+
+/* ============================================
    ANIMATIONS
    ============================================ */
 @keyframes gdrive-pulse {
