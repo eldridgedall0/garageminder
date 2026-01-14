@@ -232,6 +232,9 @@ ob_end_clean();
                 </button>
                 <input type="file" id="entry-files" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp" style="display:none;" />
                 
+                <!-- Selected files preview (populated by JS) -->
+                <div id="selected-files-preview" class="selected-files-list" style="margin-top:8px;"></div>
+                
                 <!-- Upgrade hint for free users (hidden by default, shown via JS) -->
                 <div id="attachment-upgrade-hint" class="attachment-upgrade-hint text-muted" style="display:none;">
                   <i class="bi bi-lock"></i> <a href="javascript:void(0)" class="upgrade-link">Upgrade</a> for local file uploads
