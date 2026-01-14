@@ -1104,8 +1104,20 @@ function renderDashboard() {
 function renderNewEntryFormDefaults(editEntry) {
   const today = getTodayIsoInSettingsTz();
   
-  // Get attachment limits
-  const { maxCount } = getAttachmentLimits();
+  // Get attachment limits - with fallback if function not available
+  let maxCount = 2; // Default
+  if (typeof getAttachmentLimits === 'function') {
+    try {
+      const limits = getAttachmentLimits();
+      maxCount = limits.maxCount || 2;
+    } catch (e) {
+      console.warn('getAttachmentLimits error:', e);
+    }
+  } else if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachments) {
+    maxCount = GM_CONFIG.maxAttachments;
+  } else if (typeof ATTACH_MAX_COUNT !== 'undefined') {
+    maxCount = ATTACH_MAX_COUNT;
+  }
   
   if (!editEntry) {
     $("#entry-id").val("");
@@ -1120,7 +1132,7 @@ function renderNewEntryFormDefaults(editEntry) {
     
     // Render attachment upload area for new entry (no existing attachments)
     const $attachArea = $("#new-entry-attachment-area");
-    if ($attachArea.length) {
+    if ($attachArea.length && typeof renderAttachmentUploadArea === 'function') {
       renderAttachmentUploadArea(null, 0, maxCount, $attachArea);
     }
     
@@ -1140,7 +1152,7 @@ function renderNewEntryFormDefaults(editEntry) {
     // Render attachment upload area for existing entry
     const existingAttachments = editEntry.attachments || [];
     const $attachArea = $("#new-entry-attachment-area");
-    if ($attachArea.length) {
+    if ($attachArea.length && typeof renderAttachmentUploadArea === 'function') {
       renderAttachmentUploadArea(editEntry.id, existingAttachments.length, maxCount, $attachArea);
     }
 
@@ -1673,22 +1685,33 @@ function renderDashboardRemindersSnippet() {
  * Used by both new entry form and edit entry form
  */
 function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container) {
-  // Check capabilities
+  // Safety check - if container doesn't exist, exit
+  if (!$container || !$container.length) {
+    console.warn('renderAttachmentUploadArea: container not found');
+    return;
+  }
+  
+  // Fallback for maxCount if not provided
+  if (typeof maxCount !== 'number' || maxCount <= 0) {
+    maxCount = 2; // Default
+  }
+  
+  // Check capabilities - with safe defaults
   const canDrive = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled === true);
   const canLocal = (function() {
     // Check user capabilities if available
-    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities) {
+    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities && typeof GM_USER.capabilities.can_use_local !== 'undefined') {
       return GM_USER.capabilities.can_use_local === true;
     }
     // Check subscription tier
     if (typeof GM_USER !== 'undefined' && GM_USER.subscription_tier) {
       return GM_USER.subscription_tier !== 'free';
     }
-    // Default: allow in single-user mode
+    // Default: allow local uploads (single-user mode or no restrictions)
     return true;
   })();
   
-  const remainingSlots = Math.max(0, maxCount - currentCount);
+  const remainingSlots = Math.max(0, maxCount - (currentCount || 0));
   
   // Clear container
   $container.empty();
@@ -1728,7 +1751,7 @@ function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container)
     $uploadArea.append($driveBtn);
   }
   
-  // Local upload button (paid users only)
+  // Local upload button - always show if user can use local uploads
   if (canLocal) {
     const $localInput = $('<input>')
       .attr({
@@ -1762,6 +1785,15 @@ function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container)
     });
     
     $uploadArea.append($upgradeHint);
+  }
+  
+  // If neither Google Drive nor Local is available, show a basic file input
+  if (!canDrive && !canLocal) {
+    // Fallback - shouldn't normally happen
+    $uploadArea.append(
+      $('<input>').attr({type:'file', multiple:true}).addClass('entry-attach-files'),
+      $('<div>').addClass('text-muted').css('font-size','0.7rem').text('Add files')
+    );
   }
   
   // File type hint
