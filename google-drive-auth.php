@@ -47,9 +47,60 @@ $action = $_GET['action'] ?? 'callback';
 // ========================================
 
 /**
+ * Generate and store OAuth state in database
+ */
+function generateAndStoreState(string $userId): string {
+    $pdo = db_get_pdo();
+    $state = bin2hex(random_bytes(16));
+    $expiresAt = date('Y-m-d H:i:s', time() + 600); // 10 minute expiry
+    
+    // Delete any existing state for this user
+    $stmt = $pdo->prepare("DELETE FROM `google_oauth_states` WHERE `user_id` = :user_id");
+    $stmt->execute([':user_id' => $userId]);
+    
+    // Insert new state
+    $stmt = $pdo->prepare("
+        INSERT INTO `google_oauth_states` (`user_id`, `state`, `expires_at`)
+        VALUES (:user_id, :state, :expires_at)
+    ");
+    $stmt->execute([
+        ':user_id' => $userId,
+        ':state' => $state,
+        ':expires_at' => $expiresAt
+    ]);
+    
+    return $state;
+}
+
+/**
+ * Validate OAuth state from database
+ */
+function validateState(string $state): ?string {
+    $pdo = db_get_pdo();
+    
+    $stmt = $pdo->prepare("
+        SELECT `user_id` FROM `google_oauth_states` 
+        WHERE `state` = :state AND `expires_at` > NOW()
+    ");
+    $stmt->execute([':state' => $state]);
+    $row = $stmt->fetch();
+    
+    if ($row) {
+        // Delete the used state
+        $stmt = $pdo->prepare("DELETE FROM `google_oauth_states` WHERE `state` = :state");
+        $stmt->execute([':state' => $state]);
+        return $row['user_id'];
+    }
+    
+    return null;
+}
+
+/**
  * Build OAuth authorization URL
  */
-function buildAuthUrl(): string {
+function buildAuthUrl(string $userId): string {
+    $state = generateAndStoreState($userId);
+    
     $params = [
         'client_id' => GOOGLE_CLIENT_ID,
         'redirect_uri' => GOOGLE_REDIRECT_URI,
@@ -58,12 +109,8 @@ function buildAuthUrl(): string {
         'access_type' => 'offline',
         'prompt' => 'consent', // Force consent to get refresh token
         'include_granted_scopes' => 'true',
+        'state' => $state,
     ];
-    
-    // Add state parameter for CSRF protection
-    $state = bin2hex(random_bytes(16));
-    $_SESSION['google_oauth_state'] = $state;
-    $params['state'] = $state;
     
     return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($params);
 }
@@ -232,20 +279,13 @@ function getValidAccessToken(string $userId): ?string {
 }
 
 // ========================================
-// START SESSION FOR STATE MANAGEMENT
-// ========================================
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// ========================================
 // HANDLE ACTIONS
 // ========================================
 
 switch ($action) {
     case 'authorize':
         // Redirect to Google OAuth
-        $authUrl = buildAuthUrl();
+        $authUrl = buildAuthUrl($userId);
         header('Location: ' . $authUrl);
         exit;
     
@@ -264,20 +304,25 @@ switch ($action) {
             exit;
         }
         
-        // Verify state (CSRF protection)
+        // Verify state and get user ID from database
         $state = $_GET['state'] ?? '';
-        $sessionState = $_SESSION['google_oauth_state'] ?? '';
         
-        if (empty($state) || $state !== $sessionState) {
+        if (empty($state)) {
             echo "<!DOCTYPE html><html><head><title>Error</title></head><body>";
-            echo "<script>window.opener && window.opener.postMessage({type:'google-drive-auth-error',error:'invalid_state',message:'Invalid state parameter'},'*');window.close();</script>";
-            echo "<p>Invalid state parameter. Please try again.</p>";
+            echo "<script>window.opener && window.opener.postMessage({type:'google-drive-auth-error',error:'missing_state',message:'Missing state parameter'},'*');window.close();</script>";
+            echo "<p>Missing state parameter. Please try again.</p>";
             echo "</body></html>";
             exit;
         }
         
-        // Clear state from session
-        unset($_SESSION['google_oauth_state']);
+        $validatedUserId = validateState($state);
+        if (!$validatedUserId) {
+            echo "<!DOCTYPE html><html><head><title>Error</title></head><body>";
+            echo "<script>window.opener && window.opener.postMessage({type:'google-drive-auth-error',error:'invalid_state',message:'Invalid or expired state parameter. Please try again.'},'*');window.close();</script>";
+            echo "<p>Invalid or expired state parameter. Please try again.</p>";
+            echo "</body></html>";
+            exit;
+        }
         
         // Get authorization code
         $code = $_GET['code'] ?? '';
@@ -293,8 +338,8 @@ switch ($action) {
             // Exchange code for tokens
             $tokens = exchangeCodeForTokens($code);
             
-            // Store tokens
-            storeTokens($userId, $tokens);
+            // Store tokens for the validated user
+            storeTokens($validatedUserId, $tokens);
             
             // Success - notify opener and close
             echo "<!DOCTYPE html><html><head><title>Success</title></head><body>";
