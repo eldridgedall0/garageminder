@@ -127,6 +127,9 @@ function exchangeCodeForTokens(string $code): array {
         'grant_type' => 'authorization_code',
     ];
     
+    // Log the redirect URI being used (for debugging)
+    error_log("Google OAuth: Using redirect_uri: " . GOOGLE_REDIRECT_URI);
+    
     $ch = curl_init('https://oauth2.googleapis.com/token');
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -138,11 +141,27 @@ function exchangeCodeForTokens(string $code): array {
     
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
     curl_close($ch);
+    
+    if ($curlError) {
+        error_log("Google OAuth curl error: " . $curlError);
+        throw new RuntimeException('Network error: ' . $curlError);
+    }
     
     if ($httpCode !== 200) {
         error_log("Google OAuth token exchange failed: HTTP $httpCode - $response");
-        throw new RuntimeException('Failed to exchange authorization code');
+        
+        // Parse error for better message
+        $errorData = json_decode($response, true);
+        $errorMsg = 'Failed to exchange authorization code';
+        if ($errorData && isset($errorData['error_description'])) {
+            $errorMsg = $errorData['error_description'];
+        } elseif ($errorData && isset($errorData['error'])) {
+            $errorMsg = $errorData['error'];
+        }
+        
+        throw new RuntimeException($errorMsg);
     }
     
     $tokens = json_decode($response, true);
@@ -349,10 +368,20 @@ switch ($action) {
             echo "</body></html>";
         } catch (Throwable $e) {
             error_log("Google OAuth callback error: " . $e->getMessage());
-            $error = htmlspecialchars($e->getMessage());
+            $errorMsg = $e->getMessage();
+            $safeError = htmlspecialchars($errorMsg);
+            $jsError = addslashes($errorMsg);
             echo "<!DOCTYPE html><html><head><title>Error</title></head><body>";
-            echo "<script>window.opener && window.opener.postMessage({type:'google-drive-auth-error',error:'token_exchange',message:'$error'},'*');window.close();</script>";
-            echo "<p>Authorization failed: $error</p>";
+            echo "<script>window.opener && window.opener.postMessage({type:'google-drive-auth-error',error:'token_exchange',message:'$jsError'},'*');setTimeout(function(){window.close();},5000);</script>";
+            echo "<p><strong>Authorization failed:</strong> $safeError</p>";
+            echo "<p style='font-size:0.9em;color:#666;'>Common causes:</p>";
+            echo "<ul style='font-size:0.85em;color:#666;'>";
+            echo "<li>Redirect URI mismatch - check Google Cloud Console</li>";
+            echo "<li>Invalid client credentials</li>";
+            echo "<li>Authorization code expired or already used</li>";
+            echo "</ul>";
+            echo "<p style='font-size:0.85em;'>Expected redirect URI: <code>" . htmlspecialchars(GOOGLE_REDIRECT_URI) . "</code></p>";
+            echo "<p><a href='javascript:window.close()'>Close this window</a></p>";
             echo "</body></html>";
         }
         exit;
@@ -405,6 +434,29 @@ switch ($action) {
                 'auth_url' => 'google-drive-auth.php?action=authorize'
             ]);
         }
+        exit;
+    
+    case 'debug':
+        // Show configuration for debugging (without exposing secrets)
+        header('Content-Type: application/json');
+        
+        $clientIdMasked = substr(GOOGLE_CLIENT_ID, 0, 20) . '...' . substr(GOOGLE_CLIENT_ID, -10);
+        $hasSecret = !empty(GOOGLE_CLIENT_SECRET) && strlen(GOOGLE_CLIENT_SECRET) > 10;
+        
+        echo json_encode([
+            'success' => true,
+            'config' => [
+                'google_drive_enabled' => defined('GOOGLE_DRIVE_ENABLED') && GOOGLE_DRIVE_ENABLED,
+                'client_id_preview' => $clientIdMasked,
+                'client_id_length' => strlen(GOOGLE_CLIENT_ID),
+                'has_client_secret' => $hasSecret,
+                'redirect_uri' => GOOGLE_REDIRECT_URI,
+                'current_url' => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
+                'expected_callback_url' => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . '/google-drive-auth.php',
+            ],
+            'user_id' => $userId,
+            'note' => 'Ensure GOOGLE_REDIRECT_URI in config.php EXACTLY matches what is in Google Cloud Console > Credentials > OAuth 2.0 Client IDs > Authorized redirect URIs'
+        ], JSON_PRETTY_PRINT);
         exit;
     
     default:
