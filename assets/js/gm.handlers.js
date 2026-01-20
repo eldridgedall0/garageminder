@@ -426,7 +426,7 @@ $(function() {
     e.preventDefault();
     e.stopPropagation();
     const $btn = $(this);
-    const attId = $btn.data("att-id");
+    const attId = $btn.attr("data-att-id");
     
     console.log("Delete attachment clicked, attId:", attId);
     
@@ -471,7 +471,12 @@ $(function() {
   $("#entry-list").on("click", ".entry-attach-download", function(e) {
     e.stopPropagation();
     const $btn = $(this);
-    const attId = $btn.data("att-id");
+    const attId = $btn.attr("data-att-id");
+    
+    if (!attId) {
+      showToast("Error: No attachment ID");
+      return;
+    }
     
     const downloadUrl = "download.php?id=" + encodeURIComponent(attId);
     
