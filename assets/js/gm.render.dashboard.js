@@ -1365,10 +1365,10 @@ function renderDashboardHistory() {
           $("<button>").addClass("btn-ghost btn-small entry-attach-download")
             .attr("type","button")
             .attr("title", "Download")
+            .attr("data-att-id", att.id)
+            .attr("data-att-name", att.name)
+            .attr("data-att-source", att.source || 'local')
             .html('<i class="bi bi-download"></i> Download')
-            .data("att-id", att.id)
-            .data("att-name", att.name)
-            .data("att-source", att.source || 'local')
         );
         $item.append($meta, $actions);
         $alist.append($item);
@@ -1466,16 +1466,16 @@ function renderDashboardHistory() {
           $("<button>").addClass("btn-ghost btn-small entry-attach-download")
             .attr("type","button")
             .attr("title", "Download")
-            .html('<i class="bi bi-download"></i> Download')
-            .data("att-id", att.id)
-            .data("att-name", att.name)
-            .data("att-source", att.source || 'local'),
+            .attr("data-att-id", att.id)
+            .attr("data-att-name", att.name)
+            .attr("data-att-source", att.source || 'local')
+            .html('<i class="bi bi-download"></i> Download'),
           $("<button>").addClass("btn-danger btn-small entry-attach-delete")
             .attr("type","button")
             .attr("title", "Delete")
+            .attr("data-att-id", att.id)
+            .attr("data-entry-id", entry.id)
             .html('<i class="bi bi-trash"></i> Delete')
-            .data("att-id", att.id)
-            .data("entry-id", entry.id)
         );
         $item.append($meta, $actions);
         $alist.append($item);
