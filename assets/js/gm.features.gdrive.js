@@ -9,7 +9,6 @@ let gdrivePickerApiLoaded = false;
 let gdrivePickerOauthToken = null;
 let gdriveClientId = null;
 let gdriveAppId = null;
-let gdriveApiKey = null;
 
 // Scope for Drive API
 const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
@@ -161,9 +160,7 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
         gdrivePickerOauthToken = result.access_token;
         gdriveClientId = result.client_id;
         gdriveAppId = result.app_id;
-        gdriveApiKey = result.api_key || '';
         console.log('Got access token, opening picker...');
-        console.log('API Key available:', gdriveApiKey ? 'Yes' : 'No');
         
     } catch (error) {
         console.error('Failed to get picker token:', error);
@@ -182,10 +179,6 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
         'image/webp'
     ];
     
-    // Store callback and entryId for use in pickerCallback
-    window._gdrivePickerCallback = onFilesSelected;
-    window._gdrivePickerEntryId = entryId;
-    
     // Create picker view
     const docsView = new google.picker.DocsView()
         .setIncludeFolders(true)
@@ -197,72 +190,57 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
     console.log('Picker origin:', origin);
     console.log('OAuth token (first 20 chars):', gdrivePickerOauthToken ? gdrivePickerOauthToken.substring(0, 20) + '...' : 'null');
     console.log('App ID:', gdriveAppId);
-    console.log('API Key:', gdriveApiKey ? gdriveApiKey.substring(0, 10) + '...' : 'NOT SET');
     
-    const pickerBuilder = new google.picker.PickerBuilder()
-        .addView(docsView)
-        .addView(new google.picker.DocsUploadView())
-        .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-        .setOAuthToken(gdrivePickerOauthToken)
-        .setOrigin(origin)
-        .setCallback(pickerCallbackHandler)
-        .setTitle('Select files to attach');
-    
-    // Set Developer Key (API Key) - REQUIRED for picker to work
-    if (gdriveApiKey) {
-        pickerBuilder.setDeveloperKey(gdriveApiKey);
-    } else {
-        console.warn('WARNING: No API key set. Picker may not work correctly.');
-        console.warn('Add GOOGLE_API_KEY to your config.php');
-    }
-    
-    // Set App ID if available (extracted from client ID)
-    if (gdriveAppId) {
-        pickerBuilder.setAppId(gdriveAppId);
-    }
-    
-    const picker = pickerBuilder.build();
-    console.log('Picker built, showing...');
-    picker.setVisible(true);
-    console.log('Picker should now be visible');
-}
-
-/**
- * Handle picker callback - separated for better debugging
- */
-function pickerCallbackHandler(data) {
-    console.log('=== PICKER CALLBACK ===');
-    console.log('Action:', data.action);
-    console.log('Full data:', JSON.stringify(data, null, 2));
-    
-    if (data.action === google.picker.Action.PICKED) {
-        const files = data.docs.map(doc => ({
-            id: doc.id,
-            name: doc.name,
-            mimeType: doc.mimeType,
-            size: doc.sizeBytes || 0,
-            url: doc.url
-        }));
+    // Create the callback function and store reference
+    const callbackFn = function(data) {
+        console.log('=== PICKER CALLBACK FIRED ===');
+        console.log('Action:', data.action);
+        console.log('Data:', data);
         
-        console.log('Files selected:', files);
+        if (data.action === google.picker.Action.PICKED) {
+            const files = data.docs.map(doc => ({
+                id: doc.id,
+                name: doc.name,
+                mimeType: doc.mimeType,
+                size: doc.sizeBytes || 0,
+                url: doc.url
+            }));
+            
+            console.log('Files picked:', files);
+            
+            // Call the attachment function
+            if (typeof attachGoogleDriveFiles === 'function') {
+                attachGoogleDriveFiles(files, entryId);
+            }
+            
+            showToast(`Selected ${files.length} file(s) from Google Drive`);
+        } else if (data.action === google.picker.Action.CANCEL) {
+            console.log('Picker cancelled');
+        }
+    };
+    
+    try {
+        const pickerBuilder = new google.picker.PickerBuilder()
+            .addView(docsView)
+            .addView(new google.picker.DocsUploadView())
+            .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+            .setOAuthToken(gdrivePickerOauthToken)
+            .setOrigin(origin)
+            .setCallback(callbackFn)
+            .setTitle('Select files to attach');
         
-        const entryId = window._gdrivePickerEntryId;
-        const callback = window._gdrivePickerCallback;
-        
-        console.log('Entry ID:', entryId);
-        console.log('Has callback:', !!callback);
-        
-        if (callback) {
-            callback(files, entryId);
-        } else {
-            // Fallback: call attachGoogleDriveFiles directly
-            console.log('No callback, calling attachGoogleDriveFiles directly');
-            attachGoogleDriveFiles(files, entryId);
+        // Set App ID if available
+        if (gdriveAppId) {
+            pickerBuilder.setAppId(gdriveAppId);
         }
         
-        showToast(`Selected ${files.length} file(s) from Google Drive`);
-    } else if (data.action === google.picker.Action.CANCEL) {
-        console.log('Picker cancelled by user');
+        const picker = pickerBuilder.build();
+        console.log('Picker built successfully');
+        picker.setVisible(true);
+        console.log('Picker should now be visible');
+    } catch (err) {
+        console.error('Error building picker:', err);
+        showToast('Error opening file picker: ' + err.message);
     }
 }
 
