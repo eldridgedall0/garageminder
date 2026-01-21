@@ -149,6 +149,12 @@ async function addOrUpdateEntryFromForm() {
   const fileInput = document.getElementById("entry-files");
   const hasFiles = fileInput && fileInput.files && fileInput.files.length > 0;
   
+  // Check for pending Google Drive files
+  const pendingGDriveFiles = (typeof GDrive !== 'undefined' && GDrive.getPendingFiles) 
+    ? GDrive.getPendingFiles() 
+    : [];
+  const hasGDriveFiles = pendingGDriveFiles.length > 0;
+  
   try {
     // IMPORTANT: Wait for save to complete before uploading files
     await saveData();
@@ -159,12 +165,22 @@ async function addOrUpdateEntryFromForm() {
     } else if (hasFiles && !canUseLocalUpload()) {
       showToast("Local uploads require a paid subscription. Use Google Drive instead.");
     }
+    
+    // Handle pending Google Drive files after entry is saved
+    if (hasGDriveFiles && typeof window.attachGoogleDriveFiles === 'function') {
+      console.log('Attaching pending Google Drive files to entry:', payload.id);
+      await window.attachGoogleDriveFiles(pendingGDriveFiles, payload.id);
+    }
   } catch (err) {
     console.error("Error saving entry:", err);
     showToast("Error saving entry");
   }
 
   $("#entry-files").val("");
+  // Clear any pending Google Drive files display
+  if (typeof GDrive !== 'undefined' && GDrive.clearPendingFiles) {
+    GDrive.clearPendingFiles();
+  }
   dashboardHistoryPage = 1;
   
   // Reload data from server to get updated attachments
