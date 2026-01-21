@@ -9,6 +9,7 @@ let gdrivePickerApiLoaded = false;
 let gdrivePickerOauthToken = null;
 let gdriveClientId = null;
 let gdriveAppId = null;
+let gdriveApiKey = null;
 
 // Scope for Drive API
 const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
@@ -160,7 +161,9 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
         gdrivePickerOauthToken = result.access_token;
         gdriveClientId = result.client_id;
         gdriveAppId = result.app_id;
+        gdriveApiKey = result.api_key || '';
         console.log('Got access token, opening picker...');
+        console.log('API Key available:', gdriveApiKey ? 'Yes' : 'No');
         
     } catch (error) {
         console.error('Failed to get picker token:', error);
@@ -189,11 +192,12 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
         .setSelectFolderEnabled(false)
         .setMimeTypes(allowedMimes.join(','));
     
-    // Build picker - note: don't set developer key when using OAuth
+    // Build picker
     const origin = window.location.protocol + '//' + window.location.host;
     console.log('Picker origin:', origin);
     console.log('OAuth token (first 20 chars):', gdrivePickerOauthToken ? gdrivePickerOauthToken.substring(0, 20) + '...' : 'null');
     console.log('App ID:', gdriveAppId);
+    console.log('API Key:', gdriveApiKey ? gdriveApiKey.substring(0, 10) + '...' : 'NOT SET');
     
     const pickerBuilder = new google.picker.PickerBuilder()
         .addView(docsView)
@@ -203,6 +207,14 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
         .setOrigin(origin)
         .setCallback(pickerCallbackHandler)
         .setTitle('Select files to attach');
+    
+    // Set Developer Key (API Key) - REQUIRED for picker to work
+    if (gdriveApiKey) {
+        pickerBuilder.setDeveloperKey(gdriveApiKey);
+    } else {
+        console.warn('WARNING: No API key set. Picker may not work correctly.');
+        console.warn('Add GOOGLE_API_KEY to your config.php');
+    }
     
     // Set App ID if available (extracted from client ID)
     if (gdriveAppId) {
