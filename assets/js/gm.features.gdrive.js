@@ -193,6 +193,8 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
         .setOAuthToken(gdrivePickerOauthToken)
         .setDeveloperKey('') // Not required for OAuth-based access
         .setCallback((data) => {
+            console.log('Picker callback fired:', data.action, data);
+            
             if (data.action === google.picker.Action.PICKED) {
                 const files = data.docs.map(doc => ({
                     id: doc.id,
@@ -202,9 +204,19 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
                     url: doc.url
                 }));
                 
+                console.log('Files selected:', files);
+                console.log('Entry ID:', entryId);
+                console.log('Callback function:', onFilesSelected);
+                
                 if (onFilesSelected) {
                     onFilesSelected(files, entryId);
+                } else {
+                    // Fallback: call attachGoogleDriveFiles directly
+                    console.log('No callback, calling attachGoogleDriveFiles directly');
+                    attachGoogleDriveFiles(files, entryId);
                 }
+            } else if (data.action === google.picker.Action.CANCEL) {
+                console.log('Picker cancelled');
             }
         })
         .setTitle('Select files to attach')
@@ -215,9 +227,24 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
 
 /**
  * Attach selected Google Drive files to an entry
+ * If entryId is null/empty, stores files for later attachment when entry is saved
  */
+let pendingGoogleDriveFiles = []; // Temporary storage for files selected before entry exists
+
 async function attachGoogleDriveFiles(files, entryId) {
     if (!files || !files.length) return;
+    
+    console.log('attachGoogleDriveFiles called with entryId:', entryId, 'files:', files);
+    
+    // If no entry ID, store files to attach after entry is created
+    if (!entryId) {
+        pendingGoogleDriveFiles = files;
+        showToast(`${files.length} file(s) selected from Google Drive. Will attach when entry is saved.`);
+        
+        // Show the selected files in the UI
+        displayPendingGoogleDriveFiles(files);
+        return;
+    }
     
     showToast('Attaching files from Google Drive...');
     
@@ -241,6 +268,7 @@ async function attachGoogleDriveFiles(files, entryId) {
         }
         
         const result = await response.json();
+        console.log('Attach result:', result);
         
         if (result.success) {
             showToast(`${result.count} file(s) attached from Google Drive`);
@@ -268,6 +296,56 @@ async function attachGoogleDriveFiles(files, entryId) {
         console.error('Google Drive attach error:', error);
         showToast('Failed to attach files: ' + error.message);
     }
+}
+
+/**
+ * Display pending Google Drive files in the new entry form
+ */
+function displayPendingGoogleDriveFiles(files) {
+    const $preview = $('#selected-files-preview');
+    if (!$preview.length) return;
+    
+    // Add to existing preview or create new
+    let $list = $preview.find('.gdrive-pending-files');
+    if (!$list.length) {
+        $list = $('<div>').addClass('gdrive-pending-files').css({
+            padding: '8px',
+            background: 'var(--gm-bg-subtle)',
+            borderRadius: '4px',
+            marginTop: '4px'
+        });
+        $preview.append($list);
+    }
+    
+    $list.empty();
+    $list.append($('<div>').css({fontWeight: '500', marginBottom: '4px'}).html(
+        `<i class="bi bi-google" style="color:#4285f4"></i> ${files.length} Google Drive file(s) selected:`
+    ));
+    
+    files.forEach(file => {
+        $list.append(
+            $('<div>').css({color: 'var(--gm-text-secondary)', fontSize: '0.85rem'}).html(
+                `<i class="bi bi-file-earmark"></i> ${file.name}`
+            )
+        );
+    });
+}
+
+/**
+ * Get and clear pending Google Drive files
+ */
+function getPendingGoogleDriveFiles() {
+    const files = pendingGoogleDriveFiles;
+    pendingGoogleDriveFiles = [];
+    return files;
+}
+
+/**
+ * Clear pending Google Drive files (e.g., when form is reset)
+ */
+function clearPendingGoogleDriveFiles() {
+    pendingGoogleDriveFiles = [];
+    $('#selected-files-preview .gdrive-pending-files').remove();
 }
 
 /**
@@ -525,5 +603,10 @@ window.GDrive = {
     disconnect: disconnectGoogleDrive,
     renderUploadArea: renderAttachmentUploadArea,
     renderItem: renderAttachmentItem,
-    handleDownload: handleAttachmentDownload
+    handleDownload: handleAttachmentDownload,
+    getPendingFiles: getPendingGoogleDriveFiles,
+    clearPendingFiles: clearPendingGoogleDriveFiles
 };
+
+// Also export attachGoogleDriveFiles directly to window for handler compatibility
+window.attachGoogleDriveFiles = attachGoogleDriveFiles;
