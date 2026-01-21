@@ -1104,6 +1104,11 @@ function renderDashboard() {
 function renderNewEntryFormDefaults(editEntry) {
   const today = getTodayIsoInSettingsTz();
   
+  // Clear any pending Google Drive files
+  if (typeof GDrive !== 'undefined' && GDrive.clearPendingFiles) {
+    GDrive.clearPendingFiles();
+  }
+  
   if (!editEntry) {
     $("#entry-id").val("");
     $("#entry-submit-label").text("Save entry");
