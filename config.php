@@ -53,7 +53,7 @@ const ALLOWED_MIME_TYPES = [
 define('GOOGLE_REDIRECT_URI', 'https://yesca.st/gm/garage/google-drive-auth.php');
 const GOOGLE_DRIVE_ENABLED = true;
 const GOOGLE_CLIENT_ID = '393783380963-ptirdorf7gpadkf3pb5mkrtsvlbhh2l1.apps.googleusercontent.com';
-const GOOGLE_CLIENT_SECRET = 'YOUR_CLIENT_SECRET';
+const GOOGLE_CLIENT_SECRET = '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';
 const GOOGLE_REDIRECT_URI = 'https://yesca.st/gm/garage/google-drive-auth.php';
 const GOOGLE_DRIVE_FOLDER_NAME = 'TrackMyWrench Attachments';
 const GOOGLE_DRIVE_ALLOWED_TYPES = [
