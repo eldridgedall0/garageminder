@@ -1,0 +1,72 @@
+# ========================================
+# GarageMinder .gitignore
+# ========================================
+
+# Configuration file with sensitive credentials
+config.php
+
+# Environment-specific files
+.env
+.env.local
+.env.*.local
+
+# User-uploaded files and attachments
+attachments/*
+!attachments/.htaccess
+
+# Backups (contain user data)
+backups/*
+!backups/.htaccess
+
+# Log files
+*.log
+error_log
+debug.log
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+tmp/
+temp/
+
+# Package manager files
+node_modules/
+vendor/
+composer.phar
+composer.lock
+package-lock.json
+
+# Build artifacts
+dist/
+build/
+
+# Database dumps (may contain sensitive data)
+*.sql
+*.sqlite
+*.db
+
+# WordPress-specific (if integrated)
+wp-config.php
+wp-content/uploads/
