@@ -369,8 +369,7 @@ try {
                 'success' => true,
                 'access_token' => $accessToken,
                 'client_id' => GOOGLE_CLIENT_ID,
-                'app_id' => explode('-', GOOGLE_CLIENT_ID)[0] ?? '', // Extract app ID
-                'api_key' => defined('GOOGLE_API_KEY') ? GOOGLE_API_KEY : '',
+                'app_id' => explode('-', GOOGLE_CLIENT_ID)[0] ?? '',
             ]);
             exit;
         
