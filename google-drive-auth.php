@@ -181,6 +181,8 @@ function storeTokens(string $userId, array $tokens): void {
     
     $expiresAt = date('Y-m-d H:i:s', time() + ($tokens['expires_in'] ?? 3600));
     
+    error_log("Google Drive: Storing tokens for user_id='$userId', expires_at='$expiresAt'");
+    
     $stmt = $pdo->prepare("
         INSERT INTO `google_drive_tokens` 
         (`user_id`, `access_token`, `refresh_token`, `token_type`, `expires_at`, `scope`)
@@ -202,6 +204,9 @@ function storeTokens(string $userId, array $tokens): void {
         ':expires_at' => $expiresAt,
         ':scope' => $tokens['scope'] ?? '',
     ]);
+    
+    $rowCount = $stmt->rowCount();
+    error_log("Google Drive: Token store result - rows affected: $rowCount");
 }
 
 /**
