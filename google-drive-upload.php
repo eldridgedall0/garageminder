@@ -323,14 +323,44 @@ try {
     switch ($action) {
         case 'picker_token':
             // Return access token for Drive Picker
+            
+            // First check if the tokens table exists
+            try {
+                $tableCheck = $pdo->query("SHOW TABLES LIKE 'google_drive_tokens'");
+                if ($tableCheck->rowCount() === 0) {
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'table_missing',
+                        'message' => 'Google Drive tokens table does not exist. Please run the database setup SQL.',
+                        'debug' => [
+                            'user_id_checked' => $userId,
+                            'table_exists' => false
+                        ]
+                    ]);
+                    exit;
+                }
+            } catch (Exception $e) {
+                // Table check failed, continue anyway
+            }
+            
             $accessToken = getValidAccessToken($userId);
             
             if (!$accessToken) {
+                // Debug: Check if tokens exist at all
+                $stmt = $pdo->prepare("SELECT user_id, expires_at, LENGTH(access_token) as token_len, LENGTH(refresh_token) as refresh_len FROM `google_drive_tokens` WHERE `user_id` = :user_id");
+                $stmt->execute([':user_id' => $userId]);
+                $debugTokens = $stmt->fetch();
+                
                 echo json_encode([
                     'success' => false,
                     'error' => 'not_connected',
                     'message' => 'Google Drive not connected. Please authorize first.',
-                    'auth_url' => 'google-drive-auth.php?action=authorize'
+                    'auth_url' => 'google-drive-auth.php?action=authorize',
+                    'debug' => [
+                        'user_id_checked' => $userId,
+                        'tokens_found' => $debugTokens ? true : false,
+                        'tokens_info' => $debugTokens ?: null
+                    ]
                 ]);
                 exit;
             }
