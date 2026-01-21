@@ -125,6 +125,8 @@ function authorizeGoogleDrive(callback) {
  * Open Google Drive Picker for file selection
  */
 async function openGoogleDrivePicker(entryId, onFilesSelected) {
+    console.log('openGoogleDrivePicker called, pickerApiLoaded:', gdrivePickerApiLoaded);
+    
     if (!gdrivePickerApiLoaded) {
         showToast('Google Drive is loading... Please try again.');
         loadGooglePickerApi();
@@ -133,13 +135,16 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
     
     // Get fresh access token
     try {
+        console.log('Fetching picker token...');
         const response = await fetch('google-drive-upload.php?action=picker_token', {
             credentials: 'same-origin'
         });
         const result = await response.json();
+        console.log('Picker token response:', result);
         
         if (!result.success) {
             if (result.error === 'not_connected') {
+                console.log('Not connected, starting auth flow. Debug info:', result.debug);
                 // Need to authorize first
                 authorizeGoogleDrive((success) => {
                     if (success) {
@@ -155,6 +160,7 @@ async function openGoogleDrivePicker(entryId, onFilesSelected) {
         gdrivePickerOauthToken = result.access_token;
         gdriveClientId = result.client_id;
         gdriveAppId = result.app_id;
+        console.log('Got access token, opening picker...');
         
     } catch (error) {
         console.error('Failed to get picker token:', error);
