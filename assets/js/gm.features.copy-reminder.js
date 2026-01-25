@@ -10,25 +10,53 @@ let currentCopyReminder = null;
 /**
  * Open copy reminder modal
  */
+// TEMPORARY DEBUG VERSION
+// Replace the copyReminderFromCard function in gm.features.copy-reminder.js with this:
+
 function copyReminderFromCard($card) {
+  console.log("=== copyReminderFromCard START ===");
+  console.log("1. $card:", $card);
+  console.log("2. $card.length:", $card.length);
+  
   const remId = $card.attr("data-id");
-  if (!remId) return;
+  console.log("3. remId:", remId);
+  
+  if (!remId) {
+    console.log("ERROR: No remId - STOPPING");
+    return;
+  }
+  
+  console.log("4. Searching for reminder in data.reminders...");
+  console.log("5. data.reminders exists:", typeof data !== 'undefined' && data.reminders);
+  console.log("6. data.reminders length:", data.reminders ? data.reminders.length : 'N/A');
   
   const rem = data.reminders.find(r => r.id === remId);
-  if (!rem) return;
+  console.log("7. rem found:", rem);
+  
+  if (!rem) {
+    console.log("ERROR: Reminder not found - STOPPING");
+    return;
+  }
   
   currentCopyReminder = rem;
+  console.log("8. Set currentCopyReminder:", currentCopyReminder);
   
   // Get source vehicle name
+  console.log("9. Looking for source vehicle...");
   const sourceVehicle = data.vehicles.find(v => v.id === rem.vehicleId);
+  console.log("10. sourceVehicle:", sourceVehicle);
   const sourceVehicleName = sourceVehicle ? sourceVehicle.name : "Unknown Vehicle";
+  console.log("11. sourceVehicleName:", sourceVehicleName);
   
   // Populate modal
+  console.log("12. Populating modal fields...");
   $("#copy-source-vehicle").text(sourceVehicleName);
   $("#copy-source-service").text(rem.serviceName || "Reminder");
   
   // Populate target vehicle dropdown (exclude current vehicle)
   const $targetSelect = $("#copy-target-vehicle");
+  console.log("13. $targetSelect found:", $targetSelect.length);
+  
   $targetSelect.empty().append('<option value="">-- Select vehicle --</option>');
   
   data.vehicles.forEach(v => {
@@ -38,31 +66,53 @@ function copyReminderFromCard($card) {
       );
     }
   });
+  console.log("14. Target vehicle options added");
   
   // Set read-only fields
   $("#copy-service-name").val(rem.serviceName || "");
   $("#copy-interval-miles").val(rem.intervalMiles != null ? rem.intervalMiles : "");
   $("#copy-interval-months").val(rem.intervalMonths != null ? rem.intervalMonths : "");
   $("#copy-notes").val(rem.notes || "");
+  console.log("15. Read-only fields populated");
   
   // Clear editable fields
   $("#copy-base-odo").val("");
   $("#copy-base-date").val("");
   $("#copy-next-odo").val("");
   $("#copy-next-date").val("");
+  console.log("16. Editable fields cleared");
   
   // Hide fields section initially
   $("#copy-reminder-fields").hide();
   $("#copy-reminder-confirm").prop("disabled", true);
+  console.log("17. Fields hidden, confirm button disabled");
   
   // Remove any existing auto-fill indicators
   $("#copy-reminder-modal .field").find(".reminder-autofill-indicator").remove();
+  console.log("18. Auto-fill indicators removed");
   
   // Show modal
+  console.log("19. About to show modal...");
+  console.log("20. Modal exists:", $("#copy-reminder-modal").length);
+  console.log("21. Modal display before:", $("#copy-reminder-modal").css("display"));
+  
   $("#copy-reminder-modal").fadeIn(200);
   
+  console.log("22. fadeIn called");
+  
+  setTimeout(function() {
+    console.log("23. Modal display after (200ms):", $("#copy-reminder-modal").css("display"));
+  }, 250);
+  
   // Initialize date pickers for the modal fields
-  initDatePickers($("#copy-reminder-modal"));
+  if (typeof initDatePickers === "function") {
+    initDatePickers($("#copy-reminder-modal"));
+    console.log("24. Date pickers initialized");
+  } else {
+    console.log("24. initDatePickers not found - skipping");
+  }
+  
+  console.log("=== copyReminderFromCard END ===");
 }
 
 /**
