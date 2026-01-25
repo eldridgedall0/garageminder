@@ -49,15 +49,23 @@
 /* ============================================
    REMINDER STATUS PILLS
    ============================================ */
+/* Default styles (for Reminders page) */
 .reminder-status-pill {
   font-size: 0.75rem;
-  padding: 6px 12px;
+  padding: 3px 10px;
   border-radius: var(--gm-radius-full);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
+  gap: 5px;
+}
+
+/* Sidebar-specific styles (dashboard only) */
+.reminder-snippet-item .reminder-status-pill {
+  display: flex;
   width: 100%;
+  justify-content: flex-start;
+  padding: 6px 12px;
+  gap: 6px;
   margin-top: 4px;
 }
 
