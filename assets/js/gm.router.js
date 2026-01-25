@@ -34,7 +34,7 @@ const VIEW_REGISTRY = {
     aliases: ['config', 'setup', 'preferences'],
     supportsVehicle: false,
     supportsSubviews: true,
-    subviews: ['general', 'vehicles', 'services', 'intervals'],
+    subviews: ['general', 'vehicles', 'services', 'templates', 'backup'],
     defaultSubview: 'general',
     defaultRoute: '#settings/general',
     render: function() { renderSettings(); },
