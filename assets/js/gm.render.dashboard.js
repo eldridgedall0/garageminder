@@ -1068,7 +1068,7 @@ function getServicesFromChecklist($container, otherValue) {
 
 function initDatePickers($scope) {
   const $ctx = $scope || $(document);
-  $ctx.find("#entry-date, #entry-next-date, .entry-edit-date, .entry-edit-next-date, " +
+  $ctx.find("#entry-date, .entry-edit-date, " +
             ".rem-edit-base-date, .rem-edit-next-date, #rem-new-base-date, " +
             ".settings-vehicle-insurance, .settings-vehicle-registration")
     .datepicker({
@@ -1116,9 +1116,8 @@ function renderNewEntryFormDefaults(editEntry) {
     $("#entry-odo").val("");
     $("#entry-services-other").val("");
     $("#entry-cost").val("");
-    $("#entry-next-date").val("");
-    $("#entry-next-odo").val("");
     $("#entry-notes").val("");
+    // REMOVED: entry-next-date and entry-next-odo (use reminders instead)
     $("#entry-files").val(""); // Clear file input
     $("#selected-files-preview").empty(); // Clear selected files preview
     
@@ -1131,9 +1130,8 @@ function renderNewEntryFormDefaults(editEntry) {
     $("#entry-date").val(editEntry.date || today);
     $("#entry-odo").val(editEntry.odo != null ? editEntry.odo : "");
     $("#entry-cost").val(editEntry.cost != null ? editEntry.cost : "");
-    $("#entry-next-date").val(editEntry.nextDate || "");
-    $("#entry-next-odo").val(editEntry.nextOdo != null ? editEntry.nextOdo : "");
     $("#entry-notes").val(editEntry.notes || "");
+    // REMOVED: entry-next-date and entry-next-odo (use reminders instead)
     $("#entry-files").val(""); // Clear file input
     $("#selected-files-preview").empty(); // Clear selected files preview
 
@@ -1425,15 +1423,8 @@ function renderDashboardHistory() {
       $("<div>").addClass("field").append(
         $("<label>").text("Misc/Other Cost"),
         $("<input>").attr({type:"number",min:"0",step:"0.01", placeholder:"Taxes, fees, etc."}).addClass("entry-edit-cost").val(entry.cost != null ? entry.cost : "")
-      ),
-      $("<div>").addClass("field").append(
-        $("<label>").text("Next due date"),
-        $("<input>").attr({type:"text", placeholder:"YYYY-MM-DD", autocomplete:"off"}).addClass("entry-edit-next-date").val(entry.nextDate || "")
-      ),
-      $("<div>").addClass("field").append(
-        $("<label>").html(`Next due mileage (<span class="unit-label">${unit}</span>)`),
-        $("<input>").attr({type:"number",min:"0",step:"1"}).addClass("entry-edit-next-odo").val(entry.nextOdo != null ? entry.nextOdo : "")
       )
+      // REMOVED: Next due date and next due mileage fields (use reminders instead)
     );
 
     const $notesField = $("<div>").addClass("entry-body-notes field").append(
