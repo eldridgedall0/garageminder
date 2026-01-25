@@ -286,34 +286,41 @@
         const view = e.currentTarget.dataset.view;
         if (!view) return;
 
-        // Update desktop nav buttons state
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.view === view);
-        });
+        // Use router for navigation (updates URL + renders view)
+        if (typeof navigateTo === 'function') {
+            navigateTo(view);
+            closeDrawer();
+        } else {
+            // Fallback if router not loaded
+            // Update desktop nav buttons state
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
 
-        // Update drawer nav items state
-        document.querySelectorAll('.drawer-nav-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.view === view);
-        });
+            // Update drawer nav items state
+            document.querySelectorAll('.drawer-nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.view === view);
+            });
 
-        // Switch view
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        const targetView = document.getElementById('view-' + view);
-        if (targetView) {
-            targetView.classList.add('active');
+            // Switch view
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            const targetView = document.getElementById('view-' + view);
+            if (targetView) {
+                targetView.classList.add('active');
+            }
+
+            // Trigger view-specific rendering
+            if (view === 'dashboard' && typeof renderDashboard === 'function') {
+                renderDashboard();
+            } else if (view === 'reminders' && typeof renderRemindersPage === 'function') {
+                renderRemindersPage();
+            } else if (view === 'settings' && typeof renderSettings === 'function') {
+                renderSettings();
+            }
+
+            // Close drawer
+            closeDrawer();
         }
-
-        // Trigger view-specific rendering
-        if (view === 'dashboard' && typeof renderDashboard === 'function') {
-            renderDashboard();
-        } else if (view === 'reminders' && typeof renderRemindersPage === 'function') {
-            renderRemindersPage();
-        } else if (view === 'settings' && typeof renderSettings === 'function') {
-            renderSettings();
-        }
-
-        // Close drawer
-        closeDrawer();
     }
 
     /**
@@ -328,23 +335,29 @@
             mainPicker.value = selectedValue;
         }
 
-        // Trigger change via the main picker's handler
+        // Update state
         if (typeof setActiveVehicle === 'function') {
             window.dashboardHistoryPage = 1;
             setActiveVehicle(selectedValue);
         }
 
-        // Render updates
-        if (typeof renderDashboard === 'function') renderDashboard();
-        if (typeof renderRemindersPage === 'function') renderRemindersPage();
+        // Use router to navigate with new vehicle context
+        if (typeof navigateTo === 'function' && typeof getCurrentRoute === 'function') {
+            const currentRoute = getCurrentRoute();
+            navigateTo(currentRoute.view, selectedValue, currentRoute.subview);
+        } else {
+            // Fallback if router not loaded
+            if (typeof renderDashboard === 'function') renderDashboard();
+            if (typeof renderRemindersPage === 'function') renderRemindersPage();
+            
+            // Update safety status for specific vehicles
+            if (selectedValue && selectedValue !== 'all' && typeof updateSafetyStatus === 'function') {
+                updateSafetyStatus();
+            }
+        }
         
         // Update drawer odometer section
         updateDrawerVehicleOdo();
-        
-        // Update safety status for specific vehicles
-        if (selectedValue && selectedValue !== 'all' && typeof updateSafetyStatus === 'function') {
-            updateSafetyStatus();
-        }
     }
 
     /**
