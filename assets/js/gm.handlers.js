@@ -10,17 +10,26 @@ $(function() {
   applySiteTitle();
   updateUnitLabels();
   renderVehiclePicker();
-  renderDashboard();
-  renderSettings();
-  renderReminderServiceSelect();
-  renderRemindersPage();
-  renderNewEntryFormDefaults();
-  initDatePickers($(document));
   
   // Initialize templates feature (after data is loaded)
   if (typeof initTemplatesFeature === "function") {
     initTemplatesFeature();
   }
+  
+  // Initialize router (will handle initial rendering based on URL)
+  if (typeof initRouter === "function") {
+    initRouter();
+  } else {
+    // Fallback if router not loaded
+    console.warn("Router not loaded, using fallback rendering");
+    renderDashboard();
+    renderSettings();
+    renderReminderServiceSelect();
+    renderRemindersPage();
+    renderNewEntryFormDefaults();
+  }
+  
+  initDatePickers($(document));
   
   if (activeVehicleId && activeVehicleId !== "all") {
     updateSafetyStatus();
@@ -267,16 +276,12 @@ $(function() {
   }
 
   // ============================================
-  // NAVIGATION HANDLERS
+  // NAVIGATION HANDLERS (Router-Integrated)
   // ============================================
   
   $(".nav-btn").on("click", function() {
     const view = $(this).data("view");
-    $(".nav-btn").removeClass("active");
-    $(this).addClass("active");
-    $(".view").removeClass("active");
-    $("#view-" + view).addClass("active");
-
+    
     // FIX Issue #12: Reset entry form button state when navigating away from dashboard
     if (view !== "dashboard") {
       // Hide the form and reset button to closed state
@@ -291,30 +296,48 @@ $(function() {
         $btn.contents().filter(function() { return this.nodeType === 3; }).last().replaceWith(" Add New Service Entry");
       }
     }
-
-    if (view === "dashboard") {
-      renderDashboard();
-    } else if (view === "reminders") {
-      renderRemindersPage();
-    } else if (view === "settings") {
-      renderSettings();
+    
+    // Use router for navigation (updates URL + renders view)
+    if (typeof navigateTo === "function") {
+      navigateTo(view);
+    } else {
+      // Fallback if router not loaded
+      $(".nav-btn").removeClass("active");
+      $(this).addClass("active");
+      $(".view").removeClass("active");
+      $("#view-" + view).addClass("active");
+      
+      if (view === "dashboard") {
+        renderDashboard();
+      } else if (view === "reminders") {
+        renderRemindersPage();
+      } else if (view === "settings") {
+        renderSettings();
+      }
     }
   });
 
   $(".settings-tab-btn").on("click", function() {
     const tab = $(this).data("tab");
-    $(".settings-tab-btn").removeClass("active");
-    $(this).addClass("active");
-    $(".settings-tab-view").removeClass("active");
-    $("#settings-tab-" + tab).addClass("active");
-
-    if (tab === "intervals") {
-      renderSettingsIntervals();
+    
+    // Use router for navigation (updates URL + renders tab)
+    if (typeof navigateTo === "function") {
+      navigateTo('settings', null, tab);
+    } else {
+      // Fallback if router not loaded
+      $(".settings-tab-btn").removeClass("active");
+      $(this).addClass("active");
+      $(".settings-tab-view").removeClass("active");
+      $("#settings-tab-" + tab).addClass("active");
+      
+      if (tab === "intervals") {
+        renderSettingsIntervals();
+      }
     }
   });
 
   // ============================================
-  // VEHICLE PICKER HANDLER
+  // VEHICLE PICKER HANDLER (Router-Integrated)
   // ============================================
   
   $("#active-vehicle").on("change", function() {
@@ -324,12 +347,19 @@ $(function() {
     // Always use setActiveVehicle to ensure saveData() is called
     setActiveVehicle(selectedValue);
     
-    renderDashboard();
-    renderRemindersPage();
-    
-    // Update safety status only for specific vehicles
-    if (activeVehicleId && activeVehicleId !== "all") {
-      updateSafetyStatus();
+    // Use router to navigate with new vehicle context
+    if (typeof navigateTo === "function" && typeof getCurrentRoute === "function") {
+      const currentRoute = getCurrentRoute();
+      navigateTo(currentRoute.view, selectedValue, currentRoute.subview);
+    } else {
+      // Fallback if router not loaded
+      renderDashboard();
+      renderRemindersPage();
+      
+      // Update safety status only for specific vehicles
+      if (activeVehicleId && activeVehicleId !== "all") {
+        updateSafetyStatus();
+      }
     }
   });
 
