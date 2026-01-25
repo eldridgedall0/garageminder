@@ -81,6 +81,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.24-theme-indicator.css" />
   <link rel="stylesheet" href="assets/css/gm.25-gdrive.css" />
   <link rel="stylesheet" href="assets/css/gm.dynamic-reminders.css">
+  <link rel="stylesheet" href="assets/css/gm.copy-reminder-modal.css">
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -781,6 +782,7 @@ ob_end_clean();
 
 </body>
 </html>
+
 
 
 
