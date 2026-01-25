@@ -174,21 +174,6 @@ function deleteReminderFromCard($card) {
 }
 
 /**
- * Copy a reminder to another vehicle
- */
-function copyReminderFromCard($card) {
-  const remId = $card.attr("data-id");
-  if (!remId) return;
-  
-  const rem = data.reminders.find(r => r.id === remId);
-  if (!rem) return;
-  
-  // This function is called when the copy button is clicked
-  // The actual copy happens in gm.handlers.js with the vehicle selector
-  // This is just a placeholder - the existing handler in gm.handlers.js handles this
-}
-
-/**
  * Open Google Calendar reminder
  */
 function openGoogleReminderFromCard($card) {
