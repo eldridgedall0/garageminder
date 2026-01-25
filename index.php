@@ -661,9 +661,11 @@ ob_end_clean();
   <script src="assets/js/gm.user.js"></script>
   <script src="assets/js/gm.mobile-nav.js"></script>
   <script src="assets/js/gm.features.gdrive.js"></script>
+  <script src="assets/js/gm.entry-management.js"></script>
   <script src="assets/js/gm.handlers.js"></script>
   <script src="assets/js/gm.pwa.js"></script>
   <script src="assets/js/gm.theme-indicator.js"></script>
   <script src="assets/js/gm.fixes.js"></script>
 </body>
 </html>
+
