@@ -82,6 +82,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.25-gdrive.css" />
   <link rel="stylesheet" href="assets/css/gm.dynamic-reminders.css">
   <link rel="stylesheet" href="assets/css/gm.copy-reminder-modal.css">
+  <link rel="stylesheet" href="assets/css/gm.entry-success-notification.css">
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -202,14 +203,6 @@ ob_end_clean();
               <div class="field">
                 <label for="entry-cost">Misc/Other Cost <span class="text-muted" style="font-size:0.75rem;">(taxes, fees, etc.)</span></label>
                 <input id="entry-cost" type="number" min="0" step="0.01" placeholder="0.00" />
-              </div>
-              <div class="field">
-                <label for="entry-next-date">Next due date <span class="text-muted">(optional)</span></label>
-                <input id="entry-next-date" type="text" placeholder="YYYY-MM-DD" autocomplete="off" />
-              </div>
-              <div class="field">
-                <label for="entry-next-odo">Next due mileage (<span class="unit-label">mi</span>)</label>
-                <input id="entry-next-odo" type="number" min="0" step="1" />
               </div>
             </div>
 
@@ -773,6 +766,7 @@ ob_end_clean();
   <script src="assets/js/gm.features.gdrive.js"></script>
 <script src="assets/js/gm.features.dynamic-reminders.js"></script>
 <script src="assets/js/gm.features.copy-reminder.js"></script>
+<script src="assets/js/gm.features.entry-reminders.js"></script>
 <script src="assets/js/gm.reminder-handlers.js"></script>           
 <script src="assets/js/gm.entry-management.js"></script>
 <script src="assets/js/gm.handlers.js"></script>
@@ -785,6 +779,7 @@ ob_end_clean();
 
 </body>
 </html>
+
 
 
 
