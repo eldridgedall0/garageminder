@@ -80,6 +80,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.23-pwa.css" />
   <link rel="stylesheet" href="assets/css/gm.24-theme-indicator.css" />
   <link rel="stylesheet" href="assets/css/gm.25-gdrive.css" />
+  <link rel="stylesheet" href="assets/css/gm.dynamic-reminders.css">
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -382,6 +383,9 @@ ob_end_clean();
               service types or typed manually. Intervals default from the per-vehicle
               template when available.
             </div>
+            <!-- UPDATED REMINDER FORM FOR index.php -->
+<!-- Replace the existing <form id="reminder-form"> section (around line 385) with this: -->
+
             <form id="reminder-form">
               <div class="field-grid">
                 <div class="field">
@@ -397,6 +401,26 @@ ob_end_clean();
                   <label for="rem-new-interval-months">Interval (months, optional)</label>
                   <input id="rem-new-interval-months" type="number" min="0" step="1" />
                 </div>
+                
+                <!-- NEW FIELDS ADDED BELOW -->
+                <div class="field">
+                  <label for="rem-new-base-odo">Last service mileage (<span class="unit-label">mi</span>, optional)</label>
+                  <input id="rem-new-base-odo" type="number" min="0" step="1" placeholder="Auto-fills from entries" />
+                </div>
+                <div class="field">
+                  <label for="rem-new-base-date">Last service date (optional)</label>
+                  <input id="rem-new-base-date" type="text" placeholder="YYYY-MM-DD" autocomplete="off" class="datepicker" />
+                </div>
+                <div class="field">
+                  <label for="rem-new-next-odo">Next due mileage (<span class="unit-label">mi</span>, optional)</label>
+                  <input id="rem-new-next-odo" type="number" min="0" step="1" placeholder="Auto-calculates" />
+                </div>
+                <div class="field">
+                  <label for="rem-new-next-date">Next due date (optional)</label>
+                  <input id="rem-new-next-date" type="text" placeholder="YYYY-MM-DD" autocomplete="off" class="datepicker" />
+                </div>
+                <!-- END NEW FIELDS -->
+                
                 <div class="field">
                   <label for="rem-new-notes">Notes (optional)</label>
                   <input id="rem-new-notes" type="text" placeholder="Any extra info or link" />
@@ -661,11 +685,15 @@ ob_end_clean();
   <script src="assets/js/gm.user.js"></script>
   <script src="assets/js/gm.mobile-nav.js"></script>
   <script src="assets/js/gm.features.gdrive.js"></script>
-  <script src="assets/js/gm.entry-management.js"></script>
-  <script src="assets/js/gm.handlers.js"></script>
-  <script src="assets/js/gm.pwa.js"></script>
+<script src="assets/js/gm.features.dynamic-reminders.js"></script>  
+<script src="assets/js/gm.reminder-handlers.js"></script>           
+<script src="assets/js/gm.entry-management.js"></script>
+<script src="assets/js/gm.handlers.js"></script>
+<script src="assets/js/gm.dynamic-reminders-integration.js"></script>
+<script src="assets/js/gm.pwa.js"></script>
   <script src="assets/js/gm.theme-indicator.js"></script>
   <script src="assets/js/gm.fixes.js"></script>
 </body>
 </html>
+
 
