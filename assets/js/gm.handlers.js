@@ -844,39 +844,11 @@ $(function() {
   $("#reminders-list").on("click", ".rem-btn-copy", function(e) {
     e.stopPropagation();
     const $card = $(this).closest(".reminder-card");
-    copyReminderFromCard($card);
+    copyReminderFromCard($card); // Now opens modal (see gm.features.copy-reminder.js)
   });
 
-  $("#reminders-list").on("click", ".rem-copy-cancel", function(e) {
-    e.stopPropagation();
-    $(this).closest(".reminder-copy-panel").remove();
-  });
-
-  $("#reminders-list").on("click", ".rem-copy-confirm", function(e) {
-    e.stopPropagation();
-    const $panel = $(this).closest(".reminder-copy-panel");
-    const $card = $(this).closest(".reminder-card");
-    const id = $card.attr("data-id");
-    const rem = data.reminders.find(r => r.id === id);
-    if (!rem) return;
-    const targetId = $panel.find(".rem-copy-vehicle").val();
-    if (!targetId) return;
-
-    const now = new Date().toISOString();
-    const clone = Object.assign({}, rem, {
-      id: "r_" + Date.now() + "_" + Math.random().toString(36).slice(2),
-      vehicleId: targetId,
-      createdAt: now,
-      updatedAt: now
-    });
-
-    data.reminders.push(clone);
-    saveData();
-    $panel.remove();
-    renderRemindersPage();
-    renderDashboardRemindersSnippet();
-    showToast("Reminder copied to selected vehicle.");
-  });
+  // Old inline copy panel handlers removed - now using modal with dynamic auto-fill
+  // (see gm.features.copy-reminder.js for new implementation)
 
   $("#reminders-list").on("click", ".rem-btn-google", function(e) {
     e.stopPropagation();
