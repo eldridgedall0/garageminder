@@ -696,15 +696,12 @@ ob_end_clean();
   <script src="assets/js/gm.theme-indicator.js"></script>
   <script src="assets/js/gm.fixes.js"></script>
 
-    <!-- COPY REMINDER MODAL -->
-<!-- Add this to index.php before the closing </body> tag (around line 670) -->
-
 <!-- Copy Reminder Modal -->
 <div id="copy-reminder-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content copy-reminder-modal-content">
     <div class="modal-header">
       <h3>Copy Reminder to Another Vehicle</h3>
-      <button class="modal-close" id="copy-reminder-close">&times;</button>
+      <button class="modal-close" id="copy-reminder-close"></button>
     </div>
     
     <div class="modal-body">
@@ -781,6 +778,7 @@ ob_end_clean();
 
 </body>
 </html>
+
 
 
 
