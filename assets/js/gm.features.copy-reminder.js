@@ -1,11 +1,52 @@
 /**
- * GarageMinder - Copy Reminder Modal with Dynamic Auto-Fill
+ * GarageMinder - Copy Reminder Modal with Dynamic Auto-Fill & Duplicate Detection
  * 
  * Modal-based reminder copying with automatic recalculation
- * for the target vehicle based on its service history
+ * for the target vehicle based on its service history.
+ * Includes duplicate detection and replacement functionality.
  */
 
 let currentCopyReminder = null;
+let existingDuplicateReminder = null; // Track if target has duplicate
+
+/**
+ * Check if target vehicle already has a reminder for this service
+ */
+function checkForDuplicateReminder(targetVehicleId, serviceName) {
+  if (!targetVehicleId || !serviceName) return null;
+  
+  // Case-insensitive search for existing reminder
+  const duplicate = data.reminders.find(r => 
+    r.vehicleId === targetVehicleId && 
+    r.serviceName.toLowerCase() === serviceName.toLowerCase()
+  );
+  
+  return duplicate || null;
+}
+
+/**
+ * Show or hide duplicate warning
+ */
+function updateDuplicateWarning(isDuplicate, targetVehicleName, serviceName) {
+  const $warning = $("#copy-duplicate-warning");
+  const $message = $("#copy-duplicate-message");
+  const $confirmBtn = $("#copy-reminder-confirm");
+  
+  if (isDuplicate) {
+    // Show warning
+    $message.text(`${targetVehicleName} already has a reminder for "${serviceName}". This will replace the existing reminder.`);
+    $warning.slideDown(200);
+    
+    // Change button text
+    $confirmBtn.text("Replace Existing Reminder");
+  } else {
+    // Hide warning
+    $warning.slideUp(200);
+    
+    // Reset button text
+    $confirmBtn.text("Copy Reminder");
+  }
+}
 
 /**
  * Open copy reminder modal
@@ -18,6 +59,7 @@ function copyReminderFromCard($card) {
   if (!rem) return;
   
   currentCopyReminder = rem;
+  existingDuplicateReminder = null; // Reset
   
   // Get source vehicle name
   const sourceVehicle = data.vehicles.find(v => v.id === rem.vehicleId);
@@ -51,9 +93,10 @@ function copyReminderFromCard($card) {
   $("#copy-next-odo").val("");
   $("#copy-next-date").val("");
   
-  // Hide fields section initially
+  // Hide fields section and warning initially
   $("#copy-reminder-fields").hide();
-  $("#copy-reminder-confirm").prop("disabled", true);
+  $("#copy-duplicate-warning").hide();
+  $("#copy-reminder-confirm").prop("disabled", true).text("Copy Reminder");
   
   // Remove any existing auto-fill indicators
   $("#copy-reminder-modal .field").find(".reminder-autofill-indicator").remove();
@@ -71,6 +114,7 @@ function copyReminderFromCard($card) {
 function closeCopyReminderModal() {
   $("#copy-reminder-modal").fadeOut(200);
   currentCopyReminder = null;
+  existingDuplicateReminder = null;
   
   // Clear form
   $("#copy-target-vehicle").val("");
@@ -79,6 +123,7 @@ function closeCopyReminderModal() {
   $("#copy-next-odo").val("");
   $("#copy-next-date").val("");
   $("#copy-notes").val("");
+  $("#copy-duplicate-warning").hide();
   
   // Remove auto-fill indicators
   $("#copy-reminder-modal .field").find(".reminder-autofill-indicator").remove();
@@ -92,7 +137,9 @@ function autoFillCopyReminderFields() {
   
   if (!targetVehicleId || !currentCopyReminder) {
     $("#copy-reminder-fields").hide();
+    $("#copy-duplicate-warning").hide();
     $("#copy-reminder-confirm").prop("disabled", true);
+    existingDuplicateReminder = null;
     return;
   }
   
@@ -106,6 +153,10 @@ function autoFillCopyReminderFields() {
   const serviceName = currentCopyReminder.serviceName;
   const intervalMiles = currentCopyReminder.intervalMiles;
   const intervalMonths = currentCopyReminder.intervalMonths;
+  
+  // Check for duplicate reminder
+  existingDuplicateReminder = checkForDuplicateReminder(targetVehicleId, serviceName);
+  updateDuplicateWarning(!!existingDuplicateReminder, targetVehicle.name, serviceName);
   
   // Find most recent entry for this service on target vehicle
   const mostRecentEntry = findMostRecentEntryForService(targetVehicleId, serviceName);
@@ -208,6 +259,12 @@ function confirmCopyReminder() {
   
   const notes = $("#copy-notes").val().trim();
   
+  // If duplicate exists, delete it first
+  if (existingDuplicateReminder) {
+    console.log("Deleting existing duplicate reminder:", existingDuplicateReminder.id);
+    data.reminders = data.reminders.filter(r => r.id !== existingDuplicateReminder.id);
+  }
+  
   // Create new reminder for target vehicle
   const now = new Date().toISOString();
   const newReminder = {
@@ -237,7 +294,8 @@ function confirmCopyReminder() {
   closeCopyReminderModal();
   
   // Show success message
-  showToast(`Reminder copied to ${targetVehicle.name}`);
+  const action = existingDuplicateReminder ? "replaced on" : "copied to";
+  showToast(`Reminder ${action} ${targetVehicle.name}`);
 }
 
 /**
