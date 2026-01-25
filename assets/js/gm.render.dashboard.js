@@ -1251,7 +1251,7 @@ function renderDashboardHistory() {
     const tagline = [];
     if (entry.nextDate) tagline.push("Next date: " + formatDateNice(entry.nextDate));
     if (entry.nextOdo != null) tagline.push(`Next mileage: ${entry.nextOdo.toLocaleString()} ${unit}`);
-    if (!tagline.length) tagline.push("No reminder set for this entry.");
+    
     
     $viewInner.append($("<div>").addClass("entry-tagline").text(tagline.join(" • ")));
 
