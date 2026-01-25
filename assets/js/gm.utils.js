@@ -98,172 +98,250 @@ function getServiceTypeByName(name) {
 function addMonthsToDate(iso, months) {
   if (!iso || !months) return null;
   const [y,m,d] = iso.split("-").map(Number);
-  if (!y || !m || !d) return null;
+  if (!y || !m || !d) return iso;
   const date = new Date(y, m - 1, d);
-  date.setMonth(date.getMonth() + months);
-  const newY = date.getFullYear();
-  const newM = String(date.getMonth() + 1).padStart(2,"0");
-  const newD = String(date.getDate()).padStart(2,"0");
-  return `${newY}-${newM}-${newD}`;
+  const newMonth = date.getMonth() + months;
+  date.setMonth(newMonth);
+  const yy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
 }
 
 function getIntervalForService(vehicleId, serviceName) {
-  if (data.vehicleIntervals && data.vehicleIntervals[vehicleId]) {
-    const vIntervals = data.vehicleIntervals[vehicleId];
-    if (vIntervals[serviceName]) {
-      return {
-        intervalMiles: vIntervals[serviceName].intervalMiles,
-        intervalMonths: vIntervals[serviceName].intervalMonths
-      };
+  let intervalMiles = null;
+  let intervalMonths = null;
+
+  if (data.vehicleIntervals && vehicleId && serviceName) {
+    const vMap = data.vehicleIntervals[vehicleId];
+    if (vMap && vMap[serviceName]) {
+      const vi = vMap[serviceName];
+      if (vi.intervalMiles != null && vi.intervalMiles !== "") {
+        intervalMiles = vi.intervalMiles;
+      }
+      if (vi.intervalMonths != null && vi.intervalMonths !== "") {
+        intervalMonths = vi.intervalMonths;
+      }
     }
   }
+
   const st = getServiceTypeByName(serviceName);
-  if (st) {
-    return {
-      intervalMiles: st.intervalMiles,
-      intervalMonths: st.intervalMonths
-    };
+  if (intervalMiles == null && st && st.intervalMiles != null) {
+    intervalMiles = st.intervalMiles;
   }
-  return {
-    intervalMiles: null,
-    intervalMonths: null
-  };
-}
-
-function getServiceNames(services) {
-  if (typeof services === "string") {
-    return services.split(",").map(s => s.trim()).filter(s => s.length);
-  }
-  if (!Array.isArray(services)) {
-    return [];
-  }
-  return services.map(s => {
-    if (typeof s === "string") return s.trim();
-    if (s && typeof s.name === "string") return s.name.trim();
-    return "";
-  }).filter(n => n.length);
-}
-
-function getCostForService(services, serviceName) {
-  if (!Array.isArray(services)) return null;
-  const match = services.find(s => {
-    if (typeof s === "object" && s.name === serviceName) return true;
-    return false;
-  });
-  if (!match) return null;
-  return match.cost != null ? match.cost : null;
-}
-
-function getNotesForService(services, serviceName) {
-  if (!Array.isArray(services)) return "";
-  const match = services.find(s => {
-    if (typeof s === "object" && s.name === serviceName) return true;
-    return false;
-  });
-  if (!match) return "";
-  return match.notes || "";
-}
-
-function renderServiceBubbles(services) {
-  if (!services || !services.length) {
-    return '<span class="entry-service-tag">No services</span>';
+  if (intervalMonths == null && st && st.intervalMonths != null) {
+    intervalMonths = st.intervalMonths;
   }
 
-  const names = getServiceNames(services);
-  if (!names.length) {
-    return '<span class="entry-service-tag">No services</span>';
-  }
-
-  return names.map(name => {
-    const cost = getCostForService(services, name);
-    const notes = getNotesForService(services, name);
-    
-    let label = name;
-    if (cost != null && cost > 0) {
-      label += ` ($${cost.toFixed(2)})`;
-    }
-    
-    let title = '';
-    if (notes) {
-      title = `title="${notes.replace(/"/g, '&quot;')}"`;
-    }
-    
-    return `<span class="entry-service-tag" ${title}>${label}</span>`;
-  }).join(" ");
-}
-
-function autoFillNextOdoFromIntervals() {
-  const checked = Array.from($("#service-checklist-container input[type='checkbox']:checked"))
-    .map(el => $(el).attr("data-service"));
-
-  const other = $("#entry-services-other").val().trim();
-  if (other) {
-    other.split(",").forEach(s => {
-      const name = s.trim();
-      if (name) checked.push(name);
-    });
-  }
-
-  if (!checked.length) {
-    $("#entry-next-odo").val("");
-    return;
-  }
-
-  const vehicle = data.vehicles.find(v => v.id === activeVehicleId);
-  if (!vehicle) return;
-
-  const currentOdo = vehicle.currentOdo;
-  const entryOdo = $("#entry-odo").val();
-  const baseOdo = entryOdo !== "" ? Number(entryOdo) : (currentOdo != null ? currentOdo : null);
-
-  if (baseOdo == null) {
-    $("#entry-next-odo").val("");
-    return;
-  }
-
-  let maxAdd = 0;
-  checked.forEach(serviceName => {
-    const iv = getIntervalForService(activeVehicleId, serviceName);
-    const im = iv.intervalMiles;
-    if (im && im > maxAdd) {
-      maxAdd = im;
-    }
-  });
-
-  if (maxAdd > 0) {
-    const next = baseOdo + maxAdd;
-    $("#entry-next-odo").val(next);
-  } else {
-    $("#entry-next-odo").val("");
-  }
+  return { intervalMiles, intervalMonths };
 }
 
 /**
- * Helper function to find the MOST RECENT entry for a given service
- * Used by resetRemindersForEntry to ensure reminders are based on the latest service
+ * Normalize services array to handle both old (string[]) and new (object[]) formats
+ * @param {Array} services - Array of strings or objects
+ * @returns {Array} - Array of {name, cost, note} objects
  */
-function findMostRecentEntryForService(vehicleId, serviceName) {
-  // Filter all entries for this vehicle and service
-  const candidates = data.entries.filter(e => {
-    if (e.vehicleId !== vehicleId) return false;
-    const serviceNames = getServiceNames(e.services || []);
-    return serviceNames.includes(serviceName);
+function normalizeServices(services) {
+  if (!Array.isArray(services)) return [];
+  return services.map(svc => {
+    if (typeof svc === 'string') {
+      return { name: svc, cost: null, note: '' };
+    }
+    return {
+      name: svc.name || '',
+      cost: svc.cost != null ? Number(svc.cost) : null,
+      note: svc.note || ''
+    };
   });
-  
-  // No entries found
-  if (!candidates.length) return null;
-  
-  // Sort by date (most recent first), then by createdAt as tiebreaker
-  candidates.sort((a, b) => {
-    const dateCompare = (b.date || "").localeCompare(a.date || "");
-    if (dateCompare !== 0) return dateCompare;
-    return (b.createdAt || "").localeCompare(a.createdAt || "");
-  });
-  
-  // Return the most recent entry
-  return candidates[0];
 }
 
+/**
+ * Get just the service names from a services array (handles both formats)
+ * @param {Array} services - Array of strings or objects
+ * @returns {Array} - Array of service name strings
+ */
+function getServiceNames(services) {
+  return normalizeServices(services).map(svc => svc.name).filter(n => n);
+}
+
+/**
+ * Calculate total cost for an entry (sum of per-service costs + misc cost)
+ * @param {Object} entry - Entry object
+ * @returns {Number} - Total cost
+ */
+function calculateEntryTotalCost(entry) {
+  let total = 0;
+  
+  // Sum per-service costs
+  const services = normalizeServices(entry.services || []);
+  services.forEach(svc => {
+    if (svc.cost != null) {
+      total += Number(svc.cost) || 0;
+    }
+  });
+  
+  // Add misc/legacy cost
+  if (entry.cost != null) {
+    total += Number(entry.cost) || 0;
+  }
+  
+  return total;
+}
+
+/**
+ * Get sum of just the per-service costs (excluding misc cost)
+ * @param {Object} entry - Entry object
+ * @returns {Number} - Services subtotal
+ */
+function calculateServicesSubtotal(entry) {
+  let total = 0;
+  const services = normalizeServices(entry.services || []);
+  services.forEach(svc => {
+    if (svc.cost != null) {
+      total += Number(svc.cost) || 0;
+    }
+  });
+  return total;
+}
+
+function computeReminderDerived(rem, currentOdo) {
+  const unit = getUnitShort();
+  const today = getTodayDateInSettingsTz();
+  
+  // Get configurable thresholds from settings
+  const thresholds = getReminderThresholds();
+
+  let nextOdo = rem.nextOdo != null ? rem.nextOdo : null;
+  let nextDate = rem.nextDate || null;
+
+  if (rem.intervalMiles && rem.intervalMiles > 0 && nextOdo == null) {
+    if (rem.baseOdo != null) {
+      nextOdo = rem.baseOdo + rem.intervalMiles;
+    } else if (currentOdo != null) {
+      nextOdo = currentOdo + rem.intervalMiles;
+    }
+  }
+  if (rem.intervalMonths && rem.intervalMonths > 0 && !nextDate) {
+    if (rem.baseDate) {
+      nextDate = addMonthsToDate(rem.baseDate, rem.intervalMonths);
+    } else {
+      const todayIso = getTodayIsoInSettingsTz();
+      nextDate = addMonthsToDate(todayIso, rem.intervalMonths);
+    }
+  }
+
+  let milesDiff = null;
+  if (nextOdo != null && currentOdo != null) {
+    milesDiff = nextOdo - currentOdo;
+  }
+
+  let daysDiff = null;
+  if (nextDate) {
+    const due = new Date(nextDate + "T00:00:00");
+    if (!isNaN(due.getTime())) {
+      daysDiff = Math.round((due.getTime() - today.getTime()) / (1000*60*60*24));
+    }
+  }
+
+  // Determine level based on configurable thresholds
+  let level = "ok";
+  
+  // Check for overdue (past due by more than the grace period)
+  const isOverdueMiles = milesDiff != null && milesDiff < -thresholds.overdueMiles;
+  const isOverdueDays = daysDiff != null && daysDiff < -thresholds.overdueDays;
+  
+  // Check for upcoming (within threshold but not overdue)
+  const isUpcomingMiles = milesDiff != null && milesDiff <= thresholds.upcomingMiles && milesDiff >= -thresholds.overdueMiles;
+  const isUpcomingDays = daysDiff != null && daysDiff <= thresholds.upcomingDays && daysDiff >= -thresholds.overdueDays;
+  
+  if (isOverdueMiles || isOverdueDays) {
+    level = "overdue";
+  } else if (isUpcomingMiles || isUpcomingDays) {
+    level = "upcoming";
+  }
+
+  let milesPart = "no mileage target";
+  if (milesDiff != null) {
+    if (milesDiff < 0) {
+      milesPart = `overdue by ${Math.abs(milesDiff)} ${unit}`;
+    } else {
+      milesPart = `due in ${milesDiff} ${unit}`;
+    }
+  }
+
+  let daysPart = "no date target";
+  if (daysDiff != null) {
+    if (daysDiff < 0) {
+      const absDays = Math.abs(daysDiff);
+      if (absDays >= 365) {
+        const years = Math.floor(absDays / 365);
+        daysPart = `overdue by ${years} year${years > 1 ? 's' : ''}`;
+      } else if (absDays > 30) {
+        const months = Math.floor(absDays / 30);
+        daysPart = `overdue by ${months} month${months > 1 ? 's' : ''}`;
+      } else {
+        daysPart = `overdue by ${absDays} day${absDays !== 1 ? 's' : ''}`;
+      }
+    } else {
+      if (daysDiff >= 365) {
+        const years = Math.floor(daysDiff / 365);
+        daysPart = `due in ${years} year${years > 1 ? 's' : ''}`;
+      } else if (daysDiff > 30) {
+        const months = Math.floor(daysDiff / 30);
+        daysPart = `due in ${months} month${months > 1 ? 's' : ''}`;
+      } else {
+        daysPart = `due in ${daysDiff} day${daysDiff !== 1 ? 's' : ''}`;
+      }
+    }
+  }
+
+  let label = "";
+  if (milesDiff == null && daysDiff == null) {
+    label = "No mileage or date configured";
+  } else if (milesDiff != null && daysDiff != null) {
+    label = `${milesPart} or ${daysPart}, whichever comes first`;
+  } else if (milesDiff != null) {
+    label = milesPart;
+  } else if (daysDiff != null) {
+    label = daysPart;
+  }
+
+  // Calculate urgency score for sorting (lower = more urgent)
+  // Convert mileage to "days equivalent" using average daily miles
+  const avgDailyMiles = (data.settings && data.settings.avgDailyMiles) 
+    ? data.settings.avgDailyMiles 
+    : 40; // Default: ~14,600 miles/year
+
+  let urgencyScore;
+  const milesAsDays = milesDiff != null ? milesDiff / avgDailyMiles : null;
+
+  if (daysDiff != null && milesAsDays != null) {
+    // Both set: use whichever comes first (smaller value)
+    urgencyScore = Math.min(daysDiff, milesAsDays);
+  } else if (daysDiff != null) {
+    urgencyScore = daysDiff;
+  } else if (milesAsDays != null) {
+    urgencyScore = milesAsDays;
+  } else {
+    // No threshold set: sort to bottom
+    urgencyScore = Infinity;
+  }
+
+  return {
+    level,
+    label,
+    milesDiff,
+    daysDiff,
+    nextOdo,
+    nextDate,
+    urgencyScore
+  };
+}
+
+/**
+ * Reset reminders when an entry is added/edited
+ * Updated to handle new service format
+ */
 function resetRemindersForEntry(entry) {
   if (!entry || !entry.vehicleId) return;
   const vehicle = data.vehicles.find(v => v.id === entry.vehicleId) || null;
@@ -282,17 +360,10 @@ function resetRemindersForEntry(entry) {
       const intervalMiles = r.intervalMiles != null ? r.intervalMiles : null;
       const intervalMonths = r.intervalMonths != null ? r.intervalMonths : null;
 
-      // ✅ FIX: Find the MOST RECENT entry for this service, not the current entry
-      // This ensures reminders are based on the latest service, even when adding old entries
-      const mostRecentEntry = findMostRecentEntryForService(entry.vehicleId, serviceName);
-      
-      // Use most recent entry if found, otherwise fall back to current entry
-      const referenceEntry = mostRecentEntry || entry;
-
-      let baseOdo = referenceEntry.odo != null ? referenceEntry.odo
+      let baseOdo = entry.odo != null ? entry.odo
                    : (currentOdo != null ? currentOdo
                       : (r.baseOdo != null ? r.baseOdo : null));
-      let baseDate = referenceEntry.date || r.baseDate || null;
+      let baseDate = entry.date || r.baseDate || null;
 
       let nextOdo = r.nextOdo != null ? r.nextOdo : null;
       let nextDate = r.nextDate || null;
