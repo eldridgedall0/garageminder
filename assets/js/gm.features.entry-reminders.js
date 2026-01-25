@@ -110,9 +110,9 @@ async function addOrUpdateEntryFromForm() {
     });
   });
   
-  // Handle local file uploads
+  // Handle local file uploads (if upload function exists)
   const localFiles = attachments.filter(a => a.type === "local_pending");
-  if (localFiles.length > 0) {
+  if (localFiles.length > 0 && typeof uploadLocalAttachment === "function") {
     // Upload local files
     for (const fileData of localFiles) {
       try {
@@ -307,9 +307,19 @@ $(document).on("click", ".btn-create-reminder", function() {
   // Close notification
   $(".custom-notification").remove();
   
-  // Navigate to reminders page
-  showView("reminders");
+  // Navigate to reminders page (same as clicking nav button)
+  $(".nav-btn").removeClass("active");
+  $(".nav-btn[data-view='reminders']").addClass("active");
+  $(".view").removeClass("active");
+  $("#view-reminders").addClass("active");
+  
+  // Set active vehicle
   setActiveVehicle(vehicleId);
+  
+  // Re-render reminders page with new vehicle
+  if (typeof renderRemindersPage === "function") {
+    renderRemindersPage();
+  }
   
   // Pre-fill reminder form
   setTimeout(() => {
@@ -326,12 +336,15 @@ $(document).on("click", ".btn-create-reminder", function() {
     }
     
     // Scroll to form
-    $("#reminder-form")[0].scrollIntoView({ behavior: "smooth", block: "center" });
+    const $form = $("#reminder-form");
+    if ($form.length && $form[0].scrollIntoView) {
+      $form[0].scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     
     // Highlight the form briefly
-    $("#reminder-form").addClass("highlight-form");
+    $form.addClass("highlight-form");
     setTimeout(() => {
-      $("#reminder-form").removeClass("highlight-form");
+      $form.removeClass("highlight-form");
     }, 2000);
   }, 300);
 });
