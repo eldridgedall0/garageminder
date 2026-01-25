@@ -339,6 +339,32 @@ function computeReminderDerived(rem, currentOdo) {
 }
 
 /**
+ * Find the most recent entry for a given vehicle and service type
+ * Used to ensure reminders are based on the latest service, not just any entry
+ */
+function findMostRecentEntryForService(vehicleId, serviceName) {
+  // Filter entries for this vehicle and service type
+  const candidates = data.entries.filter(e => {
+    if (e.vehicleId !== vehicleId) return false;
+    const serviceNames = getServiceNames(e.services || []);
+    return serviceNames.includes(serviceName);
+  });
+
+  // If no entries found, return null
+  if (!candidates.length) return null;
+
+  // Sort by date (most recent first), with createdAt as tiebreaker
+  candidates.sort((a, b) => {
+    const dateCompare = (b.date || "").localeCompare(a.date || "");
+    if (dateCompare !== 0) return dateCompare;
+    return (b.createdAt || "").localeCompare(a.createdAt || "");
+  });
+
+  // Return the most recent entry
+  return candidates[0];
+}
+
+/**
  * Reset reminders when an entry is added/edited
  * Updated to handle new service format
  */
@@ -360,10 +386,16 @@ function resetRemindersForEntry(entry) {
       const intervalMiles = r.intervalMiles != null ? r.intervalMiles : null;
       const intervalMonths = r.intervalMonths != null ? r.intervalMonths : null;
 
-      let baseOdo = entry.odo != null ? entry.odo
+      // Find the most recent entry for this service type
+      const mostRecentEntry = findMostRecentEntryForService(entry.vehicleId, serviceName);
+      
+      // Use most recent entry as reference, fallback to current entry if none exist
+      const referenceEntry = mostRecentEntry || entry;
+
+      let baseOdo = referenceEntry.odo != null ? referenceEntry.odo
                    : (currentOdo != null ? currentOdo
                       : (r.baseOdo != null ? r.baseOdo : null));
-      let baseDate = entry.date || r.baseDate || null;
+      let baseDate = referenceEntry.date || r.baseDate || null;
 
       let nextOdo = r.nextOdo != null ? r.nextOdo : null;
       let nextDate = r.nextDate || null;
