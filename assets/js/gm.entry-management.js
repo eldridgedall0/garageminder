@@ -116,18 +116,19 @@ async function saveEntryFromAccordion($card) {
   
   // Get checked services
   const checkedServices = [];
-  $card.find(".entry-edit-services-wrapper input[type=checkbox]:checked").each(function() {
-    const svcName = $(this).attr("name");
+  $card.find(".entry-edit-services-wrapper .service-selector-checkbox:checked").each(function() {
+    const svcName = $(this).val(); // Use val() not attr("name")
     if (svcName) {
-      const costInput = $(this).closest("label").find(".service-cost-input");
+      const $item = $(this).closest(".service-selector-item");
+      const costInput = $item.find(".service-cost-input");
       const cost = costInput.length ? parseFloat(costInput.val()) || 0 : 0;
-      const notesInput = $(this).closest("label").find(".service-notes-input");
-      const notes = notesInput.length ? notesInput.val().trim() : "";
+      const noteInput = $item.find(".service-note-input"); // Changed from service-notes-input
+      const note = noteInput.length ? noteInput.val().trim() : ""; // Changed from notes to note
       
       checkedServices.push({
         name: svcName,
         cost: cost,
-        notes: notes
+        note: note // Changed from notes to note
       });
     }
   });
@@ -137,7 +138,7 @@ async function saveEntryFromAccordion($card) {
     const otherNames = newOtherServices.split(/[,;]+/).map(s => s.trim()).filter(s => s);
     otherNames.forEach(name => {
       if (!checkedServices.find(s => s.name === name)) {
-        checkedServices.push({ name: name, cost: 0, notes: "" });
+        checkedServices.push({ name: name, cost: 0, note: "" }); // Changed from notes to note
       }
     });
   }
