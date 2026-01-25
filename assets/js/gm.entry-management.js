@@ -225,5 +225,10 @@ async function saveEntryFromAccordion($card) {
   renderRemindersPage();
   renderDashboardRemindersSnippet();
   
-  showToast("Entry updated, reminders recalculated");
+  // Show smart notification with reminder info (same as new entry)
+  if (typeof showEntrySuccessWithReminderInfo === "function") {
+    showEntrySuccessWithReminderInfo(entry, entry.services);
+  } else {
+    showToast("Entry updated, reminders recalculated");
+  }
 }
