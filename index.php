@@ -666,7 +666,37 @@ ob_end_clean();
     </footer>
   </div>
 
-<!-- COPY REMINDER MODAL -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+  <script src="assets/js/gm.core.js"></script>
+  <script src="assets/js/gm.toast.js"></script>
+  <script src="assets/js/gm.api.js"></script>
+  <script src="assets/js/gm.state.js"></script>
+  <script src="assets/js/gm.utils.js"></script>
+  <script src="assets/js/gm.ui.js"></script>
+  <script src="assets/js/gm.render.dashboard.js"></script>
+  <script src="assets/js/gm.render.reminders.js"></script>
+  <script src="assets/js/gm.render.settings.js"></script>
+  <script src="assets/js/gm.features.attachments.js"></script>
+  <script src="assets/js/gm.features.templates.js"></script>
+  <script src="assets/js/gm.features.recalls.js"></script>
+  <script src="assets/js/gm.features.export.js"></script>
+  <script src="assets/js/gm.user.js"></script>
+  <script src="assets/js/gm.mobile-nav.js"></script>
+  <script src="assets/js/gm.features.gdrive.js"></script>
+<script src="assets/js/gm.features.dynamic-reminders.js"></script>
+<script src="assets/js/gm.features.copy-reminder.js"></script>
+<script src="assets/js/gm.reminder-handlers.js"></script>           
+<script src="assets/js/gm.entry-management.js"></script>
+<script src="assets/js/gm.handlers.js"></script>
+<script src="assets/js/gm.dynamic-reminders-integration.js"></script>
+<script src="assets/js/gm.pwa.js"></script>
+  <script src="assets/js/gm.theme-indicator.js"></script>
+  <script src="assets/js/gm.fixes.js"></script>
+
+    <!-- COPY REMINDER MODAL -->
 <!-- Add this to index.php before the closing </body> tag (around line 670) -->
 
 <!-- Copy Reminder Modal -->
@@ -749,39 +779,9 @@ ob_end_clean();
   </div>
 </div>
 
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
-  <script src="assets/js/gm.core.js"></script>
-  <script src="assets/js/gm.toast.js"></script>
-  <script src="assets/js/gm.api.js"></script>
-  <script src="assets/js/gm.state.js"></script>
-  <script src="assets/js/gm.utils.js"></script>
-  <script src="assets/js/gm.ui.js"></script>
-  <script src="assets/js/gm.render.dashboard.js"></script>
-  <script src="assets/js/gm.render.reminders.js"></script>
-  <script src="assets/js/gm.render.settings.js"></script>
-  <script src="assets/js/gm.features.attachments.js"></script>
-  <script src="assets/js/gm.features.templates.js"></script>
-  <script src="assets/js/gm.features.recalls.js"></script>
-  <script src="assets/js/gm.features.export.js"></script>
-  <script src="assets/js/gm.user.js"></script>
-  <script src="assets/js/gm.mobile-nav.js"></script>
-  <script src="assets/js/gm.features.gdrive.js"></script>
-<script src="assets/js/gm.features.dynamic-reminders.js"></script>
-<script src="assets/js/gm.features.copy-reminder.js"></script>
-<script src="assets/js/gm.reminder-handlers.js"></script>           
-<script src="assets/js/gm.entry-management.js"></script>
-<script src="assets/js/gm.handlers.js"></script>
-<script src="assets/js/gm.dynamic-reminders-integration.js"></script>
-<script src="assets/js/gm.pwa.js"></script>
-  <script src="assets/js/gm.theme-indicator.js"></script>
-  <script src="assets/js/gm.fixes.js"></script>
-
-
 </body>
 </html>
+
 
 
 
