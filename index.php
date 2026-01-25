@@ -665,6 +665,89 @@ ob_end_clean();
     </footer>
   </div>
 
+<!-- COPY REMINDER MODAL -->
+<!-- Add this to index.php before the closing </body> tag (around line 670) -->
+
+<!-- Copy Reminder Modal -->
+<div id="copy-reminder-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content copy-reminder-modal-content">
+    <div class="modal-header">
+      <h3>Copy Reminder to Another Vehicle</h3>
+      <button class="modal-close" id="copy-reminder-close">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Source reminder info (read-only display) -->
+      <div class="copy-reminder-source">
+        <div class="copy-reminder-source-label">Copying from:</div>
+        <div class="copy-reminder-source-info">
+          <strong id="copy-source-vehicle"></strong> - <span id="copy-source-service"></span>
+        </div>
+      </div>
+      
+      <!-- Target vehicle selector -->
+      <div class="field">
+        <label for="copy-target-vehicle">Copy to vehicle:</label>
+        <select id="copy-target-vehicle">
+          <option value="">-- Select vehicle --</option>
+        </select>
+      </div>
+      
+      <!-- Reminder details (editable) -->
+      <div id="copy-reminder-fields" style="display: none;">
+        <div class="copy-reminder-divider"></div>
+        
+        <div class="field-grid">
+          <div class="field">
+            <label>Service name</label>
+            <input type="text" id="copy-service-name" readonly />
+          </div>
+          
+          <div class="field">
+            <label>Interval (<span class="unit-label">mi</span>)</label>
+            <input type="number" id="copy-interval-miles" readonly />
+          </div>
+          
+          <div class="field">
+            <label>Interval (months)</label>
+            <input type="number" id="copy-interval-months" readonly />
+          </div>
+          
+          <div class="field">
+            <label>Last service mileage (<span class="unit-label">mi</span>)</label>
+            <input type="number" id="copy-base-odo" min="0" step="1" />
+          </div>
+          
+          <div class="field">
+            <label>Last service date</label>
+            <input type="text" id="copy-base-date" placeholder="YYYY-MM-DD" autocomplete="off" class="datepicker" />
+          </div>
+          
+          <div class="field">
+            <label>Next due mileage (<span class="unit-label">mi</span>)</label>
+            <input type="number" id="copy-next-odo" min="0" step="1" />
+          </div>
+          
+          <div class="field">
+            <label>Next due date</label>
+            <input type="text" id="copy-next-date" placeholder="YYYY-MM-DD" autocomplete="off" class="datepicker" />
+          </div>
+          
+          <div class="field" style="grid-column: 1 / -1;">
+            <label>Notes</label>
+            <textarea id="copy-notes" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" id="copy-reminder-cancel">Cancel</button>
+      <button type="button" class="btn-primary" id="copy-reminder-confirm" disabled>Copy Reminder</button>
+    </div>
+  </div>
+</div>
+
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -685,7 +768,8 @@ ob_end_clean();
   <script src="assets/js/gm.user.js"></script>
   <script src="assets/js/gm.mobile-nav.js"></script>
   <script src="assets/js/gm.features.gdrive.js"></script>
-<script src="assets/js/gm.features.dynamic-reminders.js"></script>  
+<script src="assets/js/gm.features.dynamic-reminders.js"></script>
+<script src="assets/js/gm.features.copy-reminder.js"></script>
 <script src="assets/js/gm.reminder-handlers.js"></script>           
 <script src="assets/js/gm.entry-management.js"></script>
 <script src="assets/js/gm.handlers.js"></script>
@@ -693,7 +777,10 @@ ob_end_clean();
 <script src="assets/js/gm.pwa.js"></script>
   <script src="assets/js/gm.theme-indicator.js"></script>
   <script src="assets/js/gm.fixes.js"></script>
+
+
 </body>
 </html>
+
 
 
