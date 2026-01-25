@@ -101,6 +101,37 @@
   max-width: 700px;
 }
 
+/* Duplicate warning */
+.copy-duplicate-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #92400e;
+  animation: warningSlideIn 0.3s ease;
+}
+
+@keyframes warningSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.copy-duplicate-warning .warning-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
 .copy-reminder-source {
   background: #f9fafb;
   border: 1px solid #e5e7eb;
@@ -266,6 +297,12 @@
   
   .copy-reminder-divider {
     background: #374151;
+  }
+  
+  .copy-duplicate-warning {
+    background: #451a03;
+    border-color: #f59e0b;
+    color: #fbbf24;
   }
   
   .modal-body .field label {
