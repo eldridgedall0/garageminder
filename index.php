@@ -757,6 +757,7 @@ ob_end_clean();
   <script src="assets/js/gm.render.dashboard.js"></script>
   <script src="assets/js/gm.render.reminders.js"></script>
   <script src="assets/js/gm.render.settings.js"></script>
+  <script src="assets/js/gm.router.js"></script>
   <script src="assets/js/gm.features.attachments.js"></script>
   <script src="assets/js/gm.features.templates.js"></script>
   <script src="assets/js/gm.features.recalls.js"></script>
@@ -779,11 +780,3 @@ ob_end_clean();
 
 </body>
 </html>
-
-
-
-
-
-
-
-
