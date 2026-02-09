@@ -32,16 +32,21 @@ function isAttachmentFileAllowed(file) {
  * Check if user can use local uploads (paid feature)
  */
 function canUseLocalUpload() {
-    // Check GM_USER capabilities
-    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities) {
+    // Check GM_USER capabilities first
+    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities && typeof GM_USER.capabilities.can_use_local !== 'undefined') {
         return GM_USER.capabilities.can_use_local === true;
     }
-    // Check subscription tier
-    if (typeof GM_USER !== 'undefined') {
-        const tier = GM_USER.subscription_tier || 'free';
-        return tier !== 'free';
+    
+    // If multi-user mode is enabled, check subscription tier
+    if (typeof ENABLE_MULTI_USER !== 'undefined' && ENABLE_MULTI_USER) {
+        if (typeof GM_USER !== 'undefined') {
+            const tier = GM_USER.subscription_tier || 'free';
+            return tier !== 'free';
+        }
     }
-    return true; // Default allow in single-user mode
+    
+    // Default: allow local uploads in single-user mode
+    return true;
 }
 
 /**
