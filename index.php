@@ -278,21 +278,20 @@ ob_end_clean();
                 <div class="card-header">
                   <h2>Vehicle Overview &amp; History</h2>
                   <small id="overview-vehicle-label"></small>
-                </div>
-
-                <div class="stats-row">
-                  <div class="pill">
-                    <span class="pill-dot"></span>
-                    <span><strong id="history-total">0</strong> entries</span>
-                  </div>
-                </div>
-                
                 <div class="safety-status-row" id="safety-status-container" style="display:none;">
                   <div class="safety-status">
                     <span class="safety-icon"><i class="bi bi-shield-check"></i></span>
                     <span class="safety-label">Safety:</span>
                     <span id="safety-status-badge" class="safety-badge">â€”</span>
                     <button type="button" class="btn-ghost btn-small" id="check-recalls-btn">Check Recalls</button>
+                  </div>
+                </div>				  
+                </div>
+
+                <div class="stats-row">
+                  <div class="pill">
+                    <span class="pill-dot"></span>
+                    <span><strong id="history-total">0</strong> entries</span>
                   </div>
                 </div>
 
