@@ -30,7 +30,7 @@
 /* Search Input Field */
 .history-search-input {
   width: 100%;
-  padding: 10px 40px 10px 42px;
+  padding: 10px 40px 10px 42px !important;
   font-size: 0.9rem;
   font-family: inherit;
   border-radius: 10px;
@@ -151,7 +151,7 @@
 /* Small Mobile */
 @media (max-width: 480px) {
   .history-search-input {
-    padding: 8px 34px 8px 36px;
+    padding: 8px 34px 8px 36px !important;
     font-size: 0.8rem;
   }
   
