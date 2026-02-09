@@ -24,6 +24,11 @@ function initHistorySearch() {
       historySearchState.searchText = searchText;
       historySearchState.vehicleId = activeVehicleId;
       
+      // Reset pagination to page 1 when search changes
+      if (typeof dashboardHistoryPage !== 'undefined') {
+        dashboardHistoryPage = 1;
+      }
+      
       // Update the display
       renderDashboardHistory();
       
@@ -41,6 +46,12 @@ function initHistorySearch() {
     $('#history-search-input').val('');
     historySearchState.searchText = '';
     $('#history-search-clear').hide();
+    
+    // Reset pagination to page 1 when clearing search
+    if (typeof dashboardHistoryPage !== 'undefined') {
+      dashboardHistoryPage = 1;
+    }
+    
     renderDashboardHistory();
     $('#history-search-input').focus();
   });

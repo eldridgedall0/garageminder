@@ -1165,21 +1165,28 @@ function renderDashboardHistory() {
 
   const $list = $("#entry-list");
   $list.empty();
-  
-  // Clean up any existing search elements
-  $('.history-search-container').remove();
-  $('#history-search-count').remove();
 
   const vehicle = data.vehicles.find(v => v.id === activeVehicleId) || null;
   const unit = getUnitShort();
 
-  // Render search bar at the top (before entry list)
-  if (typeof renderHistorySearchBar === 'function' && activeVehicleId && activeVehicleId !== "all" && data.vehicles.length) {
-    const $searchBar = renderHistorySearchBar();
-    $list.before($searchBar);
+  // Check if search bar needs to be recreated (only when vehicle changes or doesn't exist)
+  const existingSearchBar = $('.history-search-container');
+  const needsNewSearchBar = !existingSearchBar.length || 
+                            (typeof historySearchState !== 'undefined' && 
+                             historySearchState.vehicleId !== activeVehicleId);
+
+  // Only recreate search bar if needed (preserves focus during typing)
+  if (needsNewSearchBar) {
+    // Clean up old search elements
+    existingSearchBar.remove();
+    $('#history-search-count').remove();
     
-    // Add search count container if it doesn't exist
-    if ($('#history-search-count').length === 0) {
+    // Render search bar at the top (before entry list)
+    if (typeof renderHistorySearchBar === 'function' && activeVehicleId && activeVehicleId !== "all" && data.vehicles.length) {
+      const $searchBar = renderHistorySearchBar();
+      $list.before($searchBar);
+      
+      // Add search count container
       $searchBar.after($('<div>').attr('id', 'history-search-count').addClass('history-search-count'));
     }
   }
