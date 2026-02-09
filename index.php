@@ -80,6 +80,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.23-pwa.css" />
   <link rel="stylesheet" href="assets/css/gm.24-theme-indicator.css" />
   <link rel="stylesheet" href="assets/css/gm.25-gdrive.css" />
+  <link rel="stylesheet" href="assets/css/gm.26-history-search.css" />
   <link rel="stylesheet" href="assets/css/gm.dynamic-reminders.css">
   <link rel="stylesheet" href="assets/css/gm.copy-reminder-modal.css">
   <link rel="stylesheet" href="assets/css/gm.entry-success-notification.css">
@@ -765,6 +766,7 @@ ob_end_clean();
   <script src="assets/js/gm.user.js"></script>
   <script src="assets/js/gm.mobile-nav.js"></script>
   <script src="assets/js/gm.features.gdrive.js"></script>
+  <script src="assets/js/gm.features.history-search.js"></script>
 <script src="assets/js/gm.features.dynamic-reminders.js"></script>
 <script src="assets/js/gm.features.copy-reminder.js"></script>
 <script src="assets/js/gm.features.entry-reminders.js"></script>

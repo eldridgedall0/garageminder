@@ -1151,16 +1151,38 @@ function renderNewEntryFormDefaults(editEntry) {
 }
 
 function renderDashboardHistory() {
-  const list = data.entries.filter(e => e.vehicleId === activeVehicleId);
+  // Get all entries for this vehicle (before filtering)
+  const allEntries = data.entries.filter(e => e.vehicleId === activeVehicleId);
+  
+  // Use filtered entries if search is active
+  const list = (typeof getFilteredHistoryEntries === 'function') 
+    ? getFilteredHistoryEntries(activeVehicleId)
+    : allEntries;
+  
   const sorted = list.slice().sort((a,b) => 
     (b.date || "").localeCompare(a.date || "") || (b.createdAt || "").localeCompare(a.createdAt || "")
   );
 
   const $list = $("#entry-list");
   $list.empty();
+  
+  // Clean up any existing search elements
+  $('.history-search-container').remove();
+  $('#history-search-count').remove();
 
   const vehicle = data.vehicles.find(v => v.id === activeVehicleId) || null;
   const unit = getUnitShort();
+
+  // Render search bar at the top (before entry list)
+  if (typeof renderHistorySearchBar === 'function' && activeVehicleId && activeVehicleId !== "all" && data.vehicles.length) {
+    const $searchBar = renderHistorySearchBar();
+    $list.before($searchBar);
+    
+    // Add search count container if it doesn't exist
+    if ($('#history-search-count').length === 0) {
+      $searchBar.after($('<div>').attr('id', 'history-search-count').addClass('history-search-count'));
+    }
+  }
 
   if (!activeVehicleId || activeVehicleId === "all" || !data.vehicles.length) {
     $list.append(
@@ -1171,13 +1193,38 @@ function renderDashboardHistory() {
     return;
   }
 
-  if (!sorted.length) {
+  // Check if we have no entries at all vs filtered to zero
+  if (allEntries.length === 0) {
     $list.append($("<div>").addClass("entry-empty").text("No entries yet."));
     $("#history-total").text(0);
     return;
   }
 
-  $("#history-total").text(sorted.length);
+  // Show "no results" if filtering resulted in zero entries
+  if (sorted.length === 0 && allEntries.length > 0) {
+    const searchTerm = historySearchState?.searchText || '';
+    $list.append(
+      $("<div>").addClass("history-search-no-results").html(`
+        <i class="bi bi-search"></i>
+        <p>No entries found matching <span class="search-term">"${searchTerm}"</span></p>
+        <p style="margin-top:4px; font-size:0.85rem; opacity:0.7;">Try a different search term</p>
+      `)
+    );
+    $("#history-total").text(allEntries.length);
+    
+    // Update search count
+    if (typeof updateHistorySearchCount === 'function') {
+      updateHistorySearchCount(allEntries.length, 0);
+    }
+    return;
+  }
+
+  $("#history-total").text(allEntries.length);
+  
+  // Update search count display
+  if (typeof updateHistorySearchCount === 'function') {
+    updateHistorySearchCount(allEntries.length, sorted.length);
+  }
 
   // Pagination
   const perPage = (data?.dashboardHistoryPerPage > 0) ? data.dashboardHistoryPerPage : 10;
