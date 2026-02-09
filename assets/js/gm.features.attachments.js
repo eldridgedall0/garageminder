@@ -150,9 +150,12 @@ async function addOrUpdateEntryFromForm() {
 
   resetRemindersForEntry(payload);
   
-  // Check if we have LOCAL files to upload (not Google Drive - that's handled separately)
+  // Convert FileList to Array immediately to prevent race conditions
   const fileInput = document.getElementById("entry-files");
-  const hasFiles = fileInput && fileInput.files && fileInput.files.length > 0;
+  const filesToUpload = fileInput && fileInput.files && fileInput.files.length > 0 
+    ? Array.from(fileInput.files) 
+    : [];
+  const hasFiles = filesToUpload.length > 0;
   
   // Check for pending Google Drive files
   const pendingGDriveFiles = (typeof GDrive !== 'undefined' && GDrive.getPendingFiles) 
@@ -160,15 +163,23 @@ async function addOrUpdateEntryFromForm() {
     : [];
   const hasGDriveFiles = pendingGDriveFiles.length > 0;
   
+  // Debug logging (can be removed after confirming fix works)
+  console.log('[Attachments] Files to upload:', filesToUpload.length);
+  console.log('[Attachments] Can use local upload:', canUseLocalUpload());
+  
   try {
     // IMPORTANT: Wait for save to complete before uploading files
     await saveData();
     
     // Handle local file uploads after entry is saved
-    if (hasFiles && canUseLocalUpload()) {
-      await uploadEntryFiles(payload.id, fileInput.files);
-    } else if (hasFiles && !canUseLocalUpload()) {
-      showToast("Local uploads require a paid subscription. Use Google Drive instead.");
+    if (hasFiles) {
+      if (canUseLocalUpload()) {
+        console.log('[Attachments] Starting upload for entry:', payload.id);
+        await uploadEntryFiles(payload.id, filesToUpload);  // Pass the array, not fileInput.files
+      } else {
+        console.log('[Attachments] Local upload not allowed for user');
+        showToast("Local uploads require a paid subscription. Use Google Drive instead.");
+      }
     }
     
     // Handle pending Google Drive files after entry is saved
@@ -202,8 +213,15 @@ async function addOrUpdateEntryFromForm() {
 }
 
 async function uploadEntryFiles(entryId, fileList) {
-  const files = Array.from(fileList || []);
-  if (!files.length) return;
+  // FIXED: Accept both FileList and Array
+  const files = Array.isArray(fileList) ? fileList : Array.from(fileList || []);
+  
+  console.log('[Upload] Starting upload with', files.length, 'files for entry:', entryId);
+  
+  if (!files.length) {
+    console.log('[Upload] No files to upload, returning');
+    return;
+  }
 
   // Check if user can upload locally
   if (!canUseLocalUpload()) {
@@ -215,17 +233,37 @@ async function uploadEntryFiles(entryId, fileList) {
   
   // Filter valid files
   const validFiles = [];
+  const skippedFiles = [];  // ADD THIS
+  
   for (const file of files) {
-    if (validFiles.length >= maxCount) break;
+    if (validFiles.length >= maxCount) {
+      skippedFiles.push({ name: file.name, reason: 'max count reached' });  // ADD THIS
+      continue;  // CHANGE FROM break TO continue
+    }
     
-    if (!isAttachmentFileAllowed(file)) continue;
-    if (maxBytes && file.size > maxBytes) continue;
+    if (!isAttachmentFileAllowed(file)) {
+      skippedFiles.push({ name: file.name, reason: 'file type not allowed' });  // ADD THIS
+      continue;
+    }
+    
+    if (maxBytes && file.size > maxBytes) {
+      skippedFiles.push({ name: file.name, reason: `exceeds ${maxSizeMB}MB limit` });  // ADD THIS
+      continue;
+    }
     
     validFiles.push(file);
   }
+  
+  console.log('[Upload] Valid files:', validFiles.length, 'Skipped:', skippedFiles.length);  // ADD THIS
 
   if (!validFiles.length) {
-    showToast("No valid files to upload");
+    // FIXED: Show more specific feedback about why no files are valid
+    if (skippedFiles.length > 0) {
+      const reasons = skippedFiles.map(f => `${f.name}: ${f.reason}`).join(', ');
+      showToast("No valid files to upload: " + reasons);
+    } else {
+      showToast("No valid files to upload");
+    }
     return;
   }
 
@@ -298,16 +336,30 @@ async function saveEntryFromAccordion($card) {
   resetRemindersForEntry(entry);
   
   // Check if we have LOCAL files to upload
+  // Convert FileList to Array immediately to prevent race conditions
   const fileInput = $card.find(".entry-attach-files")[0];
-  const hasFiles = fileInput && fileInput.files && fileInput.files.length > 0;
+  const filesToUpload = fileInput && fileInput.files && fileInput.files.length > 0 
+    ? Array.from(fileInput.files) 
+    : [];
+  const hasFiles = filesToUpload.length > 0;
+  
+  // Debug logging
+  console.log('[Attachments Edit] Files to upload:', filesToUpload.length);
+  console.log('[Attachments Edit] Can use local upload:', canUseLocalUpload());
   
   try {
     // IMPORTANT: Wait for save to complete before uploading files
     await saveData();
     
     // Handle new local file uploads after entry is saved
-    if (hasFiles && canUseLocalUpload()) {
-      await uploadEntryFiles(entry.id, fileInput.files);
+    if (hasFiles) {
+      if (canUseLocalUpload()) {
+        console.log('[Attachments Edit] Starting upload for entry:', entry.id);
+        await uploadEntryFiles(entry.id, filesToUpload);  // Pass the array, not fileInput.files
+      } else {
+        console.log('[Attachments Edit] Local upload not allowed for user');
+        showToast("Local uploads require a paid subscription. Use Google Drive instead.");
+      }
     }
   } catch (err) {
     console.error("Error saving entry:", err);
