@@ -84,6 +84,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.dynamic-reminders.css">
   <link rel="stylesheet" href="assets/css/gm.copy-reminder-modal.css">
   <link rel="stylesheet" href="assets/css/gm.entry-success-notification.css">
+  <link rel="stylesheet" href="assets/css/gm.27-export-modal.css">
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -629,14 +630,14 @@ ob_end_clean();
                   </div>
                 </div>
                 
-                <!-- Table Export Section -->
+                <!-- Vehicle Report Export Section -->
                 <div class="backup-section">
-                  <div class="backup-section-title"><i class="bi bi-table"></i> Table Export (Current Vehicle)</div>
-                  <div class="backup-section-desc">Export service history table for the currently selected vehicle. Now includes per-service costs breakdown.</div>
+                  <div class="backup-section-title"><i class="bi bi-file-earmark-text"></i> Vehicle Report Export</div>
+                  <div class="backup-section-desc">Export a comprehensive maintenance report for the selected vehicle. Choose format, date range, and sections to include.</div>
                   <div class="button-row" style="justify-content:flex-start; margin-top:4px;">
-                    <button type="button" class="btn-ghost btn-small" id="export-excel"><i class="bi bi-file-earmark-spreadsheet"></i> Export table (Excel/CSV)</button>
-                    <button type="button" class="btn-ghost btn-small" id="export-word"><i class="bi bi-file-earmark-text"></i> Export table (Word)</button>
-                    <button type="button" class="btn-ghost btn-small" id="export-pdf"><i class="bi bi-file-earmark-pdf"></i> Export table (PDF)</button>
+                    <button type="button" class="btn-primary btn-small" id="open-vehicle-report-export" onclick="openVehicleReportExportModal()">
+                      <i class="bi bi-download"></i> Export Vehicle Report
+                    </button>
                   </div>
                 </div>
                 
@@ -748,6 +749,7 @@ ob_end_clean();
   <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="assets/js/gm.core.js"></script>
   <script src="assets/js/gm.toast.js"></script>
   <script src="assets/js/gm.api.js"></script>
@@ -762,6 +764,7 @@ ob_end_clean();
   <script src="assets/js/gm.features.templates.js"></script>
   <script src="assets/js/gm.features.recalls.js"></script>
   <script src="assets/js/gm.features.export.js"></script>
+  <script src="assets/js/gm.features.vehicle-report-export.js"></script>
   <script src="assets/js/gm.user.js"></script>
   <script src="assets/js/gm.mobile-nav.js"></script>
   <script src="assets/js/gm.features.gdrive.js"></script>
