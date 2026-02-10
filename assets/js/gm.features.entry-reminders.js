@@ -3,6 +3,8 @@
  * 
  * Handles saving entries and showing smart notifications about reminders
  * Includes "Create Reminder" button for services without reminders
+ * 
+ * FIXED: Properly handles file uploads using the same approach as gm.features.attachments.js
  */
 
 /**
@@ -18,6 +20,8 @@ async function addOrUpdateEntryFromForm() {
   if (!vehicle) return;
   
   // Get form values
+  const entryId = $("#entry-id").val();
+  const isNew = !entryId;
   const date = $("#entry-date").val();
   const odoStr = $("#entry-odo").val();
   const odo = odoStr ? parseInt(odoStr, 10) : null;
@@ -28,11 +32,6 @@ async function addOrUpdateEntryFromForm() {
   if (!date) {
     alert("Please enter a date.");
     $("#entry-date").focus();
-    return;
-  }
-  if (odo == null || odo < 0) {
-    alert("Please enter a valid odometer reading.");
-    $("#entry-odo").focus();
     return;
   }
   
@@ -47,97 +46,120 @@ async function addOrUpdateEntryFromForm() {
     return;
   }
   
-  // Handle attachments
-  const attachments = [];
-  const $selectedFiles = $("#selected-files-preview .selected-file-item");
+  // FIXED: Capture files BEFORE any async operations
+  // Convert FileList to Array immediately to prevent race conditions
+  const fileInput = document.getElementById("entry-files");
+  const filesToUpload = fileInput && fileInput.files && fileInput.files.length > 0 
+    ? Array.from(fileInput.files) 
+    : [];
+  const hasLocalFiles = filesToUpload.length > 0;
   
-  $selectedFiles.each(function() {
-    const $item = $(this);
-    const type = $item.data("attach-type");
-    
-    if (type === "gdrive") {
-      attachments.push({
-        type: "gdrive",
-        fileId: $item.data("file-id"),
-        fileName: $item.data("file-name"),
-        mimeType: $item.data("mime-type"),
-        webViewLink: $item.data("web-view-link")
-      });
-    } else if (type === "local") {
-      const fileObj = $item.data("file-object");
-      if (fileObj) {
-        attachments.push({
-          type: "local_pending",
-          file: fileObj,
-          fileName: fileObj.name
-        });
-      }
-    }
-  });
+  // Check for pending Google Drive files
+  const pendingGDriveFiles = (typeof GDrive !== 'undefined' && GDrive.getPendingFiles) 
+    ? GDrive.getPendingFiles() 
+    : [];
+  const hasGDriveFiles = pendingGDriveFiles.length > 0;
+  
+  // Debug logging
+  console.log('[Entry] Files to upload:', filesToUpload.length);
+  console.log('[Entry] GDrive files:', pendingGDriveFiles.length);
   
   // Create entry object
   const now = new Date().toISOString();
   const entry = {
-    id: "e_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+    id: isNew ? ("e_" + Date.now() + "_" + Math.random().toString(36).slice(2)) : entryId,
     vehicleId: activeVehicleId,
     date: date,
     odo: odo,
     services: services,
-    miscCost: miscCost,
+    cost: miscCost,
     notes: notes,
-    attachments: attachments.filter(a => a.type === "gdrive"), // Only save GDrive initially
+    attachments: [],
     createdAt: now,
     updatedAt: now
   };
   
-  // Add to data
-  data.entries.push(entry);
+  // If editing, preserve existing attachments and createdAt
+  if (!isNew) {
+    const existingEntry = data.entries.find(e => e.id === entryId);
+    if (existingEntry) {
+      entry.createdAt = existingEntry.createdAt || now;
+      entry.attachments = existingEntry.attachments || [];
+    }
+  }
+  
+  // Add or update in data
+  if (isNew) {
+    data.entries.push(entry);
+  } else {
+    const idx = data.entries.findIndex(e => e.id === entryId);
+    if (idx >= 0) {
+      data.entries[idx] = entry;
+    } else {
+      data.entries.push(entry);
+    }
+  }
   
   // Update vehicle odometer if this is the most recent entry
   const allEntries = data.entries.filter(e => e.vehicleId === activeVehicleId);
   const sortedByDate = allEntries.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
-  if (sortedByDate[0] && sortedByDate[0].id === entry.id) {
+  if (sortedByDate[0] && sortedByDate[0].id === entry.id && odo != null) {
     vehicle.currentOdo = odo;
   }
   
   // Update reminders for each service
-  services.forEach(service => {
-    resetRemindersForEntry({
-      vehicleId: activeVehicleId,
-      date: date,
-      odo: odo,
-      services: [service]
-    });
-  });
+  resetRemindersForEntry(entry);
   
-  // Handle local file uploads (if upload function exists)
-  const localFiles = attachments.filter(a => a.type === "local_pending");
-  if (localFiles.length > 0 && typeof uploadLocalAttachment === "function") {
-    // Upload local files
-    for (const fileData of localFiles) {
-      try {
-        const uploadResult = await uploadLocalAttachment(entry.id, fileData.file);
-        if (uploadResult && uploadResult.id) {
-          entry.attachments.push({
-            id: uploadResult.id,
-            type: "local",
-            fileName: uploadResult.fileName,
-            filePath: uploadResult.filePath,
-            mimeType: uploadResult.mimeType
-          });
+  try {
+    // Save data first
+    await saveData();
+    
+    // FIXED: Handle local file uploads AFTER entry is saved (same as gm.features.attachments.js)
+    if (hasLocalFiles) {
+      if (typeof canUseLocalUpload === 'function' && canUseLocalUpload()) {
+        console.log('[Entry] Starting local file upload for entry:', entry.id);
+        if (typeof uploadEntryFiles === 'function') {
+          await uploadEntryFiles(entry.id, filesToUpload);
+        } else {
+          console.error('[Entry] uploadEntryFiles function not found');
+          showToast("File upload function not available");
         }
-      } catch (err) {
-        console.error("Upload failed:", err);
-        showToast(`Failed to upload ${fileData.fileName}`);
+      } else if (typeof canUseLocalUpload === 'function' && !canUseLocalUpload()) {
+        console.log('[Entry] Local upload not allowed for user');
+        showToast("Local uploads require a paid subscription. Use Google Drive instead.");
+      } else {
+        // canUseLocalUpload doesn't exist, try upload anyway (single-user mode)
+        console.log('[Entry] canUseLocalUpload not found, attempting upload');
+        if (typeof uploadEntryFiles === 'function') {
+          await uploadEntryFiles(entry.id, filesToUpload);
+        }
       }
     }
+    
+    // Handle pending Google Drive files after entry is saved
+    if (hasGDriveFiles && typeof window.attachGoogleDriveFiles === 'function') {
+      console.log('[Entry] Attaching Google Drive files to entry:', entry.id);
+      await window.attachGoogleDriveFiles(pendingGDriveFiles, entry.id);
+    }
+    
+  } catch (err) {
+    console.error("Error saving entry:", err);
+    showToast("Error saving entry");
   }
   
-  // Save data
-  await saveData();
+  // Clear file input
+  $("#entry-files").val("");
+  
+  // Clear any pending Google Drive files display
+  if (typeof GDrive !== 'undefined' && GDrive.clearPendingFiles) {
+    GDrive.clearPendingFiles();
+  }
   
   // Show success notification with reminder info
   showEntrySuccessWithReminderInfo(entry, services);
+  
+  // Reload data from server to get updated attachments
+  loadData();
   
   // Re-render
   renderDashboard();
@@ -148,6 +170,14 @@ async function addOrUpdateEntryFromForm() {
   renderNewEntryFormDefaults();
   initDatePickers($(document));
   $("#selected-files-preview").empty();
+  
+  // Check user preference for keeping form open
+  if (typeof getKeepFormOpenPreference === 'function') {
+    const keepOpen = getKeepFormOpenPreference();
+    if (keepOpen && typeof toggleEntryForm === 'function') {
+      toggleEntryForm(true);
+    }
+  }
 }
 
 /**
@@ -182,7 +212,7 @@ function showEntrySuccessWithReminderInfo(entry, services) {
     return;
   }
   
-  const unit = getUnitShort();
+  const unit = typeof getUnitShort === 'function' ? getUnitShort() : 'mi';
   const servicesWithReminders = [];
   const servicesWithoutReminders = [];
   
@@ -197,7 +227,7 @@ function showEntrySuccessWithReminderInfo(entry, services) {
         r.serviceName.toLowerCase() === serviceName.toLowerCase()
       );
       
-      if (reminder) {
+      if (reminder && typeof computeReminderDerived === 'function') {
         const derived = computeReminderDerived(reminder, vehicle.currentOdo);
         servicesWithReminders.push({
           name: serviceName,
@@ -214,7 +244,7 @@ function showEntrySuccessWithReminderInfo(entry, services) {
   let html = `<div class="entry-success-notification">`;
   html += `<div class="entry-success-header">`;
   html += `<i class="bi bi-check-circle-fill" style="color: var(--gm-success); font-size: 1.2rem;"></i>`;
-  html += `<strong>Entry saved at ${entry.odo.toLocaleString()} ${unit}</strong>`;
+  html += `<strong>Entry saved${entry.odo ? ` at ${entry.odo.toLocaleString()} ${unit}` : ''}</strong>`;
   html += `</div>`;
   
   // Show updated reminders
@@ -228,7 +258,7 @@ function showEntrySuccessWithReminderInfo(entry, services) {
       if (item.derived.nextOdo) {
         nextInfo.push(`${item.derived.nextOdo.toLocaleString()} ${unit}`);
       }
-      if (item.derived.nextDate) {
+      if (item.derived.nextDate && typeof formatDateNice === 'function') {
         nextInfo.push(formatDateNice(item.derived.nextDate));
       }
       
@@ -314,7 +344,9 @@ $(document).on("click", ".btn-create-reminder", function() {
   $("#view-reminders").addClass("active");
   
   // Set active vehicle
-  setActiveVehicle(vehicleId);
+  if (typeof setActiveVehicle === 'function') {
+    setActiveVehicle(vehicleId);
+  }
   
   // Re-render reminders page with new vehicle
   if (typeof renderRemindersPage === "function") {

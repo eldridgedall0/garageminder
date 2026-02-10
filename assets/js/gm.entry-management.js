@@ -4,6 +4,8 @@
  * This file contains the missing entry management functions that are called
  * but not defined in the GitHub repository.
  * 
+ * FIXED: Properly handles file uploads in saveEntryFromAccordion
+ * 
  * Add this to index.php BEFORE gm.handlers.js:
  * <script src="assets/js/gm.entry-management.js"></script>
  */
@@ -99,6 +101,7 @@ function deleteEntryByCard($card) {
 
 /**
  * Save changes to an entry from the accordion edit mode
+ * FIXED: Properly handles file uploads
  */
 async function saveEntryFromAccordion($card) {
   const entryId = $card.attr("data-id");
@@ -122,13 +125,13 @@ async function saveEntryFromAccordion($card) {
       const $item = $(this).closest(".service-selector-item");
       const costInput = $item.find(".service-cost-input");
       const cost = costInput.length ? parseFloat(costInput.val()) || 0 : 0;
-      const noteInput = $item.find(".service-note-input"); // Changed from service-notes-input
-      const note = noteInput.length ? noteInput.val().trim() : ""; // Changed from notes to note
+      const noteInput = $item.find(".service-note-input");
+      const note = noteInput.length ? noteInput.val().trim() : "";
       
       checkedServices.push({
         name: svcName,
         cost: cost,
-        note: note // Changed from notes to note
+        note: note
       });
     }
   });
@@ -138,7 +141,7 @@ async function saveEntryFromAccordion($card) {
     const otherNames = newOtherServices.split(/[,;]+/).map(s => s.trim()).filter(s => s);
     otherNames.forEach(name => {
       if (!checkedServices.find(s => s.name === name)) {
-        checkedServices.push({ name: name, cost: 0, note: "" }); // Changed from notes to note
+        checkedServices.push({ name: name, cost: 0, note: "" });
       }
     });
   }
@@ -147,6 +150,17 @@ async function saveEntryFromAccordion($card) {
     alert("Please select at least one service.");
     return;
   }
+  
+  // FIXED: Capture files BEFORE any async operations
+  // Convert FileList to Array immediately to prevent race conditions
+  const fileInput = $card.find(".entry-attach-files")[0];
+  const filesToUpload = fileInput && fileInput.files && fileInput.files.length > 0 
+    ? Array.from(fileInput.files) 
+    : [];
+  const hasFiles = filesToUpload.length > 0;
+  
+  // Debug logging
+  console.log('[Entry Edit] Files to upload:', filesToUpload.length);
   
   // Store old service names for reminder cleanup
   const oldServiceNames = getServiceNames(entry.services || []);
@@ -219,8 +233,38 @@ async function saveEntryFromAccordion($card) {
   // This ensures date/odometer changes are reflected
   resetRemindersForEntry(entry);
   
-  // Save and re-render
-  await saveData();
+  try {
+    // Save data first
+    await saveData();
+    
+    // FIXED: Handle file uploads AFTER entry is saved
+    if (hasFiles) {
+      if (typeof canUseLocalUpload === 'function' && canUseLocalUpload()) {
+        console.log('[Entry Edit] Starting upload for entry:', entry.id);
+        if (typeof uploadEntryFiles === 'function') {
+          await uploadEntryFiles(entry.id, filesToUpload);
+        } else {
+          console.error('[Entry Edit] uploadEntryFiles function not found');
+        }
+      } else if (typeof canUseLocalUpload === 'function' && !canUseLocalUpload()) {
+        console.log('[Entry Edit] Local upload not allowed for user');
+        showToast("Local uploads require a paid subscription. Use Google Drive instead.");
+      } else {
+        // canUseLocalUpload doesn't exist, try upload anyway
+        console.log('[Entry Edit] canUseLocalUpload not found, attempting upload');
+        if (typeof uploadEntryFiles === 'function') {
+          await uploadEntryFiles(entry.id, filesToUpload);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error saving entry:", err);
+    showToast("Error saving entry");
+  }
+  
+  // Reload data from server to get updated attachments
+  loadData();
+  
   renderDashboard();
   renderRemindersPage();
   renderDashboardRemindersSnippet();
@@ -231,4 +275,28 @@ async function saveEntryFromAccordion($card) {
   } else {
     showToast("Entry updated, reminders recalculated");
   }
+}
+
+/**
+ * Helper: Find most recent entry for a service (used after deletion)
+ */
+function findMostRecentEntryForService(vehicleId, serviceName) {
+  if (!vehicleId || !serviceName) return null;
+  
+  const matchingEntries = data.entries.filter(e => {
+    if (e.vehicleId !== vehicleId) return false;
+    const serviceNames = getServiceNames(e.services || []);
+    return serviceNames.some(n => n.toLowerCase() === serviceName.toLowerCase());
+  });
+  
+  if (matchingEntries.length === 0) return null;
+  
+  // Sort by date descending, then by createdAt descending
+  matchingEntries.sort((a, b) => {
+    const dateCompare = (b.date || '').localeCompare(a.date || '');
+    if (dateCompare !== 0) return dateCompare;
+    return (b.createdAt || '').localeCompare(a.createdAt || '');
+  });
+  
+  return matchingEntries[0];
 }
