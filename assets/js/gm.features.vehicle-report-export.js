@@ -504,7 +504,21 @@ function exportVehicleReportXLSX(options) {
   XLSX.writeFile(wb, branding.appName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + safeName + '-report.xlsx');
   showToast('Excel report exported');
 }
- [220, 220, 220], tableBg = [245, 245, 245], white = [255, 255, 255];
+
+function generateCleanPDF(rpt, safeName, logoData) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const contentWidth = pageWidth - (margin * 2);
+  
+  const { branding, unit, vehicle: v, stats: s, costBreakdown: cost, options: opts } = rpt;
+  
+  // B&W Color palette
+  const black = [0, 0, 0], darkGray = [51, 51, 51], mediumGray = [102, 102, 102];
+  const lightGray = [153, 153, 153], veryLightGray = [220, 220, 220], tableBg = [245, 245, 245], white = [255, 255, 255];
   
   let y = 12;
   
