@@ -1,8 +1,7 @@
 /**
- * GarageMinder - Vehicle Report Export v2.0
- * Comprehensive export system with modal options
- * Supports CSV, Word, and PDF formats
- * B&W design with color logo/branding
+ * GarageMinder - Vehicle Report Export v2.1
+ * Refined export system with comprehensive filtering
+ * Clean straight borders, proper branding, full reminder details
  */
 
 // ========================================
@@ -10,7 +9,6 @@
 // ========================================
 
 function openVehicleReportExportModal() {
-  // Check if a vehicle is selected
   if (!activeVehicleId || activeVehicleId === "all") {
     alert("Please select a specific vehicle first (not 'All Vehicles').");
     return;
@@ -22,17 +20,14 @@ function openVehicleReportExportModal() {
     return;
   }
   
-  // Check if there are entries
   const entries = data.entries.filter(e => e.vehicleId === activeVehicleId);
   if (!entries.length) {
     alert('No service records to export for "' + vehicle.name + '".');
     return;
   }
   
-  // Load saved preferences
   const savedPrefs = loadExportPreferences();
   
-  // Create modal HTML
   const modalHtml = `
     <div id="export-modal-overlay" class="export-modal-overlay">
       <div class="export-modal">
@@ -98,56 +93,64 @@ function openVehicleReportExportModal() {
             </div>
           </div>
           
-          <!-- Entry Type Filter -->
-          <div class="export-section">
-            <label class="export-section-label">Entry Types</label>
-            <div class="export-checkbox-group">
-              <label class="export-checkbox">
-                <input type="checkbox" id="export-type-all" ${savedPrefs.typeAll ? 'checked' : ''}>
-                <span>All Types</span>
-              </label>
-              <label class="export-checkbox">
-                <input type="checkbox" class="export-type-item" value="service" ${savedPrefs.types?.includes('service') ? 'checked' : ''}>
-                <span>Service</span>
-              </label>
-              <label class="export-checkbox">
-                <input type="checkbox" class="export-type-item" value="repair" ${savedPrefs.types?.includes('repair') ? 'checked' : ''}>
-                <span>Repair</span>
-              </label>
-              <label class="export-checkbox">
-                <input type="checkbox" class="export-type-item" value="upgrade" ${savedPrefs.types?.includes('upgrade') ? 'checked' : ''}>
-                <span>Upgrade</span>
-              </label>
-              <label class="export-checkbox">
-                <input type="checkbox" class="export-type-item" value="tax" ${savedPrefs.types?.includes('tax') ? 'checked' : ''}>
-                <span>Tax/Fees</span>
-              </label>
-            </div>
-          </div>
-          
-          <!-- Include Sections (PDF/Word only) -->
+          <!-- Report Sections (PDF/Word only) -->
           <div class="export-section export-sections-group">
-            <label class="export-section-label">Include Sections <small>(PDF/Word only)</small></label>
+            <label class="export-section-label">Report Sections <small>(PDF/Word)</small></label>
             <div class="export-checkbox-group">
               <label class="export-checkbox">
                 <input type="checkbox" id="export-inc-vehicleinfo" ${savedPrefs.includeVehicleInfo !== false ? 'checked' : ''}>
                 <span>Vehicle Information</span>
               </label>
               <label class="export-checkbox">
-                <input type="checkbox" id="export-inc-costsummary" ${savedPrefs.includeCostSummary !== false ? 'checked' : ''}>
+                <input type="checkbox" id="export-inc-renewals" ${savedPrefs.includeRenewals !== false ? 'checked' : ''}>
+                <span>Renewal Dates</span>
+              </label>
+              <label class="export-checkbox">
+                <input type="checkbox" id="export-inc-costsummary" ${savedPrefs.includeCostSummary === true ? 'checked' : ''}>
                 <span>Cost Summary</span>
               </label>
               <label class="export-checkbox">
                 <input type="checkbox" id="export-inc-reminders" ${savedPrefs.includeReminders !== false ? 'checked' : ''}>
-                <span>Upcoming Reminders</span>
+                <span>Upcoming Maintenance</span>
               </label>
               <label class="export-checkbox">
                 <input type="checkbox" id="export-inc-history" ${savedPrefs.includeHistory !== false ? 'checked' : ''}>
                 <span>Service History</span>
               </label>
               <label class="export-checkbox">
-                <input type="checkbox" id="export-inc-servicesummary" ${savedPrefs.includeServiceSummary !== false ? 'checked' : ''}>
+                <input type="checkbox" id="export-inc-servicesummary" ${savedPrefs.includeServiceSummary === true ? 'checked' : ''}>
                 <span>Service Type Summary</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Vehicle Details Filter (PDF/Word only) -->
+          <div class="export-section export-sections-group">
+            <label class="export-section-label">Vehicle Details to Include <small>(PDF/Word)</small></label>
+            <div class="export-checkbox-group">
+              <label class="export-checkbox">
+                <input type="checkbox" id="export-vd-vin" ${savedPrefs.showVin !== false ? 'checked' : ''}>
+                <span>VIN</span>
+              </label>
+              <label class="export-checkbox">
+                <input type="checkbox" id="export-vd-plate" ${savedPrefs.showPlate !== false ? 'checked' : ''}>
+                <span>License Plate</span>
+              </label>
+              <label class="export-checkbox">
+                <input type="checkbox" id="export-vd-odometer" ${savedPrefs.showOdometer !== false ? 'checked' : ''}>
+                <span>Odometer</span>
+              </label>
+              <label class="export-checkbox">
+                <input type="checkbox" id="export-vd-yearMakeModel" ${savedPrefs.showYearMakeModel !== false ? 'checked' : ''}>
+                <span>Year/Make/Model</span>
+              </label>
+              <label class="export-checkbox">
+                <input type="checkbox" id="export-vd-engine" ${savedPrefs.showEngine === true ? 'checked' : ''}>
+                <span>Engine</span>
+              </label>
+              <label class="export-checkbox">
+                <input type="checkbox" id="export-vd-stats" ${savedPrefs.showStats !== false ? 'checked' : ''}>
+                <span>History Stats</span>
               </label>
             </div>
           </div>
@@ -163,221 +166,139 @@ function openVehicleReportExportModal() {
     </div>
   `;
   
-  // Add modal to page
   document.body.insertAdjacentHTML('beforeend', modalHtml);
-  
-  // Setup event listeners
   setupExportModalListeners();
 }
 
 function setupExportModalListeners() {
-  // Format selection highlighting
   document.querySelectorAll('input[name="export-format"]').forEach(radio => {
     radio.addEventListener('change', function() {
       document.querySelectorAll('.export-format-option').forEach(opt => opt.classList.remove('selected'));
       this.closest('.export-format-option').classList.add('selected');
-      
-      // Show/hide sections group for non-CSV formats
-      const sectionsGroup = document.querySelector('.export-sections-group');
-      if (this.value === 'csv') {
-        sectionsGroup.style.display = 'none';
-      } else {
-        sectionsGroup.style.display = 'block';
-      }
+      const sectionsGroups = document.querySelectorAll('.export-sections-group');
+      sectionsGroups.forEach(group => {
+        group.style.display = (this.value === 'csv') ? 'none' : 'block';
+      });
     });
   });
   
-  // Date range custom toggle
   document.getElementById('export-date-range').addEventListener('change', function() {
     const customDates = document.getElementById('export-custom-dates');
     customDates.style.display = this.value === 'custom' ? 'flex' : 'none';
   });
   
-  // "All Types" checkbox logic
-  document.getElementById('export-type-all').addEventListener('change', function() {
-    const typeItems = document.querySelectorAll('.export-type-item');
-    typeItems.forEach(item => {
-      item.checked = this.checked;
-      item.disabled = this.checked;
-    });
-  });
-  
-  // Initial state for type checkboxes
-  const allTypesChecked = document.getElementById('export-type-all').checked;
-  if (allTypesChecked) {
-    document.querySelectorAll('.export-type-item').forEach(item => {
-      item.checked = true;
-      item.disabled = true;
-    });
-  }
-  
-  // Close on overlay click
   document.getElementById('export-modal-overlay').addEventListener('click', function(e) {
-    if (e.target === this) {
-      closeVehicleReportExportModal();
-    }
+    if (e.target === this) closeVehicleReportExportModal();
   });
   
-  // Close on Escape key
-  document.addEventListener('keydown', function escHandler(e) {
+  const escHandler = function(e) {
     if (e.key === 'Escape') {
       closeVehicleReportExportModal();
       document.removeEventListener('keydown', escHandler);
     }
-  });
+  };
+  document.addEventListener('keydown', escHandler);
 }
 
 function closeVehicleReportExportModal() {
   const modal = document.getElementById('export-modal-overlay');
-  if (modal) {
-    modal.remove();
-  }
+  if (modal) modal.remove();
 }
 
 function loadExportPreferences() {
   try {
-    const saved = localStorage.getItem('gm_export_prefs');
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    const saved = localStorage.getItem('gm_export_prefs_v2');
+    if (saved) return JSON.parse(saved);
   } catch (e) {}
-  
-  // Defaults
   return {
-    format: 'pdf',
-    dateRange: 'all',
-    typeAll: true,
-    types: ['service', 'repair', 'upgrade', 'tax'],
-    includeVehicleInfo: true,
-    includeCostSummary: true,
-    includeReminders: true,
-    includeHistory: true,
-    includeServiceSummary: true
+    format: 'pdf', dateRange: 'all',
+    includeVehicleInfo: true, includeRenewals: true, includeCostSummary: false,
+    includeReminders: true, includeHistory: true, includeServiceSummary: false,
+    showVin: true, showPlate: true, showOdometer: true,
+    showYearMakeModel: true, showEngine: false, showStats: true
   };
 }
 
 function saveExportPreferences(prefs) {
-  try {
-    localStorage.setItem('gm_export_prefs', JSON.stringify(prefs));
-  } catch (e) {}
+  try { localStorage.setItem('gm_export_prefs_v2', JSON.stringify(prefs)); } catch (e) {}
 }
 
 function getExportOptions() {
   const format = document.querySelector('input[name="export-format"]:checked')?.value || 'pdf';
   const dateRange = document.getElementById('export-date-range').value;
-  const dateFrom = document.getElementById('export-date-from')?.value || null;
-  const dateTo = document.getElementById('export-date-to')?.value || null;
-  
-  const typeAll = document.getElementById('export-type-all').checked;
-  const types = [];
-  if (!typeAll) {
-    document.querySelectorAll('.export-type-item:checked').forEach(cb => {
-      types.push(cb.value);
-    });
-  }
-  
   return {
-    format,
-    dateRange,
-    dateFrom,
-    dateTo,
-    typeAll,
-    types,
+    format, dateRange,
+    dateFrom: document.getElementById('export-date-from')?.value || null,
+    dateTo: document.getElementById('export-date-to')?.value || null,
     includeVehicleInfo: document.getElementById('export-inc-vehicleinfo')?.checked ?? true,
-    includeCostSummary: document.getElementById('export-inc-costsummary')?.checked ?? true,
+    includeRenewals: document.getElementById('export-inc-renewals')?.checked ?? true,
+    includeCostSummary: document.getElementById('export-inc-costsummary')?.checked ?? false,
     includeReminders: document.getElementById('export-inc-reminders')?.checked ?? true,
     includeHistory: document.getElementById('export-inc-history')?.checked ?? true,
-    includeServiceSummary: document.getElementById('export-inc-servicesummary')?.checked ?? true
+    includeServiceSummary: document.getElementById('export-inc-servicesummary')?.checked ?? false,
+    showVin: document.getElementById('export-vd-vin')?.checked ?? true,
+    showPlate: document.getElementById('export-vd-plate')?.checked ?? true,
+    showOdometer: document.getElementById('export-vd-odometer')?.checked ?? true,
+    showYearMakeModel: document.getElementById('export-vd-yearMakeModel')?.checked ?? true,
+    showEngine: document.getElementById('export-vd-engine')?.checked ?? false,
+    showStats: document.getElementById('export-vd-stats')?.checked ?? true
   };
 }
 
 function executeVehicleReportExport() {
   const options = getExportOptions();
-  
-  // Save preferences
   saveExportPreferences(options);
-  
-  // Close modal
   closeVehicleReportExportModal();
-  
-  // Execute export based on format
   switch (options.format) {
-    case 'pdf':
-      exportVehicleReportPDF(options);
-      break;
-    case 'word':
-      exportVehicleReportWord(options);
-      break;
-    case 'xlsx':
-      exportVehicleReportXLSX(options);
-      break;
-    case 'csv':
-      exportVehicleReportCSV(options);
-      break;
+    case 'pdf': exportVehicleReportPDF(options); break;
+    case 'word': exportVehicleReportWord(options); break;
+    case 'xlsx': exportVehicleReportXLSX(options); break;
+    case 'csv': exportVehicleReportCSV(options); break;
   }
 }
 
 // ========================================
-// BRANDING HELPERS
+// BRANDING & HELPERS
 // ========================================
 
 function getAppBranding() {
-  // Get branding from GM_CONFIG (set by PHP) or fallback
   const config = window.GM_CONFIG || window.APP_CONFIG || {};
-  
-  // User's custom site title from settings (if set)
-  const customTitle = data?.settings?.siteTitle || null;
-  
   return {
-    appName: customTitle || config.appName || 'GarageMinder',
+    appName: config.appName || 'GarageMinder',
     appShortName: config.appShortName || 'GM',
     tagline: config.appTagline || 'Vehicle Maintenance Tracker',
     version: config.appVersion || '1.0',
     copyrightYear: config.copyrightYear || new Date().getFullYear(),
-    logoUrl: 'assets/images/icon-64.png' // Relative path to logo
+    logoUrl: 'assets/images/icon-64.png'
   };
 }
 
-// ========================================
-// FILTER ENTRIES BY OPTIONS
-// ========================================
+function formatReminderDue(reminder, unit) {
+  const parts = [];
+  if (reminder.nextOdo != null) parts.push(reminder.nextOdo.toLocaleString() + ' ' + unit);
+  if (reminder.nextDate) {
+    const date = new Date(reminder.nextDate + 'T00:00:00');
+    const today = new Date();
+    const sameYear = date.getFullYear() === today.getFullYear();
+    const options = sameYear ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' };
+    parts.push(date.toLocaleDateString('en-US', options));
+  }
+  if (parts.length === 0) return '–';
+  return parts.length === 2 ? parts.join(' or ') : parts[0];
+}
 
 function filterEntriesByOptions(entries, options) {
   let filtered = [...entries];
-  
-  // Date range filter
   if (options.dateRange !== 'all') {
     const today = getTodayDateInSettingsTz();
-    let fromDate = null;
-    
+    let fromDate = null, toDate = null;
     switch (options.dateRange) {
-      case 'year':
-        fromDate = new Date(today);
-        fromDate.setFullYear(fromDate.getFullYear() - 1);
-        break;
-      case '6months':
-        fromDate = new Date(today);
-        fromDate.setMonth(fromDate.getMonth() - 6);
-        break;
-      case '3months':
-        fromDate = new Date(today);
-        fromDate.setMonth(fromDate.getMonth() - 3);
-        break;
-      case 'ytd':
-        fromDate = new Date(today.getFullYear(), 0, 1);
-        break;
-      case 'custom':
-        if (options.dateFrom) {
-          fromDate = new Date(options.dateFrom);
-        }
-        break;
+      case 'year': fromDate = new Date(today); fromDate.setFullYear(fromDate.getFullYear() - 1); break;
+      case '6months': fromDate = new Date(today); fromDate.setMonth(fromDate.getMonth() - 6); break;
+      case '3months': fromDate = new Date(today); fromDate.setMonth(fromDate.getMonth() - 3); break;
+      case 'ytd': fromDate = new Date(today.getFullYear(), 0, 1); break;
+      case 'custom': if (options.dateFrom) fromDate = new Date(options.dateFrom); if (options.dateTo) toDate = new Date(options.dateTo); break;
     }
-    
-    let toDate = null;
-    if (options.dateRange === 'custom' && options.dateTo) {
-      toDate = new Date(options.dateTo);
-    }
-    
     filtered = filtered.filter(e => {
       if (!e.date) return true;
       const entryDate = new Date(e.date);
@@ -386,196 +307,103 @@ function filterEntriesByOptions(entries, options) {
       return true;
     });
   }
-  
-  // Entry type filter (simplified - based on service names or notes)
-  // This is a basic implementation - you might want to add an explicit "type" field to entries
-  if (!options.typeAll && options.types.length > 0) {
-    // For now, include all if any type is selected since we don't have explicit types
-    // A more sophisticated implementation would categorize based on service names
-  }
-  
   return filtered;
 }
 
 // ========================================
-// REPORT DATA BUILDER (with branding)
+// REPORT DATA BUILDER
 // ========================================
 
 function buildVehicleReportData(options) {
   const branding = getAppBranding();
   const unit = getUnitShort();
-  const unitFull = unit === 'km' ? 'Kilometers' : 'Miles';
-  const today = getTodayDateInSettingsTz();
   const todayIso = getTodayIsoInSettingsTz();
-  
   const vehicle = data.vehicles.find(v => v.id === activeVehicleId);
   if (!vehicle) return null;
   
-  let entries = data.entries
-    .filter(e => e.vehicleId === activeVehicleId)
-    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-  
-  // Apply filters
+  let entries = data.entries.filter(e => e.vehicleId === activeVehicleId).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   entries = filterEntriesByOptions(entries, options);
-  
   const reminders = data.reminders.filter(r => r.vehicleId === activeVehicleId);
   
-  // Build cost breakdown
   const costBreakdown = calculateCostBreakdown(entries);
-  
-  // Build stats
   const stats = calculateEnhancedStats(vehicle, entries, reminders);
   
-  // Build timeline
   const timeline = entries.map((e, index) => {
     const services = normalizeServices(e.services || []);
     const totalCost = calculateEntryTotalCost(e);
     return {
-      index: index + 1,
-      date: e.date,
-      dateFormatted: e.date ? formatDateNice(e.date) : 'No date',
-      odometer: e.odo,
-      odometerFormatted: e.odo != null ? e.odo.toLocaleString() + ' ' + unit : '–',
-      services: services,
-      serviceNames: services.map(s => s.name),
+      index: index + 1, date: e.date, dateFormatted: e.date ? formatDateNice(e.date) : 'No date',
+      odometer: e.odo, odometerFormatted: e.odo != null ? e.odo.toLocaleString() + ' ' + unit : '–',
+      services, serviceNames: services.map(s => s.name),
       serviceCosts: services.filter(s => s.cost != null).map(s => s.name + ': $' + s.cost.toFixed(2)).join('; '),
-      totalCost,
-      totalCostFormatted: totalCost > 0 ? '$' + totalCost.toFixed(2) : '–',
-      notes: e.notes || ''
+      totalCost, totalCostFormatted: totalCost > 0 ? '$' + totalCost.toFixed(2) : '–', notes: e.notes || ''
     };
   });
   
-  // Build upcoming reminders
-  const upcomingReminders = reminders
-    .map(r => {
-      const derived = computeReminderDerived(r, vehicle.currentOdo);
-      return {
-        serviceName: r.serviceName || r.title || 'Reminder',
-        status: derived.level,
-        statusLabel: derived.label,
-        nextOdo: derived.nextOdo,
-        nextDate: derived.nextDate,
-        nextDateFormatted: derived.nextDate ? formatDateNice(derived.nextDate) : null,
-        urgency: derived.level === 'overdue' ? 0 : (derived.level === 'upcoming' ? 1 : 2)
-      };
-    })
-    .sort((a, b) => a.urgency - b.urgency)
-    .slice(0, 5);
+  const upcomingReminders = reminders.map(r => {
+    const derived = computeReminderDerived(r, vehicle.currentOdo);
+    return {
+      serviceName: r.serviceName || r.title || 'Reminder', status: derived.level, statusLabel: derived.label,
+      nextOdo: derived.nextOdo, nextDate: derived.nextDate, nextDateFormatted: derived.nextDate ? formatDateNice(derived.nextDate) : null,
+      intervalMiles: r.intervalMiles, intervalMonths: r.intervalMonths,
+      urgency: derived.level === 'overdue' ? 0 : (derived.level === 'upcoming' ? 1 : 2)
+    };
+  }).sort((a, b) => a.urgency - b.urgency);
   
-  // Build service summary
-  const serviceSummary = buildServiceSummary(entries);
+  const serviceSummary = typeof buildServiceSummary === 'function' ? buildServiceSummary(entries) : [];
   
   return {
-    branding,
-    reportDate: todayIso,
-    reportDateFormatted: formatDateNice(todayIso),
-    reportTime: new Date().toLocaleTimeString(),
-    unit,
-    unitFull,
+    branding, reportDate: todayIso, reportDateFormatted: formatDateNice(todayIso),
+    reportTime: new Date().toLocaleTimeString(), unit, unitFull: unit === 'km' ? 'Kilometers' : 'Miles',
     vehicle: {
-      id: vehicle.id,
-      name: vehicle.name,
-      vin: vehicle.vin || 'Not Recorded',
-      plate: vehicle.plate || 'Not Recorded',
-      currentOdo: vehicle.currentOdo,
-      photo: vehicle.photo || null
+      id: vehicle.id, name: vehicle.name, vin: vehicle.vin || 'Not Recorded', plate: vehicle.plate || 'Not Recorded',
+      currentOdo: vehicle.currentOdo, year: vehicle.year || null, make: vehicle.make || null, model: vehicle.model || null,
+      engine: vehicle.engine || null, bodyClass: vehicle.bodyClass || null, photo: vehicle.photo || vehicle.photoPath || null,
+      insuranceExpiry: vehicle.insuranceExpiry, insuranceExpiryFormatted: vehicle.insuranceExpiry ? formatDateNice(vehicle.insuranceExpiry) : null,
+      registrationExpiry: vehicle.registrationExpiry, registrationExpiryFormatted: vehicle.registrationExpiry ? formatDateNice(vehicle.registrationExpiry) : null
     },
-    costBreakdown,
-    stats,
-    timeline,
-    upcomingReminders,
-    serviceSummary,
-    recordCount: timeline.length,
-    options
+    costBreakdown, stats, timeline, upcomingReminders, serviceSummary, recordCount: timeline.length, options
   };
 }
 
-// Cost breakdown calculation (reuse from v2 or define here)
 function calculateCostBreakdown(entries) {
-  let partsCost = 0;
-  let laborCost = 0;
-  let miscCost = 0;
-  
+  let partsCost = 0, laborCost = 0, miscCost = 0;
   entries.forEach(entry => {
-    if (Array.isArray(entry.services)) {
-      entry.services.forEach(s => {
-        if (typeof s === 'object' && s.cost != null) {
-          partsCost += Number(s.cost) || 0;
-        }
-      });
-    }
-    if (entry.cost != null) {
-      miscCost += Number(entry.cost) || 0;
-    }
-    if (entry.laborCost != null) {
-      laborCost += Number(entry.laborCost) || 0;
-    }
+    if (Array.isArray(entry.services)) entry.services.forEach(s => { if (typeof s === 'object' && s.cost != null) partsCost += Number(s.cost) || 0; });
+    if (entry.cost != null) miscCost += Number(entry.cost) || 0;
+    if (entry.laborCost != null) laborCost += Number(entry.laborCost) || 0;
   });
-  
   const total = partsCost + laborCost + miscCost;
-  
-  return {
-    parts: partsCost,
-    labor: laborCost,
-    misc: miscCost,
-    total: total,
-    partsFormatted: '$' + partsCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
-    laborFormatted: '$' + laborCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
-    miscFormatted: '$' + miscCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
-    totalFormatted: '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})
-  };
+  const fmt = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  return { parts: partsCost, labor: laborCost, misc: miscCost, total, partsFormatted: fmt(partsCost), laborFormatted: fmt(laborCost), miscFormatted: fmt(miscCost), totalFormatted: fmt(total) };
 }
 
-// Enhanced stats calculation
 function calculateEnhancedStats(vehicle, entries, reminders) {
   const unit = getUnitShort();
   const today = getTodayDateInSettingsTz();
   const currentYear = today.getFullYear();
-  
-  let totalCost = 0, ytdCost = 0;
-  let firstDate = null, lastDate = null;
-  let firstOdo = null, lastOdo = null;
-  let serviceCount = 0;
+  let totalCost = 0, ytdCost = 0, firstDate = null, lastDate = null, firstOdo = null, lastOdo = null, serviceCount = 0;
   const serviceTypeCounts = {};
   
   entries.forEach(e => {
     serviceCount++;
     const cost = calculateEntryTotalCost(e);
     totalCost += cost;
-    
     if (e.date) {
-      if (!firstDate || e.date < firstDate) {
-        firstDate = e.date;
-        firstOdo = e.odo;
-      }
-      if (!lastDate || e.date > lastDate) {
-        lastDate = e.date;
-        lastOdo = e.odo;
-      }
-      const year = parseInt(e.date.substring(0, 4), 10);
-      if (year === currentYear) ytdCost += cost;
+      if (!firstDate || e.date < firstDate) { firstDate = e.date; firstOdo = e.odo; }
+      if (!lastDate || e.date > lastDate) { lastDate = e.date; lastOdo = e.odo; }
+      if (parseInt(e.date.substring(0, 4), 10) === currentYear) ytdCost += cost;
     }
-    
-    const services = normalizeServices(e.services || []);
-    services.forEach(s => {
-      serviceTypeCounts[s.name] = (serviceTypeCounts[s.name] || 0) + 1;
-    });
+    normalizeServices(e.services || []).forEach(s => { serviceTypeCounts[s.name] = (serviceTypeCounts[s.name] || 0) + 1; });
   });
   
   const distanceTracked = (lastOdo && firstOdo) ? lastOdo - firstOdo : 0;
-  
   let yearsTracked = 0, monthsTracked = 0;
   if (firstDate && lastDate) {
-    const first = new Date(firstDate);
-    const last = new Date(lastDate);
-    const diffMs = last - first;
+    const diffMs = new Date(lastDate) - new Date(firstDate);
     yearsTracked = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365));
     monthsTracked = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30));
   }
-  
-  const avgPerYear = yearsTracked > 0 ? Math.round(distanceTracked / yearsTracked) : distanceTracked;
-  const avgCostPerService = serviceCount > 0 ? totalCost / serviceCount : 0;
-  const costPerMile = distanceTracked > 0 ? totalCost / distanceTracked : 0;
   
   let overdueCount = 0, upcomingCount = 0;
   reminders.forEach(r => {
@@ -585,24 +413,13 @@ function calculateEnhancedStats(vehicle, entries, reminders) {
   });
   
   return {
-    totalCost,
-    ytdCost,
-    avgCostPerService,
-    costPerMile,
-    firstDate,
-    firstDateFormatted: firstDate ? formatDateNice(firstDate) : null,
-    lastDate,
-    lastDateFormatted: lastDate ? formatDateNice(lastDate) : null,
-    firstOdo,
-    lastOdo,
-    distanceTracked,
-    yearsTracked,
-    monthsTracked,
-    avgPerYear,
-    serviceCount,
-    overdueCount,
-    upcomingCount,
-    totalReminders: reminders.length,
+    totalCost, ytdCost, avgCostPerService: serviceCount > 0 ? totalCost / serviceCount : 0,
+    costPerMile: distanceTracked > 0 ? totalCost / distanceTracked : 0,
+    firstDate, firstDateFormatted: firstDate ? formatDateNice(firstDate) : null,
+    lastDate, lastDateFormatted: lastDate ? formatDateNice(lastDate) : null,
+    firstOdo, lastOdo, distanceTracked, yearsTracked, monthsTracked,
+    avgPerYear: yearsTracked > 0 ? Math.round(distanceTracked / yearsTracked) : distanceTracked,
+    serviceCount, overdueCount, upcomingCount, totalReminders: reminders.length,
     uniqueServiceTypes: Object.keys(serviceTypeCounts).length
   };
 }
@@ -614,939 +431,447 @@ function calculateEnhancedStats(vehicle, entries, reminders) {
 function exportVehicleReportCSV(options) {
   const rpt = buildVehicleReportData(options);
   if (!rpt) return;
-  
-  const branding = rpt.branding;
-  const unit = rpt.unit;
-  const v = rpt.vehicle;
+  const { branding, unit, vehicle: v, costBreakdown: cost } = rpt;
   const safeName = v.name.replace(/[^\w]+/g, "_").toLowerCase();
-  
   const lines = [];
   
-  // Header with branding
   lines.push(branding.appName + ' - Vehicle Maintenance Report');
   lines.push('Generated: ' + rpt.reportDateFormatted);
   lines.push('');
-  
-  // Vehicle info
   lines.push('Vehicle Information');
   lines.push('Vehicle Name,' + v.name);
-  lines.push('VIN,' + v.vin);
-  lines.push('License Plate,' + v.plate);
-  lines.push('Current Odometer,' + (v.currentOdo != null ? v.currentOdo.toLocaleString() + ' ' + unit : 'Not recorded'));
+  if (v.vin !== 'Not Recorded') lines.push('VIN,' + v.vin);
+  if (v.plate !== 'Not Recorded') lines.push('License Plate,' + v.plate);
+  if (v.currentOdo != null) lines.push('Current Odometer,' + v.currentOdo.toLocaleString() + ' ' + unit);
+  if (v.year && v.make && v.model) lines.push('Year/Make/Model,' + v.year + ' ' + v.make + ' ' + v.model);
+  if (v.insuranceExpiryFormatted) lines.push('Insurance Expiry,' + v.insuranceExpiryFormatted);
+  if (v.registrationExpiryFormatted) lines.push('Registration Expiry,' + v.registrationExpiryFormatted);
   lines.push('');
+  if (cost.total > 0) { lines.push('Cost Summary'); lines.push('Total Cost,' + cost.totalFormatted); lines.push(''); }
   
-  // Cost summary
-  lines.push('Cost Summary');
-  lines.push('Total Cost,' + rpt.costBreakdown.totalFormatted);
-  lines.push('Parts/Services,' + rpt.costBreakdown.partsFormatted);
-  lines.push('Misc/Fees,' + rpt.costBreakdown.miscFormatted);
-  lines.push('');
-  
-  // Service history header
-  const headers = ['Date', 'Odometer (' + unit + ')', 'Services', 'Service Costs', 'Total Cost', 'Notes'];
   lines.push('Service History');
-  lines.push(headers.join(','));
-  
-  // Service history rows (reverse chronological)
+  lines.push(['Date', 'Odometer (' + unit + ')', 'Services', 'Service Costs', 'Total Cost', 'Notes'].join(','));
   rpt.timeline.slice().reverse().forEach(entry => {
-    const row = [
-      entry.dateFormatted,
-      entry.odometer != null ? entry.odometer : '',
-      '"' + entry.serviceNames.join('; ').replace(/"/g, '""') + '"',
-      '"' + entry.serviceCosts.replace(/"/g, '""') + '"',
-      entry.totalCost > 0 ? entry.totalCost.toFixed(2) : '',
-      '"' + (entry.notes || '').replace(/"/g, '""') + '"'
-    ];
-    lines.push(row.join(','));
+    lines.push([entry.dateFormatted, entry.odometer != null ? entry.odometer : '', '"' + entry.serviceNames.join('; ').replace(/"/g, '""') + '"', '"' + entry.serviceCosts.replace(/"/g, '""') + '"', entry.totalCost > 0 ? entry.totalCost.toFixed(2) : '', '"' + (entry.notes || '').replace(/"/g, '""') + '"'].join(','));
   });
-  
   lines.push('');
   lines.push('Report generated by ' + branding.appName);
   
-  // Create and download file
   const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = branding.appName.toLowerCase().replace(/\s+/g, '-') + '-' + safeName + '-report.csv';
+  a.download = branding.appName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + safeName + '-report.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  
   showToast('CSV report exported');
 }
 
 // ========================================
-// XLSX EXPORT (Better formatting)
+// XLSX EXPORT
 // ========================================
 
 function exportVehicleReportXLSX(options) {
   const rpt = buildVehicleReportData(options);
   if (!rpt) return;
+  if (!window.XLSX) { alert('Excel export requires SheetJS library. Falling back to CSV.'); exportVehicleReportCSV(options); return; }
   
-  // Check for SheetJS
-  if (!window.XLSX) {
-    alert('Excel export requires SheetJS library. Falling back to CSV.');
-    exportVehicleReportCSV(options);
-    return;
-  }
-  
-  const branding = rpt.branding;
-  const unit = rpt.unit;
-  const v = rpt.vehicle;
+  const { branding, unit, vehicle: v } = rpt;
   const safeName = v.name.replace(/[^\w]+/g, "_").toLowerCase();
-  
-  // Create workbook
   const wb = XLSX.utils.book_new();
-  
-  // Build data array for the sheet
   const wsData = [];
   
-  // Header rows
   wsData.push([branding.appName + ' - Vehicle Maintenance Report']);
   wsData.push(['Generated: ' + rpt.reportDateFormatted]);
   wsData.push([]);
-  
-  // Vehicle info
   wsData.push(['Vehicle Information']);
   wsData.push(['Vehicle Name', v.name]);
-  wsData.push(['VIN', v.vin]);
-  wsData.push(['License Plate', v.plate]);
-  wsData.push(['Current Odometer', v.currentOdo != null ? v.currentOdo.toLocaleString() + ' ' + unit : 'Not recorded']);
+  if (v.vin !== 'Not Recorded') wsData.push(['VIN', v.vin]);
+  if (v.plate !== 'Not Recorded') wsData.push(['License Plate', v.plate]);
+  if (v.currentOdo != null) wsData.push(['Current Odometer', v.currentOdo.toLocaleString() + ' ' + unit]);
   wsData.push([]);
-  
-  // Cost summary
-  wsData.push(['Cost Summary']);
-  wsData.push(['Total Cost', rpt.costBreakdown.total]);
-  wsData.push(['Parts/Services', rpt.costBreakdown.parts]);
-  wsData.push(['Misc/Fees', rpt.costBreakdown.misc]);
-  wsData.push([]);
-  
-  // Service history
   wsData.push(['Service History']);
   wsData.push(['Date', 'Odometer (' + unit + ')', 'Services', 'Service Costs', 'Total Cost', 'Notes']);
-  
   rpt.timeline.slice().reverse().forEach(entry => {
-    wsData.push([
-      entry.dateFormatted,
-      entry.odometer,
-      entry.serviceNames.join('; '),
-      entry.serviceCosts,
-      entry.totalCost > 0 ? entry.totalCost : '',
-      entry.notes || ''
-    ]);
+    wsData.push([entry.dateFormatted, entry.odometer, entry.serviceNames.join('; '), entry.serviceCosts, entry.totalCost > 0 ? entry.totalCost : '', entry.notes || '']);
   });
   
-  // Create worksheet
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  
-  // Set column widths
-  ws['!cols'] = [
-    { wch: 14 },  // Date
-    { wch: 14 },  // Odometer
-    { wch: 40 },  // Services
-    { wch: 30 },  // Service Costs
-    { wch: 12 },  // Total Cost
-    { wch: 40 }   // Notes
-  ];
-  
-  // Add worksheet to workbook
+  ws['!cols'] = [{ wch: 14 }, { wch: 14 }, { wch: 45 }, { wch: 35 }, { wch: 12 }, { wch: 40 }];
   XLSX.utils.book_append_sheet(wb, ws, 'Vehicle Report');
-  
-  // Generate and download
-  const filename = branding.appName.toLowerCase().replace(/\s+/g, '-') + '-' + safeName + '-report.xlsx';
-  XLSX.writeFile(wb, filename);
-  
+  XLSX.writeFile(wb, branding.appName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + safeName + '-report.xlsx');
   showToast('Excel report exported');
 }
-
-// ========================================
-// PDF EXPORT (B&W with color logo)
-// ========================================
-
-async function exportVehicleReportPDF(options) {
-  const rpt = buildVehicleReportData(options);
-  if (!rpt) return;
+ [220, 220, 220], tableBg = [245, 245, 245], white = [255, 255, 255];
   
-  if (!window.jspdf || !window.jspdf.jsPDF) {
-    alert('PDF export requires jsPDF library.');
-    return;
-  }
+  let y = 12;
   
-  const branding = rpt.branding;
-  const safeName = rpt.vehicle.name.replace(/[^\w]+/g, "_").toLowerCase();
-  
-  // Try to load logo
-  let logoData = null;
-  try {
-    logoData = await loadImageAsDataUrl(branding.logoUrl);
-  } catch (e) {
-    console.warn('Could not load logo:', e);
-  }
-  
-  // Try to load vehicle photo
-  let vehiclePhotoData = null;
-  if (rpt.vehicle.photo && options.includeVehicleInfo) {
-    try {
-      vehiclePhotoData = await loadImageAsDataUrl(rpt.vehicle.photo);
-    } catch (e) {
-      console.warn('Could not load vehicle photo:', e);
-    }
-  }
-  
-  generateBWPDF(rpt, safeName, logoData, vehiclePhotoData);
-}
-
-async function loadImageAsDataUrl(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-function generateBWPDF(rpt, safeName, logoData, vehiclePhotoData) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
-  
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
-  const contentWidth = pageWidth - (margin * 2);
-  
-  const branding = rpt.branding;
-  const unit = rpt.unit;
-  const v = rpt.vehicle;
-  const s = rpt.stats;
-  const cost = rpt.costBreakdown;
-  const opts = rpt.options;
-  
-  // B&W Color palette
-  const black = [0, 0, 0];
-  const darkGray = [51, 51, 51];
-  const mediumGray = [102, 102, 102];
-  const lightGray = [153, 153, 153];
-  const veryLightGray = [230, 230, 230];
-  const white = [255, 255, 255];
-  
-  let y = 0;
-  
-  // ========================================
-  // HEADER WITH LOGO
-  // ========================================
-  
-  // Top line
-  doc.setDrawColor(...black);
-  doc.setLineWidth(0.5);
-  doc.line(margin, 10, pageWidth - margin, 10);
-  
-  y = 18;
-  
-  // Logo (in color)
-  if (logoData) {
-    try {
-      doc.addImage(logoData, 'PNG', margin, y - 4, 10, 10);
-    } catch (e) {}
-  }
-  
-  // App name
-  const logoOffset = logoData ? 14 : 0;
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...black);
+  // HEADER
+  if (logoData) { try { doc.addImage(logoData, 'PNG', margin, y - 3, 9, 9); } catch (e) {} }
+  const logoOffset = logoData ? 12 : 0;
+  doc.setFontSize(18); doc.setFont('helvetica', 'bold'); doc.setTextColor(...black);
   doc.text(branding.appName, margin + logoOffset, y + 2);
-  
-  // Tagline
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...mediumGray);
-  doc.text('Vehicle Maintenance Report', margin + logoOffset, y + 8);
-  
-  // Report info (right side)
-  doc.setFontSize(8);
-  doc.setTextColor(...darkGray);
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...mediumGray);
+  doc.text('Vehicle Maintenance Report', margin + logoOffset, y + 7);
+  doc.setFontSize(8); doc.setTextColor(...darkGray);
   doc.text('Report Date: ' + rpt.reportDateFormatted, pageWidth - margin, y, { align: 'right' });
-  doc.text(rpt.recordCount + ' Service Records', pageWidth - margin, y + 5, { align: 'right' });
+  doc.text(rpt.recordCount + ' Service Record' + (rpt.recordCount !== 1 ? 's' : ''), pageWidth - margin, y + 5, { align: 'right' });
   
-  // Separator line
-  y = 32;
-  doc.setDrawColor(...veryLightGray);
-  doc.setLineWidth(0.3);
+  y = 24;
+  doc.setDrawColor(...veryLightGray); doc.setLineWidth(0.5);
   doc.line(margin, y, pageWidth - margin, y);
+  y = 30;
   
-  y = 38;
-  
-  // ========================================
-  // VEHICLE INFORMATION SECTION
-  // ========================================
-  
+  // VEHICLE INFORMATION
   if (opts.includeVehicleInfo) {
-    // Section header
-    doc.setFillColor(...black);
-    doc.rect(margin, y, contentWidth, 6, 'F');
-    doc.setTextColor(...white);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Vehicle Information', margin + 3, y + 4.5);
+    doc.setFillColor(...darkGray); doc.rect(margin, y, contentWidth, 7, 'F');
+    doc.setTextColor(...white); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+    doc.text('Vehicle Information', margin + 4, y + 5);
+    y += 7;
+    
+    const boxStartY = y;
+    doc.setDrawColor(...veryLightGray); doc.setLineWidth(0.3);
+    y += 6;
+    doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(...black);
+    doc.text(v.name, margin + 5, y);
     y += 8;
     
-    // Vehicle info box
-    const infoBoxHeight = vehiclePhotoData ? 35 : 25;
-    doc.setDrawColor(...veryLightGray);
-    doc.setLineWidth(0.3);
-    doc.rect(margin, y, contentWidth, infoBoxHeight, 'S');
-    
-    // Vehicle photo (if available)
-    const photoWidth = vehiclePhotoData ? 35 : 0;
-    const infoStartX = margin + photoWidth + (vehiclePhotoData ? 8 : 5);
-    
-    if (vehiclePhotoData) {
-      try {
-        doc.addImage(vehiclePhotoData, 'JPEG', margin + 3, y + 3, 32, 24);
-      } catch (e) {}
+    const detailItems = [];
+    if (opts.showVin && v.vin !== 'Not Recorded') detailItems.push({ label: 'VIN', value: v.vin });
+    if (opts.showPlate && v.plate !== 'Not Recorded') detailItems.push({ label: 'LICENSE PLATE', value: v.plate });
+    if (opts.showOdometer && v.currentOdo != null) detailItems.push({ label: 'CURRENT ODOMETER', value: v.currentOdo.toLocaleString() + ' ' + unit });
+    if (opts.showYearMakeModel && v.year && v.make && v.model) detailItems.push({ label: 'YEAR/MAKE/MODEL', value: v.year + ' ' + v.make + ' ' + v.model });
+    if (opts.showEngine && v.engine) detailItems.push({ label: 'ENGINE', value: v.engine });
+    if (opts.showStats) {
+      if (s.monthsTracked > 0) {
+        const span = s.yearsTracked > 0 ? s.yearsTracked + ' year' + (s.yearsTracked > 1 ? 's' : '') : s.monthsTracked + ' month' + (s.monthsTracked > 1 ? 's' : '');
+        detailItems.push({ label: 'HISTORY SPAN', value: span });
+      }
+      if (s.distanceTracked > 0) detailItems.push({ label: 'DISTANCE TRACKED', value: s.distanceTracked.toLocaleString() + ' ' + unit });
+      if (s.avgPerYear > 0) detailItems.push({ label: 'AVG. ANNUAL', value: s.avgPerYear.toLocaleString() + ' ' + unit + '/yr' });
     }
     
-    // Vehicle name
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...black);
-    doc.text(v.name, infoStartX, y + 8);
-    
-    // Details grid
-    const detailY = y + 14;
-    const colWidth = (contentWidth - photoWidth - 15) / 3;
-    
-    const vehicleDetails = [
-      { label: 'VIN', value: v.vin },
-      { label: 'LICENSE PLATE', value: v.plate },
-      { label: 'CURRENT ODOMETER', value: v.currentOdo != null ? v.currentOdo.toLocaleString() + ' ' + unit : 'Not recorded' }
-    ];
-    
-    vehicleDetails.forEach((detail, i) => {
-      const x = infoStartX + (i * colWidth);
-      doc.setFontSize(6);
-      doc.setTextColor(...lightGray);
-      doc.setFont('helvetica', 'normal');
-      doc.text(detail.label, x, detailY);
-      doc.setFontSize(8);
-      doc.setTextColor(...darkGray);
-      doc.setFont('helvetica', 'bold');
-      const displayValue = detail.value.length > 20 ? detail.value.substring(0, 20) + '...' : detail.value;
-      doc.text(displayValue, x, detailY + 4);
+    const colWidth = (contentWidth - 10) / 3;
+    let col = 0, rowY = y;
+    detailItems.forEach(item => {
+      const x = margin + 5 + (col * colWidth);
+      doc.setFontSize(6); doc.setTextColor(...lightGray); doc.setFont('helvetica', 'normal');
+      doc.text(item.label, x, rowY);
+      doc.setFontSize(9); doc.setTextColor(...darkGray); doc.setFont('helvetica', 'bold');
+      const displayValue = item.value.length > 24 ? item.value.substring(0, 24) + '...' : item.value;
+      doc.text(displayValue, x, rowY + 4);
+      col++;
+      if (col >= 3) { col = 0; rowY += 11; }
     });
-    
-    // Second row of details
-    if (s.firstDate || s.distanceTracked > 0) {
-      const detailY2 = detailY + 12;
-      const details2 = [
-        { label: 'HISTORY SPAN', value: s.yearsTracked > 0 ? s.yearsTracked + ' year' + (s.yearsTracked > 1 ? 's' : '') : (s.monthsTracked > 0 ? s.monthsTracked + ' months' : '–') },
-        { label: 'DISTANCE TRACKED', value: s.distanceTracked.toLocaleString() + ' ' + unit },
-        { label: 'AVG. ANNUAL', value: s.avgPerYear.toLocaleString() + ' ' + unit + '/yr' }
-      ];
-      
-      details2.forEach((detail, i) => {
-        const x = infoStartX + (i * colWidth);
-        doc.setFontSize(6);
-        doc.setTextColor(...lightGray);
-        doc.setFont('helvetica', 'normal');
-        doc.text(detail.label, x, detailY2);
-        doc.setFontSize(8);
-        doc.setTextColor(...darkGray);
-        doc.setFont('helvetica', 'bold');
-        doc.text(detail.value, x, detailY2 + 4);
-      });
-    }
-    
-    y += infoBoxHeight + 6;
+    if (col > 0) rowY += 11;
+    y = rowY + 2;
+    doc.rect(margin, boxStartY, contentWidth, y - boxStartY, 'S');
+    y += 6;
   }
   
-  // ========================================
-  // COST SUMMARY SECTION
-  // ========================================
+  // RENEWAL DATES
+  if (opts.includeRenewals && (v.insuranceExpiry || v.registrationExpiry)) {
+    doc.setFillColor(...darkGray); doc.rect(margin, y, contentWidth, 7, 'F');
+    doc.setTextColor(...white); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+    doc.text('Renewal Dates', margin + 4, y + 5);
+    y += 7;
+    const boxStartY = y;
+    y += 5;
+    const renewals = [];
+    if (v.insuranceExpiryFormatted) renewals.push({ label: 'Insurance Expiry', value: v.insuranceExpiryFormatted });
+    if (v.registrationExpiryFormatted) renewals.push({ label: 'Registration Expiry', value: v.registrationExpiryFormatted });
+    renewals.forEach((item, i) => {
+      const x = margin + 5 + (i * (contentWidth / 2));
+      doc.setFontSize(7); doc.setTextColor(...mediumGray); doc.setFont('helvetica', 'normal');
+      doc.text(item.label, x, y);
+      doc.setFontSize(10); doc.setTextColor(...darkGray); doc.setFont('helvetica', 'bold');
+      doc.text(item.value, x, y + 5);
+    });
+    y += 10;
+    doc.setDrawColor(...veryLightGray); doc.rect(margin, boxStartY, contentWidth, y - boxStartY, 'S');
+    y += 6;
+  }
   
-  if (opts.includeCostSummary) {
-    // Section header
-    doc.setFillColor(...black);
-    doc.rect(margin, y, contentWidth, 6, 'F');
-    doc.setTextColor(...white);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Cost Summary', margin + 3, y + 4.5);
-    y += 8;
-    
-    // Cost cards
-    const cardWidth = (contentWidth - 9) / 4;
+  // COST SUMMARY (Optional)
+  if (opts.includeCostSummary && cost.total > 0) {
+    doc.setFillColor(...darkGray); doc.rect(margin, y, contentWidth, 7, 'F');
+    doc.setTextColor(...white); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+    doc.text('Cost Summary', margin + 4, y + 5);
+    y += 7;
+    const boxStartY = y;
+    y += 4;
+    const cardWidth = (contentWidth - 15) / 4;
     const costItems = [
       { label: 'Parts/Services', value: cost.partsFormatted },
       { label: 'Labor', value: cost.laborFormatted },
       { label: 'Misc/Fees', value: cost.miscFormatted },
       { label: 'TOTAL', value: cost.totalFormatted, bold: true }
     ];
-    
     costItems.forEach((item, i) => {
-      const x = margin + (i * (cardWidth + 3));
-      
-      // Card border
+      const x = margin + 3 + (i * (cardWidth + 3));
       doc.setDrawColor(...veryLightGray);
-      doc.rect(x, y, cardWidth, 16, 'S');
-      
-      // Label
-      doc.setFontSize(6);
-      doc.setTextColor(...lightGray);
-      doc.setFont('helvetica', 'normal');
-      doc.text(item.label.toUpperCase(), x + cardWidth / 2, y + 5, { align: 'center' });
-      
-      // Value
-      doc.setFontSize(item.bold ? 11 : 10);
-      doc.setTextColor(...(item.bold ? black : darkGray));
+      if (item.bold) { doc.setFillColor(...tableBg); doc.rect(x, y, cardWidth, 14, 'FD'); }
+      else { doc.rect(x, y, cardWidth, 14, 'S'); }
+      doc.setFontSize(6); doc.setTextColor(...lightGray); doc.setFont('helvetica', 'normal');
+      doc.text(item.label.toUpperCase(), x + cardWidth / 2, y + 4, { align: 'center' });
+      doc.setFontSize(item.bold ? 11 : 9); doc.setTextColor(...(item.bold ? black : darkGray));
       doc.setFont('helvetica', item.bold ? 'bold' : 'normal');
-      doc.text(item.value, x + cardWidth / 2, y + 12, { align: 'center' });
+      doc.text(item.value, x + cardWidth / 2, y + 10, { align: 'center' });
     });
-    
-    y += 20;
-    
-    // Additional stats
+    y += 18;
     const statItems = [
       { label: 'Year-to-Date', value: '$' + s.ytdCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) },
       { label: 'Avg per Service', value: '$' + s.avgCostPerService.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) },
       { label: 'Cost per ' + (unit === 'km' ? 'km' : 'mile'), value: '$' + s.costPerMile.toFixed(2) },
       { label: 'Service Types', value: s.uniqueServiceTypes.toString() }
     ];
-    
     statItems.forEach((item, i) => {
-      const x = margin + (i * (cardWidth + 3));
-      doc.setFontSize(6);
-      doc.setTextColor(...lightGray);
-      doc.text(item.label, x + cardWidth / 2, y, { align: 'center' });
-      doc.setFontSize(9);
-      doc.setTextColor(...darkGray);
-      doc.setFont('helvetica', 'bold');
-      doc.text(item.value, x + cardWidth / 2, y + 5, { align: 'center' });
+      const x = margin + 3 + (i * (cardWidth + 3));
+      doc.setFontSize(6); doc.setTextColor(...lightGray); doc.text(item.label, x + cardWidth / 2, y, { align: 'center' });
+      doc.setFontSize(8); doc.setTextColor(...darkGray); doc.setFont('helvetica', 'bold');
+      doc.text(item.value, x + cardWidth / 2, y + 4, { align: 'center' });
     });
-    
-    y += 12;
+    y += 8;
+    doc.setDrawColor(...veryLightGray); doc.rect(margin, boxStartY, contentWidth, y - boxStartY, 'S');
+    y += 6;
   }
   
-  // ========================================
-  // UPCOMING REMINDERS SECTION
-  // ========================================
-  
+  // UPCOMING MAINTENANCE
   if (opts.includeReminders && rpt.upcomingReminders.length > 0) {
-    // Section header
-    doc.setFillColor(...black);
-    doc.rect(margin, y, contentWidth, 6, 'F');
-    doc.setTextColor(...white);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Upcoming Maintenance', margin + 3, y + 4.5);
-    
-    // Status badge
+    doc.setFillColor(...darkGray); doc.rect(margin, y, contentWidth, 7, 'F');
+    doc.setTextColor(...white); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+    doc.text('Upcoming Maintenance', margin + 4, y + 5);
     const statusText = s.overdueCount > 0 ? s.overdueCount + ' Overdue' : 'All OK';
     doc.setFontSize(7);
-    const badgeWidth = doc.getTextWidth(statusText) + 6;
-    doc.setFillColor(...(s.overdueCount > 0 ? darkGray : lightGray));
-    doc.roundedRect(pageWidth - margin - badgeWidth - 3, y + 1, badgeWidth, 4, 1, 1, 'F');
+    const badgeWidth = doc.getTextWidth(statusText) + 8;
+    doc.setFillColor(...(s.overdueCount > 0 ? mediumGray : lightGray));
+    doc.rect(pageWidth - margin - badgeWidth - 3, y + 1.5, badgeWidth, 4, 'F');
     doc.setTextColor(...white);
-    doc.text(statusText, pageWidth - margin - badgeWidth / 2 - 3, y + 3.8, { align: 'center' });
-    
-    y += 8;
-    
-    // Reminders list
+    doc.text(statusText, pageWidth - margin - badgeWidth / 2 - 3, y + 4.2, { align: 'center' });
+    y += 7;
+    const boxStartY = y;
+    y += 4;
     rpt.upcomingReminders.forEach((reminder, i) => {
       const rowY = y + (i * 6);
-      
-      // Status indicator
       const dotFill = reminder.status === 'overdue' ? black : (reminder.status === 'upcoming' ? mediumGray : lightGray);
-      doc.setFillColor(...dotFill);
-      doc.circle(margin + 3, rowY + 2, 1.2, 'F');
-      
-      // Service name
-      doc.setFontSize(8);
-      doc.setTextColor(...darkGray);
-      doc.setFont('helvetica', 'normal');
-      doc.text(reminder.serviceName, margin + 8, rowY + 3);
-      
-      // Due info
-      doc.setFontSize(7);
-      doc.setTextColor(...mediumGray);
-      const dueText = reminder.nextDateFormatted || (reminder.nextOdo ? reminder.nextOdo.toLocaleString() + ' ' + unit : '–');
-      doc.text(dueText, pageWidth - margin, rowY + 3, { align: 'right' });
+      doc.setFillColor(...dotFill); doc.circle(margin + 5, rowY + 1.5, 1.5, 'F');
+      doc.setFontSize(9); doc.setTextColor(...darkGray); doc.setFont('helvetica', 'normal');
+      doc.text(reminder.serviceName, margin + 10, rowY + 2.5);
+      doc.setFontSize(8); doc.setTextColor(...mediumGray);
+      doc.text(formatReminderDue(reminder, unit), pageWidth - margin - 3, rowY + 2.5, { align: 'right' });
     });
-    
-    y += (rpt.upcomingReminders.length * 6) + 6;
+    y += (rpt.upcomingReminders.length * 6) + 3;
+    doc.setDrawColor(...veryLightGray); doc.rect(margin, boxStartY, contentWidth, y - boxStartY, 'S');
+    y += 6;
   }
   
-  // ========================================
   // SERVICE HISTORY TABLE
-  // ========================================
-  
   if (opts.includeHistory && rpt.timeline.length > 0) {
-    // Section header
-    doc.setFillColor(...black);
-    doc.rect(margin, y, contentWidth, 6, 'F');
-    doc.setTextColor(...white);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Service History', margin + 3, y + 4.5);
+    doc.setFillColor(...darkGray); doc.rect(margin, y, contentWidth, 7, 'F');
+    doc.setTextColor(...white); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+    doc.text('Service History', margin + 4, y + 5);
     y += 8;
     
-    // Table
     const headers = ['Date', 'Odometer', 'Services', 'Cost', 'Notes'];
     const rows = rpt.timeline.slice().reverse().map(entry => [
-      entry.dateFormatted,
-      entry.odometerFormatted,
-      entry.serviceNames.join(', ') || '–',
-      entry.totalCostFormatted,
-      entry.notes ? (entry.notes.length > 30 ? entry.notes.substring(0, 30) + '...' : entry.notes) : '–'
+      entry.dateFormatted, entry.odometerFormatted, entry.serviceNames.join(', ') || '–',
+      entry.totalCostFormatted, entry.notes ? (entry.notes.length > 35 ? entry.notes.substring(0, 35) + '...' : entry.notes) : '–'
     ]);
     
     doc.autoTable({
-      startY: y,
-      head: [headers],
-      body: rows,
-      styles: {
-        fontSize: 7,
-        cellPadding: 2.5,
-        textColor: darkGray,
-        lineColor: veryLightGray,
-        lineWidth: 0.2
-      },
-      headStyles: {
-        fillColor: veryLightGray,
-        textColor: darkGray,
-        fontStyle: 'bold',
-        fontSize: 6
-      },
-      columnStyles: {
-        0: { cellWidth: 22 },
-        1: { cellWidth: 24 },
-        2: { cellWidth: 65 },
-        3: { cellWidth: 20, halign: 'right', fontStyle: 'bold' },
-        4: { cellWidth: 44 }
-      },
-      alternateRowStyles: {
-        fillColor: [252, 252, 252]
-      },
+      startY: y, head: [headers], body: rows,
+      styles: { fontSize: 8, cellPadding: 3, textColor: darkGray, lineColor: veryLightGray, lineWidth: 0.3 },
+      headStyles: { fillColor: tableBg, textColor: mediumGray, fontStyle: 'bold', fontSize: 7 },
+      columnStyles: { 0: { cellWidth: 24 }, 1: { cellWidth: 24 }, 2: { cellWidth: 65 }, 3: { cellWidth: 22, halign: 'right', fontStyle: 'bold' }, 4: { cellWidth: 40 } },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
       margin: { left: margin, right: margin },
       didDrawPage: function(data) {
-        // Footer on each page
-        doc.setFontSize(6);
-        doc.setTextColor(...mediumGray);
+        doc.setFontSize(7); doc.setTextColor(...mediumGray);
         const pageNum = doc.internal.getCurrentPageInfo().pageNumber;
-        doc.text('Page ' + pageNum, pageWidth / 2, pageHeight - 8, { align: 'center' });
         doc.text(v.name + ' | VIN: ' + v.vin, margin, pageHeight - 8);
+        doc.text('Page ' + pageNum, pageWidth / 2, pageHeight - 8, { align: 'center' });
         doc.text(branding.appName, pageWidth - margin, pageHeight - 8, { align: 'right' });
-        
-        // Header line on subsequent pages
         if (pageNum > 1) {
-          doc.setDrawColor(...black);
-          doc.setLineWidth(0.3);
-          doc.line(margin, 8, pageWidth - margin, 8);
-          doc.setFontSize(8);
-          doc.setTextColor(...darkGray);
-          doc.text(branding.appName + ' - ' + v.name, margin, 14);
+          doc.setDrawColor(...veryLightGray); doc.setLineWidth(0.3);
+          doc.line(margin, 10, pageWidth - margin, 10);
+          doc.setFontSize(9); doc.setTextColor(...darkGray);
+          doc.text(branding.appName + ' - ' + v.name, margin, 8);
         }
       }
     });
-    
     y = doc.lastAutoTable.finalY + 6;
   }
   
-  // ========================================
-  // SERVICE TYPE SUMMARY
-  // ========================================
-  
-  if (opts.includeServiceSummary && rpt.serviceSummary.length > 0 && y < pageHeight - 60) {
-    doc.setFillColor(...black);
-    doc.rect(margin, y, contentWidth, 6, 'F');
-    doc.setTextColor(...white);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Service Type Summary', margin + 3, y + 4.5);
+  // SERVICE TYPE SUMMARY (Optional)
+  if (opts.includeServiceSummary && rpt.serviceSummary && rpt.serviceSummary.length > 0 && y < pageHeight - 60) {
+    doc.setFillColor(...darkGray); doc.rect(margin, y, contentWidth, 7, 'F');
+    doc.setTextColor(...white); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+    doc.text('Service Type Summary', margin + 4, y + 5);
     y += 8;
-    
     const summaryHeaders = ['Service Type', 'Count', 'Total Cost', 'Last Performed'];
-    const summaryRows = rpt.serviceSummary.slice(0, 10).map(svc => [
-      svc.name,
-      svc.count.toString(),
-      '$' + svc.totalCost.toFixed(2),
-      svc.lastPerformedFormatted || '–'
-    ]);
-    
+    const summaryRows = rpt.serviceSummary.slice(0, 10).map(svc => [svc.name, svc.count.toString(), '$' + svc.totalCost.toFixed(2), svc.lastPerformedFormatted || '–']);
     doc.autoTable({
-      startY: y,
-      head: [summaryHeaders],
-      body: summaryRows,
-      styles: {
-        fontSize: 7,
-        cellPadding: 2,
-        textColor: darkGray,
-        lineColor: veryLightGray,
-        lineWidth: 0.2
-      },
-      headStyles: {
-        fillColor: veryLightGray,
-        textColor: darkGray,
-        fontStyle: 'bold',
-        fontSize: 6
-      },
-      columnStyles: {
-        0: { cellWidth: 60 },
-        1: { cellWidth: 18, halign: 'center' },
-        2: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
-        3: { cellWidth: 35 }
-      },
+      startY: y, head: [summaryHeaders], body: summaryRows,
+      styles: { fontSize: 8, cellPadding: 2.5, textColor: darkGray, lineColor: veryLightGray, lineWidth: 0.3 },
+      headStyles: { fillColor: tableBg, textColor: mediumGray, fontStyle: 'bold', fontSize: 7 },
+      columnStyles: { 0: { cellWidth: 65 }, 1: { cellWidth: 20, halign: 'center' }, 2: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }, 3: { cellWidth: 35 } },
       margin: { left: margin, right: margin }
     });
-    
     y = doc.lastAutoTable.finalY + 6;
   }
   
-  // ========================================
-  // FOOTER / DISCLAIMER
-  // ========================================
-  
-  if (y < pageHeight - 25) {
-    doc.setDrawColor(...veryLightGray);
-    doc.setLineWidth(0.3);
-    doc.rect(margin, y, contentWidth, 14, 'S');
-    
-    doc.setFontSize(6);
-    doc.setTextColor(...mediumGray);
-    doc.setFont('helvetica', 'normal');
-    doc.text('This report is generated from records in ' + branding.appName + '. It may not include all maintenance performed on this vehicle.', margin + 3, y + 4);
-    doc.text('For vehicle purchase decisions, always verify records and perform an independent inspection.', margin + 3, y + 8);
-    doc.text('Report generated: ' + rpt.reportDateFormatted + ' at ' + rpt.reportTime, margin + 3, y + 12);
+  // FOOTER DISCLAIMER
+  if (y < pageHeight - 28) {
+    doc.setDrawColor(...veryLightGray); doc.setLineWidth(0.3);
+    doc.rect(margin, y, contentWidth, 16, 'S');
+    doc.setFontSize(7); doc.setTextColor(...mediumGray); doc.setFont('helvetica', 'normal');
+    doc.text('This report is generated from records in ' + branding.appName + '. It may not include all maintenance performed on this vehicle.', margin + 4, y + 5);
+    doc.text('For vehicle purchase decisions, always verify records and perform an independent inspection.', margin + 4, y + 9);
+    doc.text('Report generated: ' + rpt.reportDateFormatted + ' at ' + rpt.reportTime, margin + 4, y + 13);
   }
   
-  // Save
-  const filename = branding.appName.toLowerCase().replace(/\s+/g, '-') + '-' + safeName + '-report.pdf';
-  doc.save(filename);
+  doc.save(branding.appName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + safeName + '-report.pdf');
   showToast('PDF report exported');
 }
 
 // ========================================
-// WORD EXPORT (Matches PDF design)
+// WORD EXPORT
 // ========================================
 
 function exportVehicleReportWord(options) {
   const rpt = buildVehicleReportData(options);
   if (!rpt) return;
   
-  const branding = rpt.branding;
-  const unit = rpt.unit;
-  const v = rpt.vehicle;
-  const s = rpt.stats;
-  const cost = rpt.costBreakdown;
-  const opts = rpt.options;
+  const { branding, unit, vehicle: v, stats: s, costBreakdown: cost, options: opts } = rpt;
   const safeName = v.name.replace(/[^\w]+/g, "_").toLowerCase();
   
-  // Build HTML document that Word can open
-  let html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
+  let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>${escapeHtml(branding.appName)} - Vehicle Report - ${escapeHtml(v.name)}</title>
 <style>
 @page { margin: 0.75in; size: letter; }
 * { box-sizing: border-box; }
-body { 
-  font-family: Arial, Helvetica, sans-serif; 
-  font-size: 10pt; 
-  line-height: 1.4; 
-  color: #333; 
-  margin: 0; 
-  padding: 0;
-  background: #fff;
-}
-.header { 
-  border-bottom: 2px solid #000; 
-  padding-bottom: 10px; 
-  margin-bottom: 15px;
-  display: table;
-  width: 100%;
-}
+body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.4; color: #333; margin: 0; padding: 0; }
+.header { border-bottom: 1px solid #ccc; padding-bottom: 12px; margin-bottom: 20px; }
+.header-row { display: table; width: 100%; }
 .header-left { display: table-cell; vertical-align: top; }
 .header-right { display: table-cell; vertical-align: top; text-align: right; }
 .app-name { font-size: 18pt; font-weight: bold; color: #000; }
-.app-tagline { font-size: 9pt; color: #666; }
+.app-tagline { font-size: 9pt; color: #666; margin-top: 2px; }
 .report-meta { font-size: 8pt; color: #333; }
-.record-badge { 
-  display: inline-block;
-  background: #333; 
-  color: #fff; 
-  padding: 3px 10px; 
-  font-size: 8pt;
-  font-weight: bold;
-  margin-top: 5px;
-}
 .section { margin: 15px 0; page-break-inside: avoid; }
-.section-header { 
-  background: #000; 
-  color: #fff; 
-  padding: 6px 10px; 
-  font-size: 10pt; 
-  font-weight: bold;
-}
-.section-body { 
-  border: 1px solid #ddd; 
-  border-top: none; 
-  padding: 12px;
-}
-.vehicle-info { display: table; width: 100%; }
-.vehicle-name { font-size: 14pt; font-weight: bold; color: #000; margin-bottom: 10px; }
+.section-header { background: #333; color: #fff; padding: 6px 12px; font-size: 10pt; font-weight: bold; }
+.section-body { border: 1px solid #dcdcdc; border-top: none; padding: 15px; }
+.vehicle-name { font-size: 14pt; font-weight: bold; color: #000; margin-bottom: 12px; }
 .info-grid { display: table; width: 100%; }
 .info-row { display: table-row; }
 .info-cell { display: table-cell; width: 33%; padding: 5px 10px 5px 0; vertical-align: top; }
-.info-label { font-size: 7pt; color: #999; text-transform: uppercase; letter-spacing: 0.3px; }
+.info-label { font-size: 7pt; color: #999; text-transform: uppercase; }
 .info-value { font-size: 9pt; color: #333; font-weight: bold; }
-.cost-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 5px; }
-.cost-card { 
-  display: table-cell; 
-  width: 25%; 
-  border: 1px solid #ddd; 
-  padding: 8px; 
-  text-align: center;
-  vertical-align: top;
-}
-.cost-card.total { background: #f5f5f5; }
-.cost-label { font-size: 7pt; color: #999; text-transform: uppercase; }
-.cost-value { font-size: 12pt; color: #333; margin-top: 3px; }
-.cost-card.total .cost-value { font-weight: bold; color: #000; font-size: 14pt; }
-.stats-row { display: table; width: 100%; margin-top: 10px; }
-.stat-item { display: table-cell; width: 25%; text-align: center; }
-.stat-label { font-size: 7pt; color: #999; }
-.stat-value { font-size: 9pt; color: #333; font-weight: bold; }
-.reminder-row { padding: 5px 0; border-bottom: 1px solid #eee; }
+.reminder-row { padding: 4px 0; border-bottom: 1px solid #eee; display: table; width: 100%; }
 .reminder-row:last-child { border-bottom: none; }
-.reminder-dot { 
-  display: inline-block; 
-  width: 8px; 
-  height: 8px; 
-  border-radius: 50%; 
-  margin-right: 8px;
-  vertical-align: middle;
-}
-.reminder-dot.overdue { background: #000; }
-.reminder-dot.upcoming { background: #666; }
-.reminder-dot.ok { background: #ccc; }
-.reminder-name { font-size: 9pt; color: #333; }
-.reminder-due { float: right; font-size: 8pt; color: #666; }
-table.data-table { 
-  width: 100%; 
-  border-collapse: collapse; 
-  font-size: 9pt;
-}
-table.data-table th { 
-  background: #f0f0f0; 
-  padding: 6px 8px; 
-  text-align: left; 
-  font-size: 8pt; 
-  text-transform: uppercase;
-  color: #666;
-  border-bottom: 1px solid #333;
-  font-weight: bold;
-}
-table.data-table td { 
-  padding: 6px 8px; 
-  border-bottom: 1px solid #eee;
-  vertical-align: top;
-  color: #333;
-}
+.reminder-dot { display: table-cell; width: 20px; vertical-align: middle; }
+.reminder-dot-inner { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.reminder-dot-inner.overdue { background: #000; }
+.reminder-dot-inner.upcoming { background: #666; }
+.reminder-dot-inner.ok { background: #ccc; }
+.reminder-name { display: table-cell; font-size: 9pt; color: #333; vertical-align: middle; }
+.reminder-due { display: table-cell; text-align: right; font-size: 8pt; color: #666; vertical-align: middle; }
+table.data-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+table.data-table th { background: #f5f5f5; padding: 6px 8px; text-align: left; font-size: 8pt; text-transform: uppercase; color: #666; border-bottom: 1px solid #ccc; font-weight: bold; }
+table.data-table td { padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: top; color: #333; }
 table.data-table tr:nth-child(even) td { background: #fafafa; }
 .cost-cell { font-weight: bold; text-align: right; }
-.footer { 
-  margin-top: 20px; 
-  padding: 10px; 
-  border: 1px solid #ddd;
-  font-size: 7pt; 
-  color: #666;
-  line-height: 1.5;
-}
-</style>
-</head>
-<body>`;
+.footer { margin-top: 20px; padding: 12px; border: 1px solid #dcdcdc; font-size: 8pt; color: #666; line-height: 1.5; }
+.cost-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 5px; }
+.cost-card { display: table-cell; width: 25%; border: 1px solid #dcdcdc; padding: 8px; text-align: center; }
+.cost-card.total { background: #f5f5f5; }
+.cost-label { font-size: 7pt; color: #999; text-transform: uppercase; }
+.cost-value { font-size: 11pt; color: #333; margin-top: 3px; }
+.cost-card.total .cost-value { font-weight: bold; color: #000; }
+</style></head><body>`;
 
   // Header
-  html += `<div class="header">
-    <div class="header-left">
-      <div class="app-name">${escapeHtml(branding.appName)}</div>
-      <div class="app-tagline">Vehicle Maintenance Report</div>
-    </div>
-    <div class="header-right">
-      <div class="report-meta">Report Date: ${rpt.reportDateFormatted}</div>
-      <div class="record-badge">${rpt.recordCount} RECORDS</div>
-    </div>
-  </div>`;
+  html += `<div class="header"><div class="header-row">
+    <div class="header-left"><div class="app-name">${escapeHtml(branding.appName)}</div><div class="app-tagline">Vehicle Maintenance Report</div></div>
+    <div class="header-right"><div class="report-meta">Report Date: ${rpt.reportDateFormatted}<br>${rpt.recordCount} Service Record${rpt.recordCount !== 1 ? 's' : ''}</div></div>
+  </div></div>`;
 
   // Vehicle Information
   if (opts.includeVehicleInfo) {
-    html += `<div class="section">
-      <div class="section-header">Vehicle Information</div>
-      <div class="section-body">
-        <div class="vehicle-name">${escapeHtml(v.name)}</div>
-        <div class="info-grid">
-          <div class="info-row">
-            <div class="info-cell">
-              <div class="info-label">VIN</div>
-              <div class="info-value">${escapeHtml(v.vin)}</div>
-            </div>
-            <div class="info-cell">
-              <div class="info-label">License Plate</div>
-              <div class="info-value">${escapeHtml(v.plate)}</div>
-            </div>
-            <div class="info-cell">
-              <div class="info-label">Current Odometer</div>
-              <div class="info-value">${v.currentOdo != null ? v.currentOdo.toLocaleString() + ' ' + unit : 'Not recorded'}</div>
-            </div>
-          </div>
-          <div class="info-row">
-            <div class="info-cell">
-              <div class="info-label">History Span</div>
-              <div class="info-value">${s.yearsTracked > 0 ? s.yearsTracked + ' year' + (s.yearsTracked > 1 ? 's' : '') : (s.monthsTracked > 0 ? s.monthsTracked + ' months' : '–')}</div>
-            </div>
-            <div class="info-cell">
-              <div class="info-label">Distance Tracked</div>
-              <div class="info-value">${s.distanceTracked.toLocaleString()} ${unit}</div>
-            </div>
-            <div class="info-cell">
-              <div class="info-label">Avg. Annual</div>
-              <div class="info-value">${s.avgPerYear.toLocaleString()} ${unit}/yr</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>`;
+    html += `<div class="section"><div class="section-header">Vehicle Information</div><div class="section-body">
+      <div class="vehicle-name">${escapeHtml(v.name)}</div><div class="info-grid">`;
+    const detailItems = [];
+    if (opts.showVin && v.vin !== 'Not Recorded') detailItems.push({ label: 'VIN', value: v.vin });
+    if (opts.showPlate && v.plate !== 'Not Recorded') detailItems.push({ label: 'License Plate', value: v.plate });
+    if (opts.showOdometer && v.currentOdo != null) detailItems.push({ label: 'Current Odometer', value: v.currentOdo.toLocaleString() + ' ' + unit });
+    if (opts.showYearMakeModel && v.year && v.make && v.model) detailItems.push({ label: 'Year/Make/Model', value: v.year + ' ' + v.make + ' ' + v.model });
+    if (opts.showEngine && v.engine) detailItems.push({ label: 'Engine', value: v.engine });
+    if (opts.showStats) {
+      if (s.monthsTracked > 0) detailItems.push({ label: 'History Span', value: s.yearsTracked > 0 ? s.yearsTracked + ' year' + (s.yearsTracked > 1 ? 's' : '') : s.monthsTracked + ' month' + (s.monthsTracked > 1 ? 's' : '') });
+      if (s.distanceTracked > 0) detailItems.push({ label: 'Distance Tracked', value: s.distanceTracked.toLocaleString() + ' ' + unit });
+      if (s.avgPerYear > 0) detailItems.push({ label: 'Avg. Annual', value: s.avgPerYear.toLocaleString() + ' ' + unit + '/yr' });
+    }
+    for (let i = 0; i < detailItems.length; i += 3) {
+      html += `<div class="info-row">`;
+      for (let j = i; j < i + 3 && j < detailItems.length; j++) {
+        html += `<div class="info-cell"><div class="info-label">${detailItems[j].label.toUpperCase()}</div><div class="info-value">${escapeHtml(detailItems[j].value)}</div></div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div></div></div>`;
   }
 
-  // Cost Summary
-  if (opts.includeCostSummary) {
-    html += `<div class="section">
-      <div class="section-header">Cost Summary</div>
-      <div class="section-body">
-        <div class="cost-grid">
-          <div class="cost-card">
-            <div class="cost-label">Parts/Services</div>
-            <div class="cost-value">${cost.partsFormatted}</div>
-          </div>
-          <div class="cost-card">
-            <div class="cost-label">Labor</div>
-            <div class="cost-value">${cost.laborFormatted}</div>
-          </div>
-          <div class="cost-card">
-            <div class="cost-label">Misc/Fees</div>
-            <div class="cost-value">${cost.miscFormatted}</div>
-          </div>
-          <div class="cost-card total">
-            <div class="cost-label">Total</div>
-            <div class="cost-value">${cost.totalFormatted}</div>
-          </div>
-        </div>
-        <div class="stats-row">
-          <div class="stat-item">
-            <div class="stat-label">Year-to-Date</div>
-            <div class="stat-value">$${s.ytdCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Avg per Service</div>
-            <div class="stat-value">$${s.avgCostPerService.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Cost per ${unit === 'km' ? 'km' : 'mile'}</div>
-            <div class="stat-value">$${s.costPerMile.toFixed(2)}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Service Types</div>
-            <div class="stat-value">${s.uniqueServiceTypes}</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
+  // Renewal Dates
+  if (opts.includeRenewals && (v.insuranceExpiry || v.registrationExpiry)) {
+    html += `<div class="section"><div class="section-header">Renewal Dates</div><div class="section-body"><div class="info-grid"><div class="info-row">`;
+    if (v.insuranceExpiryFormatted) html += `<div class="info-cell"><div class="info-label">INSURANCE EXPIRY</div><div class="info-value">${v.insuranceExpiryFormatted}</div></div>`;
+    if (v.registrationExpiryFormatted) html += `<div class="info-cell"><div class="info-label">REGISTRATION EXPIRY</div><div class="info-value">${v.registrationExpiryFormatted}</div></div>`;
+    html += `</div></div></div></div>`;
   }
 
-  // Upcoming Reminders
+  // Cost Summary (optional)
+  if (opts.includeCostSummary && cost.total > 0) {
+    html += `<div class="section"><div class="section-header">Cost Summary</div><div class="section-body">
+      <div class="cost-grid">
+        <div class="cost-card"><div class="cost-label">Parts/Services</div><div class="cost-value">${cost.partsFormatted}</div></div>
+        <div class="cost-card"><div class="cost-label">Labor</div><div class="cost-value">${cost.laborFormatted}</div></div>
+        <div class="cost-card"><div class="cost-label">Misc/Fees</div><div class="cost-value">${cost.miscFormatted}</div></div>
+        <div class="cost-card total"><div class="cost-label">Total</div><div class="cost-value">${cost.totalFormatted}</div></div>
+      </div></div></div>`;
+  }
+
+  // Upcoming Maintenance
   if (opts.includeReminders && rpt.upcomingReminders.length > 0) {
-    html += `<div class="section">
-      <div class="section-header">Upcoming Maintenance</div>
-      <div class="section-body">`;
-    
+    html += `<div class="section"><div class="section-header">Upcoming Maintenance</div><div class="section-body">`;
     rpt.upcomingReminders.forEach(reminder => {
-      const dueText = reminder.nextDateFormatted || (reminder.nextOdo ? reminder.nextOdo.toLocaleString() + ' ' + unit : '–');
       html += `<div class="reminder-row">
-        <span class="reminder-dot ${reminder.status}"></span>
-        <span class="reminder-name">${escapeHtml(reminder.serviceName)}</span>
-        <span class="reminder-due">${dueText}</span>
+        <div class="reminder-dot"><span class="reminder-dot-inner ${reminder.status}"></span></div>
+        <div class="reminder-name">${escapeHtml(reminder.serviceName)}</div>
+        <div class="reminder-due">${formatReminderDue(reminder, unit)}</div>
       </div>`;
     });
-    
     html += `</div></div>`;
   }
 
   // Service History
   if (opts.includeHistory && rpt.timeline.length > 0) {
-    html += `<div class="section">
-      <div class="section-header">Service History</div>
-      <div class="section-body">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th style="width:12%">Date</th>
-              <th style="width:12%">Odometer</th>
-              <th style="width:35%">Services</th>
-              <th style="width:12%">Cost</th>
-              <th style="width:29%">Notes</th>
-            </tr>
-          </thead>
-          <tbody>`;
-    
+    html += `<div class="section"><div class="section-header">Service History</div><div class="section-body" style="padding:0;">
+      <table class="data-table"><thead><tr><th>Date</th><th>Odometer</th><th>Services</th><th style="text-align:right;">Cost</th><th>Notes</th></tr></thead><tbody>`;
     rpt.timeline.slice().reverse().forEach(entry => {
-      html += `<tr>
-        <td>${entry.dateFormatted}</td>
-        <td>${entry.odometerFormatted}</td>
-        <td>${escapeHtml(entry.serviceNames.join(', ') || '–')}</td>
-        <td class="cost-cell">${entry.totalCostFormatted}</td>
-        <td>${escapeHtml(entry.notes ? (entry.notes.length > 40 ? entry.notes.substring(0, 40) + '...' : entry.notes) : '–')}</td>
-      </tr>`;
+      html += `<tr><td>${entry.dateFormatted}</td><td>${entry.odometerFormatted}</td><td>${escapeHtml(entry.serviceNames.join(', ') || '–')}</td><td class="cost-cell">${entry.totalCostFormatted}</td><td>${escapeHtml(entry.notes ? (entry.notes.length > 40 ? entry.notes.substring(0, 40) + '...' : entry.notes) : '–')}</td></tr>`;
     });
-    
     html += `</tbody></table></div></div>`;
   }
 
-  // Service Type Summary
-  if (opts.includeServiceSummary && rpt.serviceSummary.length > 0) {
-    html += `<div class="section">
-      <div class="section-header">Service Type Summary</div>
-      <div class="section-body">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Service Type</th>
-              <th style="width:10%">Count</th>
-              <th style="width:15%">Total Cost</th>
-              <th style="width:20%">Last Performed</th>
-            </tr>
-          </thead>
-          <tbody>`;
-    
+  // Service Type Summary (optional)
+  if (opts.includeServiceSummary && rpt.serviceSummary && rpt.serviceSummary.length > 0) {
+    html += `<div class="section"><div class="section-header">Service Type Summary</div><div class="section-body" style="padding:0;">
+      <table class="data-table"><thead><tr><th>Service Type</th><th style="text-align:center;">Count</th><th style="text-align:right;">Total Cost</th><th>Last Performed</th></tr></thead><tbody>`;
     rpt.serviceSummary.slice(0, 10).forEach(svc => {
-      html += `<tr>
-        <td>${escapeHtml(svc.name)}</td>
-        <td style="text-align:center">${svc.count}</td>
-        <td class="cost-cell">$${svc.totalCost.toFixed(2)}</td>
-        <td>${svc.lastPerformedFormatted || '–'}</td>
-      </tr>`;
+      html += `<tr><td>${escapeHtml(svc.name)}</td><td style="text-align:center;">${svc.count}</td><td class="cost-cell">$${svc.totalCost.toFixed(2)}</td><td>${svc.lastPerformedFormatted || '–'}</td></tr>`;
     });
-    
     html += `</tbody></table></div></div>`;
   }
 
@@ -1555,26 +880,22 @@ table.data-table tr:nth-child(even) td { background: #fafafa; }
     This report is generated from records in ${escapeHtml(branding.appName)}. It may not include all maintenance performed on this vehicle.
     For vehicle purchase decisions, always verify records and perform an independent inspection.<br>
     <em>Report generated: ${rpt.reportDateFormatted} at ${rpt.reportTime}</em>
-  </div>`;
+  </div></body></html>`;
 
-  html += `</body></html>`;
-
-  // Download as .doc file
   const blob = new Blob([html], { type: 'application/msword' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = branding.appName.toLowerCase().replace(/\s+/g, '-') + '-' + safeName + '-report.doc';
+  a.download = branding.appName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + safeName + '-report.doc';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  
   showToast('Word report exported');
 }
 
 // ========================================
-// MAKE FUNCTIONS GLOBALLY AVAILABLE
+// GLOBAL EXPORTS
 // ========================================
 
 window.openVehicleReportExportModal = openVehicleReportExportModal;
