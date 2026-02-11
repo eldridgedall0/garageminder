@@ -101,7 +101,7 @@ function executeVehicleReportExport() {
 // ========================================
 
 function getAppBranding() {
-  var config = window.GM_CONFIG || window.APP_CONFIG || {};
+  var config = GM_CONFIG || APP_CONFIG || {};
   return {
     appName: config.appName || 'GarageMinder',
     appShortName: config.appShortName || 'GM',
