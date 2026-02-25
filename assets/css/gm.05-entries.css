@@ -191,7 +191,6 @@
   padding: 4px 10px;
   background: var(--gm-accent-subtle);
   color: var(--gm-accent-text);
-  border-radius: var(--gm-radius-full);
   font-size: 0.75rem;
   font-weight: 500;
   border: 1px solid var(--gm-accent-soft);
@@ -208,7 +207,6 @@
   padding: 4px 8px;
   background: var(--gm-bg-elevated);
   color: var(--gm-text-muted);
-  border-radius: var(--gm-radius-full);
   font-size: 0.72rem;
   font-weight: 500;
   border: 1px solid var(--gm-border);
