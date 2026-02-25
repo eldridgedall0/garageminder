@@ -35,7 +35,32 @@ function addTemplate(templateData) {
   if (!data.entryTemplates) {
     data.entryTemplates = [];
   }
-  
+
+  // ── Subscription: template limit gate ───────────────────────────────────
+  if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
+    const maxTemplates = gmSub.maxTemplates();
+    if (maxTemplates !== -1 && maxTemplates >= 0) {
+      const currentCount = (data.entryTemplates || []).length;
+      if (currentCount >= maxTemplates) {
+        showUpgradeModal({
+          title: 'Template Limit Reached',
+          message: `Your ${gmSub.tierName()} plan allows up to ${maxTemplates} template(s). Upgrade to create more.`,
+          feature: 'templates',
+        });
+        return null;
+      }
+    }
+    // Check if templates feature is enabled at all
+    if (!gmSub.can('templates')) {
+      showUpgradeModal({
+        title: 'Templates Require an Upgrade',
+        message: `Entry templates are not available on the ${gmSub.tierName()} plan.`,
+        feature: 'templates',
+      });
+      return null;
+    }
+  }
+
   const now = new Date().toISOString();
   const template = {
     id: generateTemplateId(),

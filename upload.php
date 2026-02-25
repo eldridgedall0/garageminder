@@ -75,19 +75,45 @@ try {
         }
     }
     
-    // Check current attachment count
+    // Check current attachment count and enforce subscription limits
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM `entry_attachments` WHERE `entry_id` = :id");
     $stmt->execute([':id' => $entryId]);
     $currentCount = (int) $stmt->fetchColumn();
-    
-    $maxAttachments = ENTRY_MAX_ATTACHMENTS;
+
+    // ── SUBSCRIPTION-AWARE ATTACHMENT LIMIT ─────────────────────────────────
+    // Prefer gm_get_user_limits() (subscription-tier-aware) when available.
+    // Fall back to the ENTRY_MAX_ATTACHMENTS constant from config.php.
+    if ($userId !== 'default' && function_exists('gm_get_user_limits')) {
+        $limits         = gm_get_user_limits($userId);
+        $maxAttachments = (int) ($limits['attachments_per_entry'] ?? 0);
+
+        // Check: is local upload allowed for this tier?
+        $localUploadAllowed = (bool) ($limits['enable_local_upload'] ?? false);
+        if (!$localUploadAllowed) {
+            http_response_code(403);
+            echo json_encode([
+                'success'     => false,
+                'error'       => 'local_upload_not_allowed',
+                'message'     => 'Local file uploads are not available on your current plan. Please upgrade.',
+                'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('local_upload') : '',
+            ]);
+            exit;
+        }
+    } else {
+        $maxAttachments = defined('ENTRY_MAX_ATTACHMENTS') ? (int) ENTRY_MAX_ATTACHMENTS : 2;
+    }
+
     $remainingSlots = max(0, $maxAttachments - $currentCount);
-    
-    if ($remainingSlots <= 0) {
-        http_response_code(400);
+
+    if ($maxAttachments <= 0 || $remainingSlots <= 0) {
+        http_response_code(403);
         echo json_encode([
-            'success' => false,
-            'message' => "Maximum attachments ($maxAttachments) already reached for this entry"
+            'success'     => false,
+            'error'       => 'attachment_limit_reached',
+            'message'     => $maxAttachments <= 0
+                ? 'File attachments are not available on your current plan. Please upgrade.'
+                : "Maximum attachments ({$maxAttachments}) already reached for this entry.",
+            'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('attachments') : '',
         ]);
         exit;
     }

@@ -1,5 +1,10 @@
 function autoCheckRecallsOnLoad() {
   if (!activeVehicleId) return;
+
+  // ── Subscription gate: skip auto-check if recalls not available ──────────
+  if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION && !gmSub.can('recalls')) {
+    return;
+  }
   
   const vehicle = data.vehicles.find(v => v.id === activeVehicleId);
   if (!vehicle || !vehicle.vin) return;
@@ -231,5 +236,3 @@ function setVehicleRecallCache(vehicleId, data) {
     console.error('Failed to cache recall data:', e);
   }
 }
-
-

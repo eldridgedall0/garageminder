@@ -59,6 +59,38 @@ function loadData() {
           if (resp.data.authUrls) {
             window.gmAuthUrls = resp.data.authUrls;
           }
+
+          // ── Store subscription / tier-limit data ───────────────────────
+          // Available to all feature modules as window.GM_SUBSCRIPTION.
+          // When null (single-user mode) we set a full-access default so that
+          // feature modules never have to special-case the absence of this key.
+          if (resp.data.subscription) {
+            window.GM_SUBSCRIPTION = resp.data.subscription;
+          } else {
+            window.GM_SUBSCRIPTION = {
+              tier: 'free',
+              tier_name: 'Free',
+              is_active: true,
+              limits: {},
+              usage: {
+                vehicles: { used: 0, max: -1, remaining: -1, unlimited: true },
+                entries:  { used: 0, max: -1, remaining: -1, unlimited: true },
+              },
+              features: {
+                recalls:               true,
+                export:                true,
+                export_level:          'bulk',
+                attachments:           true,
+                attachments_per_entry: 5,
+                vehicle_photos:        true,
+                local_upload:          true,
+                gdrive:                true,
+                templates:             true,
+                max_templates:         -1,
+              },
+              upgrade_url: '/pricing/',
+            };
+          }
         }
       },
       error: function(xhr, status, err) {
@@ -217,3 +249,112 @@ function saveData() {
 function saveDataSync() {
   saveData().catch(err => console.error("Save failed:", err));
 }
+
+// ============================================================
+// GM SUBSCRIPTION HELPERS
+// Provides a clean API for all feature modules to read limits
+// from window.GM_SUBSCRIPTION (populated in loadData above).
+// ============================================================
+
+const gmSub = {
+
+  /** Return the full subscription object (or null if not yet loaded). */
+  get: function() {
+    return window.GM_SUBSCRIPTION || null;
+  },
+
+  /**
+   * Check if a boolean/flag feature is available.
+   * Feature keys mirror WP Admin tier limit keys:
+   *   'recalls', 'export', 'attachments', 'vehicle_photos',
+   *   'local_upload', 'gdrive', 'templates'
+   */
+  can: function(featureKey) {
+    const sub = this.get();
+    if (!sub || !sub.features) return true;  // default: allow when no data
+    const val = sub.features[featureKey];
+    if (val === undefined) return true;
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'number')  return val > 0 || val === -1;
+    return val !== 'none' && val !== '0' && val !== '';
+  },
+
+  /** Return a numeric limit (-1 = unlimited).  Reads from limits{} block. */
+  limit: function(key) {
+    const sub = this.get();
+    if (!sub || !sub.limits) return -1;
+    const v = sub.limits[key];
+    return v !== undefined ? Number(v) : -1;
+  },
+
+  /**
+   * Check whether the user is AT or OVER a counted limit.
+   * countType: 'vehicles' | 'entries'
+   */
+  atLimit: function(countType) {
+    const sub = this.get();
+    if (!sub || !sub.usage || !sub.usage[countType]) return false;
+    const u = sub.usage[countType];
+    if (u.unlimited) return false;
+    return u.remaining <= 0;
+  },
+
+  /** Number remaining for a countType (-1 = unlimited). */
+  remaining: function(countType) {
+    const sub = this.get();
+    if (!sub || !sub.usage || !sub.usage[countType]) return -1;
+    const u = sub.usage[countType];
+    if (u.unlimited) return -1;
+    return u.remaining;
+  },
+
+  /** Current usage count for a countType. */
+  used: function(countType) {
+    const sub = this.get();
+    if (!sub || !sub.usage || !sub.usage[countType]) return 0;
+    return sub.usage[countType].used || 0;
+  },
+
+  /** Max allowed for a countType (-1 = unlimited). */
+  max: function(countType) {
+    const sub = this.get();
+    if (!sub || !sub.usage || !sub.usage[countType]) return -1;
+    const u = sub.usage[countType];
+    return u.unlimited ? -1 : (u.max || -1);
+  },
+
+  /** Upgrade / pricing page URL. */
+  upgradeUrl: function() {
+    return this.get()?.upgrade_url || '/pricing/';
+  },
+
+  /** Human-readable tier name (e.g. "Free", "Pro", "Fleet"). */
+  tierName: function() {
+    return this.get()?.tier_name || 'Free';
+  },
+
+  /** Raw tier slug (e.g. "free", "paid", "fleet"). */
+  tier: function() {
+    return this.get()?.tier || 'free';
+  },
+
+  /** export_level string: 'none' | 'standard' | 'bulk' */
+  exportLevel: function() {
+    return this.get()?.features?.export_level || 'none';
+  },
+
+  /** Attachments per entry allowed by the subscription (0 = none). */
+  attachmentsPerEntry: function() {
+    const sub = this.get();
+    return sub?.features?.attachments_per_entry ?? 0;
+  },
+
+  /** Max templates allowed (-1 = unlimited, 0 = none). */
+  maxTemplates: function() {
+    const sub = this.get();
+    return sub?.features?.max_templates ?? -1;
+  },
+};
+
+// Expose globally so all feature modules can use it
+window.gmSub = gmSub;

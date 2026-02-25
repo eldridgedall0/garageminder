@@ -410,6 +410,16 @@ function gm_load_data(string $userId): array {
         $authUrls = gm_get_auth_urls();
     }
 
+    // ── Subscription / tier limits payload ──────────────────────────────────
+    // Only meaningful in multi-user mode with a real user ID.
+    // In single-user mode we set null so the frontend defaults to full access.
+    $subscription = null;
+    if (defined('ENABLE_MULTI_USER') && ENABLE_MULTI_USER && $userId !== 'default') {
+        if (function_exists('gm_get_subscription_api_response')) {
+            $subscription = gm_get_subscription_api_response($pdo, $userId);
+        }
+    }
+
     return [
         'vehicles'         => $vehicles_out,
         'serviceTypes'     => $service_types_out,
@@ -426,6 +436,8 @@ function gm_load_data(string $userId): array {
         'user'             => $userInfo,
         'authUrls'         => $authUrls,
         'multiUserEnabled' => defined('ENABLE_MULTI_USER') && ENABLE_MULTI_USER,
+        // Subscription / tier limits (null in single-user mode → frontend grants full access)
+        'subscription'     => $subscription,
     ];
 }
 
@@ -459,6 +471,32 @@ function gm_save_data(array $payload, string $userId): void {
             $stmt->execute(array_merge(array_values($toDelete), [$userId]));
         }
         
+        // ── VEHICLE LIMIT CHECK (backend enforcement) ───────────────────────
+        // Determine which vehicles in the payload are genuinely NEW (not in DB yet).
+        if (!empty($payload['vehicles']) && is_array($payload['vehicles']) &&
+            $userId !== 'default' && function_exists('gm_get_user_limits')) {
+
+            $payloadVehicleIds = array_column($payload['vehicles'], 'id');
+            $newlyAdded        = array_diff($payloadVehicleIds, $existingVehicleIds);
+
+            if (!empty($newlyAdded)) {
+                $limits      = gm_get_user_limits($userId);
+                $maxVehicles = (int) ($limits['max_vehicles'] ?? -1);
+
+                if ($maxVehicles >= 0 && count($payload['vehicles']) > $maxVehicles) {
+                    $pdo->rollBack();
+                    http_response_code(403);
+                    echo json_encode([
+                        'success'     => false,
+                        'error'       => 'vehicle_limit_reached',
+                        'message'     => "Your plan allows a maximum of {$maxVehicles} vehicle(s). Please upgrade to add more.",
+                        'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('vehicles') : '',
+                    ]);
+                    exit;
+                }
+            }
+        }
+
         // Upsert vehicles - with new detail fields
         if (!empty($payload['vehicles']) && is_array($payload['vehicles'])) {
             $stmt = $pdo->prepare("INSERT INTO `vehicles` 
@@ -583,6 +621,33 @@ function gm_save_data(array $payload, string $userId): void {
             }
         }
 
+        // ── ENTRY LIMIT CHECK (backend enforcement) ─────────────────────────
+        if (!empty($payload['entries']) && is_array($payload['entries']) &&
+            $userId !== 'default' && function_exists('gm_get_user_limits')) {
+
+            $limits     = gm_get_user_limits($userId);
+            $maxEntries = (int) ($limits['max_entries'] ?? -1);
+
+            if ($maxEntries >= 0) {
+                // Count entries in the payload that belong to this user's vehicles
+                $payloadEntryCount = count(array_filter($payload['entries'], function ($e) use ($newVehicleIds) {
+                    return in_array($e['vehicleId'] ?? '', $newVehicleIds);
+                }));
+
+                if ($payloadEntryCount > $maxEntries) {
+                    $pdo->rollBack();
+                    http_response_code(403);
+                    echo json_encode([
+                        'success'     => false,
+                        'error'       => 'entry_limit_reached',
+                        'message'     => "Your plan allows a maximum of {$maxEntries} service entr(ies). Please upgrade for unlimited entries.",
+                        'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('entries') : '',
+                    ]);
+                    exit;
+                }
+            }
+        }
+
         // Upsert entries
         if (!empty($payload['entries']) && is_array($payload['entries'])) {
             $stmt = $pdo->prepare("INSERT INTO `entries` (`id`, `vehicle_id`, `date`, `odo`, `notes`, `cost`, `next_date`, `next_odo`, `services_json`, `created_at`, `updated_at`)
@@ -681,6 +746,26 @@ function gm_save_data(array $payload, string $userId): void {
                         ':months' => $intervals['intervalMonths'] ?? null,
                     ]);
                 }
+            }
+        }
+
+        // ── TEMPLATE LIMIT CHECK (backend enforcement) ──────────────────────
+        if (!empty($payload['entryTemplates']) && is_array($payload['entryTemplates']) &&
+            $userId !== 'default' && function_exists('gm_get_user_limits')) {
+
+            $limits       = gm_get_user_limits($userId);
+            $maxTemplates = (int) ($limits['max_templates'] ?? -1);
+
+            if ($maxTemplates >= 0 && count($payload['entryTemplates']) > $maxTemplates) {
+                $pdo->rollBack();
+                http_response_code(403);
+                echo json_encode([
+                    'success'     => false,
+                    'error'       => 'template_limit_reached',
+                    'message'     => "Your plan allows a maximum of {$maxTemplates} template(s). Please upgrade for more.",
+                    'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('templates') : '',
+                ]);
+                exit;
             }
         }
 

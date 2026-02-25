@@ -85,6 +85,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.copy-reminder-modal.css">
   <link rel="stylesheet" href="assets/css/gm.entry-success-notification.css">
   <link rel="stylesheet" href="assets/css/gm.27-export-modal.css">
+  <link rel="stylesheet" href="assets/css/gm.60-subscription.css">
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -753,6 +754,7 @@ ob_end_clean();
   <script src="assets/js/gm.core.js"></script>
   <script src="assets/js/gm.toast.js"></script>
   <script src="assets/js/gm.api.js"></script>
+  <script src="assets/js/gm.subscription.js"></script>
   <script src="assets/js/gm.state.js"></script>
   <script src="assets/js/gm.utils.js"></script>
   <script src="assets/js/gm.ui.js"></script>

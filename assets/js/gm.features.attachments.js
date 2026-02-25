@@ -29,30 +29,39 @@ function isAttachmentFileAllowed(file) {
 }
 
 /**
- * Check if user can use local uploads (paid feature)
+ * Check if user can use local uploads.
+ * Prefers GM_SUBSCRIPTION (set by gmSub / loadData) over legacy GM_USER.capabilities.
  */
 function canUseLocalUpload() {
-    // Check GM_USER capabilities first
+    // 1. Prefer subscription data from gmSub (most accurate)
+    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
+        return gmSub.can('local_upload');
+    }
+    // 2. Legacy GM_USER capabilities fallback
     if (typeof GM_USER !== 'undefined' && GM_USER.capabilities && typeof GM_USER.capabilities.can_use_local !== 'undefined') {
         return GM_USER.capabilities.can_use_local === true;
     }
-    
-    // If multi-user mode is enabled, check subscription tier
+    // 3. Multi-user mode without subscription data — check tier
     if (typeof ENABLE_MULTI_USER !== 'undefined' && ENABLE_MULTI_USER) {
         if (typeof GM_USER !== 'undefined') {
             const tier = GM_USER.subscription_tier || 'free';
             return tier !== 'free';
         }
     }
-    
     // Default: allow local uploads in single-user mode
     return true;
 }
 
 /**
- * Check if user can use Google Drive
+ * Check if user can use Google Drive.
+ * Prefers GM_SUBSCRIPTION gdrive feature flag.
  */
 function canUseGoogleDrive() {
+    // 1. Subscription data
+    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
+        if (!gmSub.can('gdrive')) return false;
+    }
+    // 2. Config flag
     if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled) {
         return true;
     }
@@ -60,28 +69,31 @@ function canUseGoogleDrive() {
 }
 
 /**
- * Get attachment limits
+ * Get attachment limits.
+ * Resolution order: GM_SUBSCRIPTION → GM_CONFIG → ATTACH_MAX constants.
  */
 function getAttachmentLimits() {
-    let maxCount = 2;
+    let maxCount  = 2;
     let maxSizeMB = 5;
-    
-    if (typeof GM_CONFIG !== 'undefined') {
+
+    // 1. Subscription tier limits (most accurate, set by loadData)
+    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
+        const perEntry = gmSub.attachmentsPerEntry();
+        if (perEntry >= 0) maxCount = perEntry;
+    } else if (typeof GM_CONFIG !== 'undefined') {
+        // 2. GM_CONFIG constants injected by index.php from config.php
         maxCount = GM_CONFIG.maxAttachments || 2;
-        maxSizeMB = GM_CONFIG.maxAttachmentSizeMB || 5;
     } else if (typeof ATTACH_MAX_COUNT !== 'undefined') {
+        // 3. Legacy ATTACH_MAX_COUNT constant
         maxCount = ATTACH_MAX_COUNT;
     }
-    
-    if (typeof ATTACH_MAX_SIZE_MB !== 'undefined') {
+
+    if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachmentSizeMB) {
+        maxSizeMB = GM_CONFIG.maxAttachmentSizeMB;
+    } else if (typeof ATTACH_MAX_SIZE_MB !== 'undefined') {
         maxSizeMB = ATTACH_MAX_SIZE_MB;
     }
-    
-    // Check user capabilities for max attachments
-    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities) {
-        maxCount = GM_USER.capabilities.max_attachments_per_entry || maxCount;
-    }
-    
+
     return {
         maxCount,
         maxSizeMB,

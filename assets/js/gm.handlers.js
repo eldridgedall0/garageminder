@@ -29,6 +29,11 @@ $(function() {
     renderNewEntryFormDefaults();
   }
   
+  // Apply subscription UI gates after everything is rendered
+  if (typeof gmSubUpdateUI === "function") {
+    gmSubUpdateUI();
+  }
+  
   initDatePickers($(document));
   
   if (activeVehicleId && activeVehicleId !== "all") {
@@ -39,6 +44,17 @@ $(function() {
   // Check recalls button
   $("#check-recalls-btn").on("click", function(e) {
     e.preventDefault();
+
+    // ── Subscription: gate recalls behind feature flag ───────────────────
+    if (typeof gmSub !== 'undefined' && !gmSub.can('recalls')) {
+      showUpgradeModal({
+        title: 'Recall Checking Requires an Upgrade',
+        message: `Vehicle recall checking is not available on the ${gmSub.tierName()} plan. Upgrade to enable this feature.`,
+        feature: 'recalls',
+      });
+      return;
+    }
+
     checkVehicleRecalls();
   });
   
@@ -58,6 +74,16 @@ $(function() {
   
   // Full backup - Download JSON with data + embedded attachments
   $("#backup-export-full").on("click", async function() {
+    // ── Subscription gate — bulk export = fleet/top tier only ────────────
+    if (typeof gmSub !== 'undefined' && gmSub.exportLevel() !== 'bulk') {
+      showUpgradeModal({
+        title: 'Full Backup Requires a Higher Plan',
+        message: `Full data backup with attachments is not available on the ${gmSub.tierName()} plan. Upgrade to unlock bulk export.`,
+        feature: 'export_bulk',
+      });
+      return;
+    }
+
     const $btn = $(this);
     const originalText = $btn.html();
     
@@ -564,6 +590,17 @@ $(function() {
   $("#settings-vehicle-add").on("click", function() {
     const name = $("#settings-vehicle-new").val().trim();
     if (!name) return;
+
+    // ── Subscription: check vehicle limit before adding ──────────────────
+    if (typeof gmSub !== 'undefined' && gmSub.atLimit('vehicles')) {
+      showUpgradeModal({
+        title: 'Vehicle Limit Reached',
+        message: `Your ${gmSub.tierName()} plan allows a maximum of ${gmSub.max('vehicles')} vehicle(s). Upgrade to add more.`,
+        feature: 'vehicles',
+      });
+      return;
+    }
+
     const id = "v_" + Date.now() + "_" + Math.random().toString(36).slice(2);
     data.vehicles.push({
       id, 
@@ -817,14 +854,39 @@ $(function() {
   });
 
   $("#export-excel").on("click", function() {
+    // ── Subscription gate ─────────────────────────────────────────────
+    if (typeof gmSub !== 'undefined' && !gmSub.can('export')) {
+      showUpgradeModal({
+        title: 'Export Requires an Upgrade',
+        message: `Data export is not available on the ${gmSub.tierName()} plan.`,
+        feature: 'export',
+      });
+      return;
+    }
     exportTableCSV();
   });
 
   $("#export-word").on("click", function() {
+    if (typeof gmSub !== 'undefined' && !gmSub.can('export')) {
+      showUpgradeModal({
+        title: 'Export Requires an Upgrade',
+        message: `Data export is not available on the ${gmSub.tierName()} plan.`,
+        feature: 'export',
+      });
+      return;
+    }
     exportTableWord();
   });
 
   $("#export-pdf").on("click", function() {
+    if (typeof gmSub !== 'undefined' && !gmSub.can('export')) {
+      showUpgradeModal({
+        title: 'Export Requires an Upgrade',
+        message: `Data export is not available on the ${gmSub.tierName()} plan.`,
+        feature: 'export',
+      });
+      return;
+    }
     exportTablePDF();
   });
 
