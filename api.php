@@ -472,7 +472,9 @@ function gm_save_data(array $payload, string $userId): void {
         }
         
         // ── VEHICLE LIMIT CHECK (backend enforcement) ───────────────────────
-        // Determine which vehicles in the payload are genuinely NEW (not in DB yet).
+        // Only blocks when the user is genuinely adding a NEW vehicle that would
+        // push them past the limit. Existing vehicles being updated/saved never
+        // trigger this — that would break normal saves like odometer updates.
         if (!empty($payload['vehicles']) && is_array($payload['vehicles']) &&
             $userId !== 'default' && function_exists('gm_get_user_limits')) {
 
@@ -483,16 +485,20 @@ function gm_save_data(array $payload, string $userId): void {
                 $limits      = gm_get_user_limits($userId);
                 $maxVehicles = (int) ($limits['max_vehicles'] ?? -1);
 
-                if ($maxVehicles >= 0 && count($payload['vehicles']) > $maxVehicles) {
-                    $pdo->rollBack();
-                    http_response_code(403);
-                    echo json_encode([
-                        'success'     => false,
-                        'error'       => 'vehicle_limit_reached',
-                        'message'     => "Your plan allows a maximum of {$maxVehicles} vehicle(s). Please upgrade to add more.",
-                        'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('vehicles') : '',
-                    ]);
-                    exit;
+                if ($maxVehicles >= 0) {
+                    // Use DB count (before this transaction) + count of new IDs being added
+                    $countAfterSave = count($existingVehicleIds) + count($newlyAdded);
+                    if ($countAfterSave > $maxVehicles) {
+                        $pdo->rollBack();
+                        http_response_code(403);
+                        echo json_encode([
+                            'success'     => false,
+                            'error'       => 'vehicle_limit_reached',
+                            'message'     => "Your plan allows a maximum of {$maxVehicles} vehicle(s). Please upgrade to add more.",
+                            'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('vehicles') : '',
+                        ]);
+                        exit;
+                    }
                 }
             }
         }
@@ -622,6 +628,9 @@ function gm_save_data(array $payload, string $userId): void {
         }
 
         // ── ENTRY LIMIT CHECK (backend enforcement) ─────────────────────────
+        // Only blocks genuinely NEW entries that push the user past their limit.
+        // The payload always contains all existing entries (full sync model), so
+        // comparing payload count directly would 403 every save when at the limit.
         if (!empty($payload['entries']) && is_array($payload['entries']) &&
             $userId !== 'default' && function_exists('gm_get_user_limits')) {
 
@@ -629,21 +638,35 @@ function gm_save_data(array $payload, string $userId): void {
             $maxEntries = (int) ($limits['max_entries'] ?? -1);
 
             if ($maxEntries >= 0) {
-                // Count entries in the payload that belong to this user's vehicles
-                $payloadEntryCount = count(array_filter($payload['entries'], function ($e) use ($newVehicleIds) {
-                    return in_array($e['vehicleId'] ?? '', $newVehicleIds);
-                }));
+                // Get current entry IDs from DB for this user
+                if (!empty($newVehicleIds)) {
+                    $epPlaceholders = implode(',', array_fill(0, count($newVehicleIds), '?'));
+                    $estmt = $pdo->prepare(
+                        "SELECT `id` FROM `entries` WHERE `vehicle_id` IN ($epPlaceholders)"
+                    );
+                    $estmt->execute($newVehicleIds);
+                    $existingEntryIds = $estmt->fetchAll(PDO::FETCH_COLUMN);
+                } else {
+                    $existingEntryIds = [];
+                }
 
-                if ($payloadEntryCount > $maxEntries) {
-                    $pdo->rollBack();
-                    http_response_code(403);
-                    echo json_encode([
-                        'success'     => false,
-                        'error'       => 'entry_limit_reached',
-                        'message'     => "Your plan allows a maximum of {$maxEntries} service entr(ies). Please upgrade for unlimited entries.",
-                        'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('entries') : '',
-                    ]);
-                    exit;
+                // Count only genuinely NEW entry IDs in the payload
+                $payloadEntryIds = array_column($payload['entries'], 'id');
+                $newEntryCount   = count(array_diff($payloadEntryIds, $existingEntryIds));
+
+                if ($newEntryCount > 0) {
+                    $totalAfterSave = count($existingEntryIds) + $newEntryCount;
+                    if ($totalAfterSave > $maxEntries) {
+                        $pdo->rollBack();
+                        http_response_code(403);
+                        echo json_encode([
+                            'success'     => false,
+                            'error'       => 'entry_limit_reached',
+                            'message'     => "Your plan allows a maximum of {$maxEntries} service entr(ies). Please upgrade for unlimited entries.",
+                            'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('entries') : '',
+                        ]);
+                        exit;
+                    }
                 }
             }
         }
@@ -750,22 +773,40 @@ function gm_save_data(array $payload, string $userId): void {
         }
 
         // ── TEMPLATE LIMIT CHECK (backend enforcement) ──────────────────────
+        // Only blocks when user is adding NEW templates beyond their plan limit.
+        // Full-sync payload always sends all existing templates, so comparing the
+        // total payload count would 403 every save once the user is at the limit.
         if (!empty($payload['entryTemplates']) && is_array($payload['entryTemplates']) &&
             $userId !== 'default' && function_exists('gm_get_user_limits')) {
 
             $limits       = gm_get_user_limits($userId);
             $maxTemplates = (int) ($limits['max_templates'] ?? -1);
 
-            if ($maxTemplates >= 0 && count($payload['entryTemplates']) > $maxTemplates) {
-                $pdo->rollBack();
-                http_response_code(403);
-                echo json_encode([
-                    'success'     => false,
-                    'error'       => 'template_limit_reached',
-                    'message'     => "Your plan allows a maximum of {$maxTemplates} template(s). Please upgrade for more.",
-                    'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('templates') : '',
-                ]);
-                exit;
+            if ($maxTemplates >= 0) {
+                // Get current template IDs from DB
+                $tstmt = $pdo->prepare(
+                    "SELECT `id` FROM `entry_templates` WHERE `user_id` = :uid"
+                );
+                $tstmt->execute([':uid' => $userId]);
+                $existingTemplateIds = $tstmt->fetchAll(PDO::FETCH_COLUMN);
+
+                $payloadTemplateIds  = array_column($payload['entryTemplates'], 'id');
+                $newTemplateCount    = count(array_diff($payloadTemplateIds, $existingTemplateIds));
+
+                if ($newTemplateCount > 0) {
+                    $totalAfterSave = count($existingTemplateIds) + $newTemplateCount;
+                    if ($totalAfterSave > $maxTemplates) {
+                        $pdo->rollBack();
+                        http_response_code(403);
+                        echo json_encode([
+                            'success'     => false,
+                            'error'       => 'template_limit_reached',
+                            'message'     => "Your plan allows a maximum of {$maxTemplates} template(s). Please upgrade for more.",
+                            'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('templates') : '',
+                        ]);
+                        exit;
+                    }
+                }
             }
         }
 

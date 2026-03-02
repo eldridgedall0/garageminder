@@ -220,7 +220,7 @@ function saveData() {
           }
         },
         error: function(xhr, status, err) {
-          // Check for auth error
+          // Check for auth error (401)
           if (xhr.status === 401) {
             try {
               const resp = JSON.parse(xhr.responseText);
@@ -232,6 +232,35 @@ function saveData() {
             window.location.reload();
             return;
           }
+
+          // Check for subscription / plan limit errors (403)
+          if (xhr.status === 403) {
+            try {
+              const resp = JSON.parse(xhr.responseText);
+              const limitErrors = [
+                'vehicle_limit_reached',
+                'entry_limit_reached',
+                'template_limit_reached',
+                'local_upload_not_allowed',
+                'attachment_limit_reached',
+              ];
+              if (resp && limitErrors.includes(resp.error)) {
+                // Show upgrade modal with the server message
+                if (typeof showUpgradeModal === 'function') {
+                  showUpgradeModal({
+                    title: 'Plan Limit Reached',
+                    message: resp.message || 'This action is not available on your current plan.',
+                    feature: resp.error,
+                  });
+                } else {
+                  alert(resp.message || 'Plan limit reached. Please upgrade.');
+                }
+                reject(new Error(resp.error));
+                return;
+              }
+            } catch (e) {}
+          }
+
           console.error("Error saving data:", err);
           reject(err);
         }
