@@ -106,11 +106,16 @@ function loadData() {
           // Store data_version for optimistic locking
           if (resp.data.data_version) window._gmDataVersion = resp.data.data_version;
 
-          // Save snapshot for offline use
+          // Save snapshot for offline use; verify/heal SW cache; confirm offline readiness
           if (typeof gmOffline !== 'undefined') {
             var uid = (window.GM_USER && window.GM_USER.id)
               ? String(window.GM_USER.id) : 'default';
-            gmOffline.saveSnapshot(uid, resp.data);
+            gmOffline.saveSnapshot(uid, resp.data).then(function () {
+              // Notify user that offline is ready (first time only per session)
+              gmOffline.notifyOfflineReady();
+            });
+            // Ask SW to check/heal core asset cache — runs in background, no UI impact
+            gmOffline.verifyCacheHealth();
             gmOffline.hideBanner();
           }
         }

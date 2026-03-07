@@ -18,6 +18,8 @@
  *   gmOffline.hasPendingQueue(userId)  → bool
  *   gmOffline.getPendingCount(userId)  → int
  *   gmOffline.syncPendingQueue()       → Promise
+ *   gmOffline.verifyCacheHealth()      → asks SW to check/heal CORE assets
+ *   gmOffline.notifyOfflineReady()     → shows "ready for offline" toast once per session
  *   gmOffline.showBanner(type, msg)
  *   gmOffline.hideBanner()
  */
@@ -698,6 +700,68 @@
     return 'default';
   }
 
+  // ─── Cache health check ────────────────────────────────────────────────────
+
+  /**
+   * Ask the service worker to verify all CORE assets are cached and re-fetch
+   * any that are missing. Called by gm.api.js after every successful online load.
+   * Silent on success; logs warnings on partial failure.
+   * No-op if SW is not available.
+   */
+  function verifyCacheHealth() {
+    if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
+
+    const channel = new MessageChannel();
+    channel.port1.onmessage = function (e) {
+      const { type, healed, missing, version } = e.data || {};
+      if (type === 'CACHE_HEALTHY') {
+        console.log('[gmOffline] Cache healthy v' + version);
+      } else if (type === 'CACHE_HEALED') {
+        console.log('[gmOffline] Cache self-healed ' + (healed || []).length + ' asset(s)');
+        notifyOfflineReady(true); // re-notify since cache was repaired
+      } else if (type === 'CACHE_INCOMPLETE') {
+        console.warn('[gmOffline] Cache incomplete — ' + (missing || []).length + ' asset(s) still missing:', missing);
+        showBanner('error',
+          'Some offline files couldn\u2019t be cached. Stay online to retry, or reload the page.');
+      }
+    };
+
+    navigator.serviceWorker.controller.postMessage(
+      { type: 'VERIFY_CACHE' },
+      [channel.port2]
+    );
+  }
+
+  /**
+   * Show a one-time "ready for offline use" confirmation after the IDB snapshot
+   * is saved for the first time in this browser session.
+   * Subsequent online loads in the same session are silent.
+   * @param {boolean} [force] - Show even if already shown this session
+   */
+  var _offlineReadyShown = false;
+  function notifyOfflineReady(force) {
+    if (_offlineReadyShown && !force) return;
+    _offlineReadyShown = true;
+    // Use a subtle toast rather than the banner — it's good news, not an error
+    if (typeof showToast === 'function') {
+      showToast('\u2713 Ready for offline use', 2500);
+    }
+  }
+
+  // ─── Handle INSTALL_INCOMPLETE from SW ─────────────────────────────────────
+  // Shown when SW install failed to cache one or more core assets.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', function (e) {
+      if (!e.data) return;
+      if (e.data.type === 'INSTALL_INCOMPLETE') {
+        console.warn('[gmOffline] SW install incomplete, missing:', e.data.missing);
+        showBanner('error',
+          'Offline setup incomplete \u2014 some files couldn\u2019t be cached. ' +
+          'Stay connected and reload to finish setup.');
+      }
+    });
+  }
+
   // ─── Public API ───────────────────────────────────────────────────────────
 
   window.gmOffline = {
@@ -712,6 +776,8 @@
     getPendingCount,
     clearQueue,
     syncPendingQueue,
+    verifyCacheHealth,
+    notifyOfflineReady,
     showBanner,
     hideBanner,
     notifyUpdateAvailable,
