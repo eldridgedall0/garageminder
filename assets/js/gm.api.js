@@ -26,6 +26,10 @@ function _loadFromSnapshot() {
       _normalizeLoadedData();
       if (typeof renderAll === 'function')       renderAll();
       else if (typeof renderDashboard === 'function') renderDashboard();
+      // Re-run feature inits that depend on data — these already fired on
+      // DOM-ready but data was empty then because IDB load is async.
+      if (typeof initTemplatesFeature === 'function') initTemplatesFeature();
+      if (typeof gmSubUpdateUI         === 'function') gmSubUpdateUI();
       gmOffline.showBanner('offline',
         "You\u2019re offline \u2014 viewing data from your last session.");
     } else {
