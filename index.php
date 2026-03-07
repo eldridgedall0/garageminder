@@ -87,6 +87,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.entry-success-notification.css">
   <link rel="stylesheet" href="assets/css/gm.27-export-modal.css">
   <link rel="stylesheet" href="assets/css/gm.60-subscription.css">
+  <link rel="stylesheet" href="assets/css/gm.28-preloader.css" />
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
@@ -828,6 +829,7 @@ ob_end_clean();
 </script>
   <script src="assets/js/gm.theme-indicator.js"></script>
   <script src="assets/js/gm.fixes.js"></script>
+  <script src="assets/js/gm.preloader.js"></script>
 
 
 

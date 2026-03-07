@@ -30,6 +30,7 @@ function _loadFromSnapshot() {
       // DOM-ready but data was empty then because IDB load is async.
       if (typeof initTemplatesFeature === 'function') initTemplatesFeature();
       if (typeof gmSubUpdateUI         === 'function') gmSubUpdateUI();
+      document.dispatchEvent(new CustomEvent('gm:dataLoaded'));
       gmOffline.showBanner('offline',
         "You\u2019re offline \u2014 viewing data from your last session.");
     } else {
@@ -140,6 +141,7 @@ function loadData() {
     });
 
     _normalizeLoadedData();
+    document.dispatchEvent(new CustomEvent('gm:dataLoaded'));
 
   } catch(e) {
     console.error("Error loading data, resetting.", e);

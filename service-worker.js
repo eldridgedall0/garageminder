@@ -19,7 +19,7 @@
  */
 
 // ── Version — keep in sync with APP_VERSION in config.php ──────────────────
-const SW_VERSION = '2.5.0';
+const SW_VERSION = '2.5.1';
 
 // Page version (runtime awareness / update banners — NOT used for cache naming)
 let PAGE_VERSION = SW_VERSION;
@@ -58,6 +58,8 @@ const CORE_ASSETS = [
   './assets/css/gm.23-pwa.css',
   './assets/css/gm.24-theme-indicator.css',
   './assets/css/gm.25-gdrive.css',
+  './assets/css/gm.28-preloader.css',
+  './assets/js/gm.preloader.js',
   './assets/css/gm.26-offline.css',
   './assets/js/gm.core.js',
   './assets/js/gm.toast.js',
