@@ -422,11 +422,42 @@
         (window.BACKEND_URL || 'api.php') + '?action=load&ts=' + Date.now(),
         { method: 'GET', cache: 'no-store', credentials: 'same-origin' }
       );
+
+      // Session expired while offline — queue is safe in IDB, redirect to login
+      if (resp.status === 401) {
+        let loginUrl = null;
+        try {
+          const errJson = await resp.json();
+          loginUrl = errJson.login_url || null;
+        } catch(e) {}
+
+        showBanner('error',
+          'Your session expired while offline. ' +
+          '<a href="' + (loginUrl || (window.gmAuthUrls && window.gmAuthUrls.login_url) || '/gm/') + '" ' +
+          'style="color:inherit;text-decoration:underline">Sign in again</a> ' +
+          'to sync your ' + (await getPendingCount(userId)) + ' pending change(s). Your data is safe.'
+        );
+        _syncInProgress = false;
+        return;
+      }
+
       const json = await resp.json();
+
+      // Other auth/server errors
+      if (json && json.error === 'authentication_required') {
+        const loginUrl2 = json.login_url || (window.gmAuthUrls && window.gmAuthUrls.login_url) || '/gm/';
+        showBanner('error',
+          'Please <a href="' + loginUrl2 + '" style="color:inherit;text-decoration:underline">sign in</a> ' +
+          'to sync your pending changes. Your data is safe.'
+        );
+        _syncInProgress = false;
+        return;
+      }
+
       if (!json.success || !json.data) throw new Error('Load failed');
       freshData = json.data;
     } catch (e) {
-      showBanner('error', 'Could not reach server — will retry when connected.');
+      showBanner('error', 'Could not reach server \u2014 will retry when connected.');
       _isOffline = true;
       setOfflineUIState(true);
       return;
@@ -473,6 +504,17 @@
       );
 
       saveResp = await resp.json();
+
+      // Session expired between load and save steps
+      if (resp.status === 401) {
+        const loginUrl = saveResp.login_url || (window.gmAuthUrls && window.gmAuthUrls.login_url) || '/gm/';
+        showBanner('error',
+          'Session expired. <a href="' + loginUrl + '" style="color:inherit;text-decoration:underline">Sign in</a> ' +
+          'to complete the sync. Your pending changes are safe.'
+        );
+        _syncInProgress = false;
+        return;
+      }
 
       if (resp.status === 409) {
         // Version conflict — another device saved between our load and save
