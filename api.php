@@ -192,6 +192,39 @@ function gm_set_setting(PDO $pdo, string $key, string $userId, $value): void {
     $stmt->execute([':k' => $key, ':uid' => $userId, ':v' => (string) $value]);
 }
 
+// ============================================================
+// OPTIMISTIC LOCKING — data_version token per user
+// Prevents blind overwrites when multiple devices save concurrently.
+// The token is stored as a settings key and rotated on every
+// successful save. Clients must echo back the token they received
+// on load; a mismatch means another device saved in the meantime.
+// ============================================================
+
+/**
+ * Get the current data_version token for a user.
+ * Returns a newly generated token (and stores it) if none exists yet.
+ */
+function gm_get_data_version(PDO $pdo, string $userId): string {
+    $existing = gm_get_setting($pdo, 'data_version', $userId, null);
+    if ($existing) {
+        return $existing;
+    }
+    // First time — generate and persist
+    $token = bin2hex(random_bytes(16));
+    gm_set_setting($pdo, 'data_version', $userId, $token);
+    return $token;
+}
+
+/**
+ * Rotate the data_version token after a successful save.
+ * Must be called INSIDE an open transaction, before commit.
+ */
+function gm_rotate_data_version(PDO $pdo, string $userId): string {
+    $token = bin2hex(random_bytes(16));
+    gm_set_setting($pdo, 'data_version', $userId, $token);
+    return $token;
+}
+
 /**
  * Load all data for the current user
  */
@@ -420,6 +453,13 @@ function gm_load_data(string $userId): array {
         }
     }
 
+    // ── Optimistic locking token ─────────────────────────────────────────────
+    // Returned on every load so the client can echo it back on save.
+    // Single-user mode gets a static token (no conflict risk).
+    $dataVersion = ($userId !== 'default')
+        ? gm_get_data_version($pdo, $userId)
+        : 'single-user';
+
     return [
         'vehicles'         => $vehicles_out,
         'serviceTypes'     => $service_types_out,
@@ -438,17 +478,41 @@ function gm_load_data(string $userId): array {
         'multiUserEnabled' => defined('ENABLE_MULTI_USER') && ENABLE_MULTI_USER,
         // Subscription / tier limits (null in single-user mode → frontend grants full access)
         'subscription'     => $subscription,
+        // Optimistic locking — client must echo this back on save
+        'data_version'     => $dataVersion,
     ];
 }
 
 /**
  * Save data for the current user
  */
-function gm_save_data(array $payload, string $userId): void {
+function gm_save_data(array $payload, string $userId): string {
     gm_db_check();
     $pdo = db_get_pdo();
     gm_ensure_templates_table($pdo);
     gm_ensure_vehicle_details_columns($pdo);
+
+    // ── Optimistic locking check ──────────────────────────────────────────
+    // Skip for single-user mode (no concurrent device risk).
+    if ($userId !== 'default') {
+        $clientVersion = $payload['data_version'] ?? null;
+        $serverVersion = gm_get_data_version($pdo, $userId);
+
+        // If client sent a token and it doesn't match, reject immediately.
+        // If client sent no token (first save, legacy client) we allow through
+        // so existing installs aren't broken before they pick up the new JS.
+        if ($clientVersion !== null && $clientVersion !== 'single-user' && $clientVersion !== $serverVersion) {
+            http_response_code(409);
+            echo json_encode([
+                'success'       => false,
+                'error'         => 'version_conflict',
+                'message'       => 'Data was updated from another device. Refreshing your local data.',
+                'server_version'=> $serverVersion,
+            ]);
+            exit;
+        }
+    }
+
     $pdo->beginTransaction();
 
     try {
@@ -866,7 +930,16 @@ function gm_save_data(array $payload, string $userId): void {
             gm_set_setting($pdo, 'active_vehicle_id', $userId, $payload['activeVehicleId'] ?: '');
         }
 
+        // Rotate the version token — must happen inside the transaction
+        // so it's atomic with all the data changes above.
+        $newVersion = ($userId !== 'default')
+            ? gm_rotate_data_version($pdo, $userId)
+            : 'single-user';
+
         $pdo->commit();
+
+        return $newVersion;
+
     } catch (Throwable $e) {
         $pdo->rollBack();
         throw $e;
@@ -897,8 +970,8 @@ if ($method === 'POST' && $action === 'save') {
     }
 
     try {
-        gm_save_data($decoded['data'], $currentUserId);
-        echo json_encode(['success' => true]);
+        $newVersion = gm_save_data($decoded['data'], $currentUserId);
+        echo json_encode(['success' => true, 'data_version' => $newVersion]);
     } catch (Throwable $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);

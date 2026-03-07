@@ -80,6 +80,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.23-pwa.css" />
   <link rel="stylesheet" href="assets/css/gm.24-theme-indicator.css" />
   <link rel="stylesheet" href="assets/css/gm.25-gdrive.css" />
+  <link rel="stylesheet" href="assets/css/gm.26-offline.css" />
   <link rel="stylesheet" href="assets/css/gm.26-history-search.css" />
   <link rel="stylesheet" href="assets/css/gm.dynamic-reminders.css">
   <link rel="stylesheet" href="assets/css/gm.copy-reminder-modal.css">
@@ -776,9 +777,55 @@ ob_end_clean();
 <script src="assets/js/gm.features.entry-reminders.js"></script>
 <script src="assets/js/gm.reminder-handlers.js"></script>           
 <script src="assets/js/gm.entry-management.js"></script>
+<script src="assets/js/gm.features.offline.js"></script>
 <script src="assets/js/gm.handlers.js"></script>
 <script src="assets/js/gm.dynamic-reminders-integration.js"></script>
 <script src="assets/js/gm.pwa.js"></script>
+<script>
+// Send APP_VERSION to service worker on every load.
+// This is the single signal that triggers cache invalidation on deploy.
+// To push an update to all users: bump APP_VERSION in config.php.
+(function() {
+  var swVersion = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.appVersion)
+    ? GM_CONFIG.appVersion : '2.5.0';
+
+  if ('serviceWorker' in navigator) {
+    // Send version to active SW
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SET_VERSION',
+        version: swVersion
+      });
+    }
+
+    // Listen for messages from SW
+    navigator.serviceWorker.addEventListener('message', function(event) {
+      if (!event.data) return;
+
+      // New SW version installed — prompt user to refresh
+      if (event.data.type === 'SW_UPDATED') {
+        if (typeof gmOffline !== 'undefined') {
+          gmOffline.notifyUpdateAvailable();
+        }
+      }
+
+      // Background sync triggered by SW
+      if (event.data.type === 'TRIGGER_SYNC') {
+        if (typeof gmOffline !== 'undefined') {
+          gmOffline.syncPendingQueue();
+        }
+      }
+    });
+
+    // Also send version once SW is ready (covers first-load before controller exists)
+    navigator.serviceWorker.ready.then(function(reg) {
+      if (reg.active) {
+        reg.active.postMessage({ type: 'SET_VERSION', version: swVersion });
+      }
+    });
+  }
+})();
+</script>
   <script src="assets/js/gm.theme-indicator.js"></script>
   <script src="assets/js/gm.fixes.js"></script>
 

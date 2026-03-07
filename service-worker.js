@@ -1,13 +1,24 @@
 /**
  * TrackMyWrench Service Worker
  * Provides offline caching and PWA functionality
- * Multi-user compatible - caches static assets only
+ * Multi-user compatible
+ *
+ * Version management:
+ *   APP_VERSION is received from the page via postMessage on every init.
+ *   Cache names include the version so any APP_VERSION bump automatically
+ *   invalidates old caches and triggers the update flow for all users.
+ *   Bump APP_VERSION in config.php whenever you deploy changes to cached files.
  */
 
-const CACHE_NAME = 'trackmywrench-v1';
-const STATIC_CACHE_NAME = 'trackmywrench-static-v1';
+// Default version — overwritten immediately by APP_VERSION message from page
+let APP_VERSION = '2.5.0';
 
-// Static assets to cache (shared across all users)
+// Cache names are version-scoped — old versions are cleaned up on activate
+function getStaticCacheName()  { return `tmw-static-${APP_VERSION}`; }
+function getDynCacheName()     { return `tmw-dyn-${APP_VERSION}`; }
+
+// Static assets to cache on install (app shell)
+// Add gm.features.offline.js and gm.26-offline.css to the list
 const STATIC_ASSETS = [
   './',
   './index.php',
@@ -33,7 +44,11 @@ const STATIC_ASSETS = [
   './assets/css/gm.19-templates.css',
   './assets/css/gm.20-service-selector.css',
   './assets/css/gm.21-vehicle-details.css',
-  './assets/css/gm.22-pwa.css',
+  './assets/css/gm.22-mobile-nav.css',
+  './assets/css/gm.23-pwa.css',
+  './assets/css/gm.24-theme-indicator.css',
+  './assets/css/gm.25-gdrive.css',
+  './assets/css/gm.26-offline.css',
   './assets/js/gm.core.js',
   './assets/js/gm.toast.js',
   './assets/js/gm.api.js',
@@ -47,13 +62,14 @@ const STATIC_ASSETS = [
   './assets/js/gm.features.templates.js',
   './assets/js/gm.features.recalls.js',
   './assets/js/gm.features.export.js',
+  './assets/js/gm.features.offline.js',
   './assets/js/gm.user.js',
   './assets/js/gm.handlers.js',
+  './assets/js/gm.mobile-nav.js',
+  './assets/js/gm.theme-indicator.js',
   './assets/js/gm.pwa.js',
-  './assets/images/icon-16.png',
   './assets/images/icon-32.png',
   './assets/images/icon-64.png',
-  './assets/images/icon-180.png',
   './assets/images/icon-192.png',
   './assets/images/icon-512.png',
   './manifest.json'
@@ -68,72 +84,76 @@ const CDN_ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js'
 ];
 
-// Install event - cache static assets
+// ── Install ────────────────────────────────────────────────────────────────
+
 self.addEventListener('install', (event) => {
-  console.log('[ServiceWorker] Install');
-  
+  console.log(`[SW] Install — version ${APP_VERSION}`);
+
   event.waitUntil(
     Promise.all([
-      // Cache static assets
-      caches.open(STATIC_CACHE_NAME).then((cache) => {
-        console.log('[ServiceWorker] Caching static assets');
-        return cache.addAll(STATIC_ASSETS.map(url => {
-          return new Request(url, { cache: 'reload' });
-        })).catch(err => {
-          console.warn('[ServiceWorker] Some static assets failed to cache:', err);
+      // Cache static app shell
+      caches.open(getStaticCacheName()).then((cache) => {
+        console.log('[SW] Caching static assets');
+        return cache.addAll(STATIC_ASSETS.map(url =>
+          new Request(url, { cache: 'reload' })
+        )).catch(err => {
+          console.warn('[SW] Some static assets failed to cache:', err);
         });
       }),
       // Cache CDN assets
-      caches.open(CACHE_NAME).then((cache) => {
-        console.log('[ServiceWorker] Caching CDN assets');
+      caches.open(getDynCacheName()).then((cache) => {
+        console.log('[SW] Caching CDN assets');
         return Promise.all(
-          CDN_ASSETS.map(url => {
-            return fetch(url, { mode: 'cors' })
-              .then(response => {
-                if (response.ok) {
-                  return cache.put(url, response);
-                }
-              })
-              .catch(err => {
-                console.warn('[ServiceWorker] Failed to cache CDN asset:', url, err);
-              });
-          })
+          CDN_ASSETS.map(url =>
+            fetch(url, { mode: 'cors' })
+              .then(response => { if (response.ok) return cache.put(url, response); })
+              .catch(err => console.warn('[SW] Failed to cache CDN:', url, err))
+          )
         );
       })
     ]).then(() => {
-      // Force the waiting service worker to become active
+      // Take over immediately — don't wait for old SW tabs to close
       return self.skipWaiting();
     })
   );
 });
 
-// Activate event - clean up old caches
+// ── Activate ──────────────────────────────────────────────────────────────
+
 self.addEventListener('activate', (event) => {
-  console.log('[ServiceWorker] Activate');
-  
+  console.log(`[SW] Activate — version ${APP_VERSION}`);
+
   event.waitUntil(
     caches.keys().then((cacheNames) => {
+      const currentCaches = [getStaticCacheName(), getDynCacheName()];
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
-            console.log('[ServiceWorker] Removing old cache:', cacheName);
+          // Delete any cache that doesn't belong to the current version
+          if (!currentCaches.includes(cacheName)) {
+            console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      // Take control of all clients immediately
-      return self.clients.claim();
+      // Notify all open tabs that a new version is active
+      return self.clients.matchAll({ type: 'window' }).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ type: 'SW_UPDATED', version: APP_VERSION });
+        });
+        return self.clients.claim();
+      });
     })
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// ── Fetch ─────────────────────────────────────────────────────────────────
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  
-  // Skip API calls and POST requests - these must always go to network
-  // This ensures multi-user data is never cached
+
+  // Skip non-GET and all dynamic PHP endpoints
+  // These must always hit the network (auth state, user data, uploads)
   if (
     event.request.method !== 'GET' ||
     url.pathname.includes('api.php') ||
@@ -145,137 +165,127 @@ self.addEventListener('fetch', (event) => {
     url.pathname.includes('backup-create.php') ||
     url.pathname.includes('restore-full.php') ||
     url.pathname.includes('delete-attachment.php') ||
+    url.pathname.includes('google-drive') ||
     url.search.includes('action=') ||
-    url.search.includes('_=') // jQuery cache buster
+    url.search.includes('_=')
   ) {
-    return; // Let the browser handle this request normally
+    return; // Browser handles normally
   }
-  
-  // For navigation requests (HTML pages), use network-first strategy
+
+  // Navigation requests: network-first, fallback to cached shell
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Clone and cache the response
-          const responseClone = response.clone();
-          caches.open(STATIC_CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          const clone = response.clone();
+          caches.open(getStaticCacheName()).then(cache => cache.put(event.request, clone));
           return response;
         })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(event.request).then((response) => {
-            if (response) {
-              return response;
-            }
-            // Return offline page if available
-            return caches.match('./index.php');
-          });
-        })
+        .catch(() =>
+          caches.match(event.request)
+            .then(r => r || caches.match('./index.php'))
+        )
     );
     return;
   }
-  
-  // For static assets, use cache-first strategy
+
+  // Static assets: cache-first, fallback to network
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached version
-        return cachedResponse;
-      }
-      
-      // Not in cache, fetch from network
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+
       return fetch(event.request).then((response) => {
-        // Don't cache non-successful responses
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-        
-        // Clone and cache successful responses for static assets
-        const responseClone = response.clone();
-        
-        // Only cache CSS, JS, images, and fonts
-        const contentType = response.headers.get('content-type') || '';
+        const clone = response.clone();
+        const ct = response.headers.get('content-type') || '';
         if (
-          contentType.includes('text/css') ||
-          contentType.includes('application/javascript') ||
-          contentType.includes('image/') ||
-          contentType.includes('font/')
+          ct.includes('text/css') ||
+          ct.includes('application/javascript') ||
+          ct.includes('image/') ||
+          ct.includes('font/')
         ) {
-          caches.open(STATIC_CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          caches.open(getStaticCacheName()).then(cache => cache.put(event.request, clone));
         }
-        
         return response;
       }).catch(() => {
-        // Network failed and not in cache
-        console.warn('[ServiceWorker] Fetch failed for:', event.request.url);
+        console.warn('[SW] Fetch failed:', event.request.url);
         return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
       });
     })
   );
 });
 
-// Handle messages from the main app
+// ── Messages ──────────────────────────────────────────────────────────────
+
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (!event.data) return;
+
+  // Page sends its APP_VERSION on load so the SW uses version-scoped caches
+  if (event.data.type === 'SET_VERSION' && event.data.version) {
+    const prev = APP_VERSION;
+    APP_VERSION = event.data.version;
+    if (prev !== APP_VERSION) {
+      console.log(`[SW] Version updated: ${prev} -> ${APP_VERSION}`);
+    }
+  }
+
+  if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
-  if (event.data && event.data.type === 'CLEAR_CACHE') {
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => caches.delete(cacheName))
-      );
-    }).then(() => {
-      event.ports[0].postMessage({ success: true });
+
+  if (event.data.type === 'CLEAR_CACHE') {
+    caches.keys().then(names =>
+      Promise.all(names.map(n => caches.delete(n)))
+    ).then(() => {
+      if (event.ports && event.ports[0]) {
+        event.ports[0].postMessage({ success: true });
+      }
     });
   }
 });
 
-// Background sync for offline entries (future enhancement)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-entries') {
-    console.log('[ServiceWorker] Background sync triggered');
-    // Could implement offline entry sync here
-  }
-});
+// ── Background sync (for offline queue flush) ─────────────────────────────
 
-// Push notifications (future enhancement)
-self.addEventListener('push', (event) => {
-  if (event.data) {
-    const data = event.data.json();
-    const options = {
-      body: data.body || 'Maintenance reminder',
-      icon: './assets/images/icon-192.png',
-      badge: './assets/images/icon-192.png',
-      vibrate: [100, 50, 100],
-      data: {
-        url: data.url || './'
-      }
-    };
-    
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'gm-sync-queue') {
+    console.log('[SW] Background sync triggered');
+    // Notify the page to run syncPendingQueue()
     event.waitUntil(
-      self.registration.showNotification(data.title || 'TrackMyWrench', options)
+      self.clients.matchAll({ type: 'window' }).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ type: 'TRIGGER_SYNC' });
+        });
+      })
     );
   }
 });
 
-// Notification click handler
+// ── Push notifications ────────────────────────────────────────────────────
+
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    const d = event.data.json();
+    event.waitUntil(
+      self.registration.showNotification(d.title || 'TrackMyWrench', {
+        body:    d.body    || 'Maintenance reminder',
+        icon:    './assets/images/icon-192.png',
+        badge:   './assets/images/icon-192.png',
+        vibrate: [100, 50, 100],
+        data:    { url: d.url || './' }
+      })
+    );
+  }
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      // If app is already open, focus it
-      for (const client of clientList) {
-        if (client.url.includes('index.php') && 'focus' in client) {
-          return client.focus();
-        }
+    clients.matchAll({ type: 'window' }).then(list => {
+      for (const c of list) {
+        if (c.url.includes('index.php') && 'focus' in c) return c.focus();
       }
-      // Otherwise open new window
       if (clients.openWindow) {
         return clients.openWindow(event.notification.data.url || './');
       }
