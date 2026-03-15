@@ -29,43 +29,42 @@ function isAttachmentFileAllowed(file) {
 }
 
 /**
- * Check if user can use local uploads.
- * Prefers GM_SUBSCRIPTION (set by gmSub / loadData) over legacy GM_USER.capabilities.
+ * Check if user can use local file uploads.
+ *
+ * Source of truth: GM_SUBSCRIPTION.features.attachments_per_entry (from WP tier settings).
+ * WP admin has NO separate enable_local_upload key — attachments_per_entry > 0
+ * means file uploads are allowed for this tier.
  */
 function canUseLocalUpload() {
-    // 1. Prefer subscription data from gmSub (most accurate)
+    // 1. Subscription data from loadData() — most accurate
     if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
-        return gmSub.can('local_upload');
+        return gmSub.attachmentsPerEntry() > 0;
     }
     // 2. Legacy GM_USER capabilities fallback
     if (typeof GM_USER !== 'undefined' && GM_USER.capabilities && typeof GM_USER.capabilities.can_use_local !== 'undefined') {
         return GM_USER.capabilities.can_use_local === true;
     }
-    // 3. Multi-user mode without subscription data — check tier
-    if (typeof ENABLE_MULTI_USER !== 'undefined' && ENABLE_MULTI_USER) {
-        if (typeof GM_USER !== 'undefined') {
-            const tier = GM_USER.subscription_tier || 'free';
-            return tier !== 'free';
-        }
-    }
-    // Default: allow local uploads in single-user mode
+    // 3. Single-user / no subscription data — allow by default
     return true;
 }
 
 /**
- * Check if user can use Google Drive.
- * Prefers GM_SUBSCRIPTION gdrive feature flag.
+ * Check if user can use Google Drive attachments.
+ *
+ * WP admin has no separate enable_gdrive key. Google Drive is allowed whenever
+ * attachments_per_entry > 0 (same gate as local upload). The global
+ * GOOGLE_DRIVE_ENABLED config flag (config.php) must also be true.
  */
 function canUseGoogleDrive() {
-    // 1. Subscription data
+    // Google Drive must be enabled at the app/config level
+    if (typeof GM_CONFIG === 'undefined' || !GM_CONFIG.googleDriveEnabled) {
+        return false;
+    }
+    // Subscription: allowed whenever attachments are allowed for this tier
     if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
-        if (!gmSub.can('gdrive')) return false;
+        return gmSub.attachmentsPerEntry() > 0;
     }
-    // 2. Config flag
-    if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled) {
-        return true;
-    }
-    return false;
+    return true;
 }
 
 /**

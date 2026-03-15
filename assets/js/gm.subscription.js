@@ -185,10 +185,17 @@ function _gmSubUpdateExportButtons() {
     }
   });
 
-  // Full backup export — bulk tier only
+  // Full backup export — requires 'advanced' export level (WP value) or legacy 'bulk'
+  // WP admin export_level values: 'none' | 'basic' | 'advanced'
   const $backup = $('#backup-export-full');
   if ($backup.length) {
-    if (exportLevel !== 'bulk') {
+    const sub = window.GM_SUBSCRIPTION;
+    const canBulk = sub && sub.features && (
+      sub.features.export_bulk === true ||
+      exportLevel === 'advanced' ||
+      exportLevel === 'bulk'
+    );
+    if (!canBulk) {
       $backup.addClass('gm-feature-locked')
              .attr('title', 'Full backup export requires a higher plan');
     } else {

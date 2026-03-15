@@ -81,38 +81,37 @@ try {
     $currentCount = (int) $stmt->fetchColumn();
 
     // ── SUBSCRIPTION-AWARE ATTACHMENT LIMIT ─────────────────────────────────
-    // Prefer gm_get_user_limits() (subscription-tier-aware) when available.
-    // Fall back to the ENTRY_MAX_ATTACHMENTS constant from config.php.
+    // WP admin stores 'attachments_per_entry' as the sole attachment limit key.
+    // There is NO 'enable_local_upload' key in WordPress — that key doesn't exist
+    // and always resolves to false, blocking every upload regardless of tier.
+    // The only gate needed: attachments_per_entry > 0 means uploads are allowed.
     if ($userId !== 'default' && function_exists('gm_get_user_limits')) {
         $limits         = gm_get_user_limits($userId);
         $maxAttachments = (int) ($limits['attachments_per_entry'] ?? 0);
-
-        // Check: is local upload allowed for this tier?
-        $localUploadAllowed = (bool) ($limits['enable_local_upload'] ?? false);
-        if (!$localUploadAllowed) {
-            http_response_code(403);
-            echo json_encode([
-                'success'     => false,
-                'error'       => 'local_upload_not_allowed',
-                'message'     => 'Local file uploads are not available on your current plan. Please upgrade.',
-                'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('local_upload') : '',
-            ]);
-            exit;
-        }
     } else {
+        // Single-user mode or WP unavailable — fall back to config.php constant
         $maxAttachments = defined('ENTRY_MAX_ATTACHMENTS') ? (int) ENTRY_MAX_ATTACHMENTS : 2;
     }
 
     $remainingSlots = max(0, $maxAttachments - $currentCount);
 
-    if ($maxAttachments <= 0 || $remainingSlots <= 0) {
+    if ($maxAttachments <= 0) {
         http_response_code(403);
         echo json_encode([
             'success'     => false,
             'error'       => 'attachment_limit_reached',
-            'message'     => $maxAttachments <= 0
-                ? 'File attachments are not available on your current plan. Please upgrade.'
-                : "Maximum attachments ({$maxAttachments}) already reached for this entry.",
+            'message'     => 'File attachments are not available on your current plan. Please upgrade.',
+            'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('attachments') : '',
+        ]);
+        exit;
+    }
+
+    if ($remainingSlots <= 0) {
+        http_response_code(403);
+        echo json_encode([
+            'success'     => false,
+            'error'       => 'attachment_limit_reached',
+            'message'     => "Maximum attachments ({$maxAttachments}) already reached for this entry.",
             'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('attachments') : '',
         ]);
         exit;

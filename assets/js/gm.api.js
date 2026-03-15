@@ -88,6 +88,8 @@ function loadData() {
           if (resp.data.subscription) {
             window.GM_SUBSCRIPTION = resp.data.subscription;
           } else {
+            // Single-user / no WP data — grant full access.
+            // export_level uses WP admin values: 'none' | 'basic' | 'advanced'
             window.GM_SUBSCRIPTION = {
               tier: 'free', tier_name: 'Free', is_active: true, limits: {},
               usage: {
@@ -95,10 +97,11 @@ function loadData() {
                 entries:  { used: 0, max: -1, remaining: -1, unlimited: true }
               },
               features: {
-                recalls: true, export: true, export_level: 'bulk',
+                recalls: true, export: true, export_level: 'advanced',
+                export_bulk: true,
                 attachments: true, attachments_per_entry: 5,
-                vehicle_photos: true, local_upload: true,
-                gdrive: true, templates: true, max_templates: -1
+                local_upload: true, gdrive: true,
+                vehicle_photos: true, templates: true, max_templates: -1
               },
               upgrade_url: '/pricing/'
             };

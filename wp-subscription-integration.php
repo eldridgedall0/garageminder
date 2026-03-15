@@ -29,17 +29,19 @@ if (!function_exists('gm_sub_fallback_limits')) {
         if (defined('GM_FALLBACK_LIMITS') && is_array(GM_FALLBACK_LIMITS)) {
             return GM_FALLBACK_LIMITS;
         }
+        // Key names match what tmw_get_tier_values() stores in the WP 'tmw_tier_values' option.
+        // WP admin keys: max_vehicles, max_entries, attachments_per_entry, max_templates,
+        //   recalls_enabled, vehicle_photos, export_level, api_access, team_members.
+        // NOTE: There are NO separate enable_local_upload / enable_gdrive keys in WP.
         return [
             'max_vehicles'          => 2,
             'max_entries'           => 50,
-            'attachments_per_entry' => 0,
-            'enable_recalls'        => false,
-            'export_level'          => 'none',
+            'attachments_per_entry' => 0,   // 0 = uploads not allowed on this tier
             'max_templates'         => 3,
-            'enable_vehicle_photos' => false,
-            'enable_local_upload'   => false,
-            'enable_gdrive'         => true,
-            'enable_api'            => false,
+            'recalls_enabled'       => false, // WP key (not enable_recalls)
+            'vehicle_photos'        => false, // WP key (not enable_vehicle_photos)
+            'export_level'          => 'none', // WP values: none | basic | advanced
+            'api_access'            => false, // WP key (not enable_api)
             'team_members'          => 0,
         ];
     }
@@ -310,7 +312,8 @@ if (!function_exists('gm_get_remaining_counts')) {
         $exportLevel = $limits['export_level'] ?? 'none';
         $canExport   = $exportLevel !== '' && $exportLevel !== 'none';
 
-        $recallsVal = $limits['enable_recalls'] ?? false;
+        // WP stores 'recalls_enabled'; fallback to 'enable_recalls' for safety
+        $recallsVal = $limits['recalls_enabled'] ?? $limits['enable_recalls'] ?? false;
         $canRecalls = is_bool($recallsVal) ? $recallsVal : (bool)(int) $recallsVal;
 
         return [
@@ -447,13 +450,24 @@ if (!function_exists('gm_get_subscription_api_response')) {
 
             'features' => [
                 'recalls'               => $remaining['can_use_recalls'],
+
+                // WP export_level values: 'none' | 'basic' | 'advanced'
                 'export'                => $remaining['can_export'],
                 'export_level'          => $remaining['export_level'],
+                // export_bulk: true when level is 'advanced' (WP) or legacy 'bulk'
+                'export_bulk'           => in_array($remaining['export_level'], ['advanced', 'bulk'], true),
+
+                // WP only has 'attachments_per_entry' (number). No separate
+                // enable_local_upload or enable_gdrive keys exist in WP.
+                // Both upload types are allowed whenever per_entry > 0.
                 'attachments'           => $remaining['attachments_per_entry'] > 0,
                 'attachments_per_entry' => $remaining['attachments_per_entry'],
-                'vehicle_photos'        => (bool) ($limits['enable_vehicle_photos'] ?? false),
-                'local_upload'          => (bool) ($limits['enable_local_upload']   ?? false),
-                'gdrive'                => (bool) ($limits['enable_gdrive']          ?? false),
+                'local_upload'          => $remaining['attachments_per_entry'] > 0,
+                'gdrive'                => $remaining['attachments_per_entry'] > 0,
+
+                // WP key is 'vehicle_photos', not 'enable_vehicle_photos'
+                'vehicle_photos'        => (bool) ($limits['vehicle_photos'] ?? $limits['enable_vehicle_photos'] ?? false),
+
                 'templates'             => (int)  ($limits['max_templates']          ?? 0) !== 0,
                 'max_templates'         => (int)  ($limits['max_templates']          ?? 0),
             ],
