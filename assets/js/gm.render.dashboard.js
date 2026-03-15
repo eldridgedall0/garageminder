@@ -1802,20 +1802,16 @@ function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container)
     maxCount = 2; // Default
   }
   
-  // Check capabilities - with safe defaults
-  const canDrive = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled === true);
-  const canLocal = (function() {
-    // Check user capabilities if available
-    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities && typeof GM_USER.capabilities.can_use_local !== 'undefined') {
-      return GM_USER.capabilities.can_use_local === true;
-    }
-    // Check subscription tier
-    if (typeof GM_USER !== 'undefined' && GM_USER.subscription_tier) {
-      return GM_USER.subscription_tier !== 'free';
-    }
-    // Default: allow local uploads (single-user mode or no restrictions)
-    return true;
-  })();
+  // Check capabilities using the subscription system (gmSub / GM_SUBSCRIPTION).
+  // canUseLocalUpload() is defined in gm.features.attachments.js and reads
+  // gmSub.attachmentsPerEntry() > 0 — which comes directly from WP tier settings.
+  // Do NOT use GM_USER.subscription_tier here; that hardcodes free=no-upload.
+  const canDrive = (typeof canUseGoogleDrive === 'function')
+    ? canUseGoogleDrive()
+    : (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled === true);
+  const canLocal = (typeof canUseLocalUpload === 'function')
+    ? canUseLocalUpload()
+    : true;
   
   const remainingSlots = Math.max(0, maxCount - (currentCount || 0));
   
