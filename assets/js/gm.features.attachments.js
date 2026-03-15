@@ -30,39 +30,19 @@ function isAttachmentFileAllowed(file) {
 
 /**
  * Check if user can use local file uploads.
- *
- * Source of truth: GM_SUBSCRIPTION.features.attachments_per_entry (from WP tier settings).
- * WP admin has NO separate enable_local_upload key — attachments_per_entry > 0
- * means file uploads are allowed for this tier.
+ * Subscription gating removed — always allowed.
  */
 function canUseLocalUpload() {
-    // 1. Subscription data from loadData() — most accurate
-    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
-        return gmSub.attachmentsPerEntry() > 0;
-    }
-    // 2. Legacy GM_USER capabilities fallback
-    if (typeof GM_USER !== 'undefined' && GM_USER.capabilities && typeof GM_USER.capabilities.can_use_local !== 'undefined') {
-        return GM_USER.capabilities.can_use_local === true;
-    }
-    // 3. Single-user / no subscription data — allow by default
     return true;
 }
 
 /**
  * Check if user can use Google Drive attachments.
- *
- * WP admin has no separate enable_gdrive key. Google Drive is allowed whenever
- * attachments_per_entry > 0 (same gate as local upload). The global
- * GOOGLE_DRIVE_ENABLED config flag (config.php) must also be true.
+ * Only gated by whether Google Drive is enabled in config.
  */
 function canUseGoogleDrive() {
-    // Google Drive must be enabled at the app/config level
     if (typeof GM_CONFIG === 'undefined' || !GM_CONFIG.googleDriveEnabled) {
         return false;
-    }
-    // Subscription: allowed whenever attachments are allowed for this tier
-    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
-        return gmSub.attachmentsPerEntry() > 0;
     }
     return true;
 }
@@ -75,15 +55,10 @@ function getAttachmentLimits() {
     let maxCount  = 2;
     let maxSizeMB = 5;
 
-    // 1. Subscription tier limits (most accurate, set by loadData)
-    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
-        const perEntry = gmSub.attachmentsPerEntry();
-        if (perEntry >= 0) maxCount = perEntry;
-    } else if (typeof GM_CONFIG !== 'undefined') {
-        // 2. GM_CONFIG constants injected by index.php from config.php
-        maxCount = GM_CONFIG.maxAttachments || 2;
+    // Read limit from GM_CONFIG (set by config.php ENTRY_MAX_ATTACHMENTS) — no tier gating
+    if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachments) {
+        maxCount = GM_CONFIG.maxAttachments;
     } else if (typeof ATTACH_MAX_COUNT !== 'undefined') {
-        // 3. Legacy ATTACH_MAX_COUNT constant
         maxCount = ATTACH_MAX_COUNT;
     }
 
