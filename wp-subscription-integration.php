@@ -156,19 +156,46 @@ if (!function_exists('gm_get_user_limits')) {
     /**
      * Get the limits for a specific user (resolves their tier first).
      *
+     * Resolution order:
+     *  1. tmw_get_user_limits() via WP theme — reads live tmw_tier_values WP option
+     *  2. gm_get_tier_limits() via adapter chain fallback
+     *
+     * Important: attachments_per_entry comes directly from WP admin tier settings.
+     * If WP returns 0 but ENTRY_MAX_ATTACHMENTS constant is set in config.php,
+     * we use the constant as a floor so uploads are never accidentally blocked by
+     * a WP connectivity failure.
+     *
      * @param string|null $userId WordPress user ID (null = current user)
      * @return array Limits array
      */
     function gm_get_user_limits(?string $userId = null): array {
+        $limits = [];
+
         if (function_exists('gm_load_wordpress') && gm_load_wordpress() && function_exists('tmw_get_user_limits')) {
-            $limits = tmw_get_user_limits($userId ? (int) $userId : 0);
-            if (!empty($limits) && is_array($limits)) {
-                return $limits;
+            $wpLimits = tmw_get_user_limits($userId ? (int) $userId : 0);
+            if (!empty($wpLimits) && is_array($wpLimits)) {
+                $limits = $wpLimits;
             }
         }
 
-        $tier = gm_get_user_subscription_tier($userId);
-        return gm_get_tier_limits($tier);
+        if (empty($limits)) {
+            $tier   = gm_get_user_subscription_tier($userId);
+            $limits = gm_get_tier_limits($tier);
+        }
+
+        // Safety net: if WP returned attachments_per_entry=0 but config.php defines
+        // ENTRY_MAX_ATTACHMENTS > 0, use the constant as the floor. This prevents
+        // a WP load failure from silently blocking all file uploads.
+        if (
+            isset($limits['attachments_per_entry']) &&
+            (int) $limits['attachments_per_entry'] <= 0 &&
+            defined('ENTRY_MAX_ATTACHMENTS') &&
+            (int) ENTRY_MAX_ATTACHMENTS > 0
+        ) {
+            $limits['attachments_per_entry'] = (int) ENTRY_MAX_ATTACHMENTS;
+        }
+
+        return $limits;
     }
 }
 
@@ -420,8 +447,17 @@ if (!function_exists('gm_get_subscription_api_response')) {
      */
     function gm_get_subscription_api_response(PDO $pdo, string $userId): array {
         $tier      = gm_get_user_subscription_tier($userId);
-        $limits    = gm_get_tier_limits($tier);
+        // Use gm_get_user_limits (not gm_get_tier_limits) so the ENTRY_MAX_ATTACHMENTS
+        // safety net is applied — this ensures the frontend gets the correct
+        // attachments_per_entry value even when WP load fails.
+        $limits    = gm_get_user_limits($userId);
         $remaining = gm_get_remaining_counts($pdo, $userId);
+
+        // Apply the same safety net to $remaining so features block is consistent
+        if ((int) ($remaining['attachments_per_entry'] ?? 0) <= 0 &&
+            defined('ENTRY_MAX_ATTACHMENTS') && (int) ENTRY_MAX_ATTACHMENTS > 0) {
+            $remaining['attachments_per_entry'] = (int) ENTRY_MAX_ATTACHMENTS;
+        }
 
         $tierName = (function_exists('gm_load_wordpress') && gm_load_wordpress() && function_exists('tmw_get_tier_name'))
             ? tmw_get_tier_name($tier)

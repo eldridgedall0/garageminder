@@ -88,8 +88,16 @@ try {
     if ($userId !== 'default' && function_exists('gm_get_user_limits')) {
         $limits         = gm_get_user_limits($userId);
         $maxAttachments = (int) ($limits['attachments_per_entry'] ?? 0);
+
+        // Safety net: if WP integration returned 0 but the config.php constant
+        // allows attachments, use the constant as the floor. This handles the
+        // case where gm_load_wordpress() failed silently and returned fallback
+        // limits with attachments_per_entry=0 instead of the real WP value.
+        if ($maxAttachments <= 0 && defined('ENTRY_MAX_ATTACHMENTS') && (int) ENTRY_MAX_ATTACHMENTS > 0) {
+            $maxAttachments = (int) ENTRY_MAX_ATTACHMENTS;
+        }
     } else {
-        // Single-user mode or WP unavailable — fall back to config.php constant
+        // Single-user mode or gm_get_user_limits not available
         $maxAttachments = defined('ENTRY_MAX_ATTACHMENTS') ? (int) ENTRY_MAX_ATTACHMENTS : 2;
     }
 
