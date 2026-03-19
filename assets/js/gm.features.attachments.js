@@ -29,20 +29,27 @@ function isAttachmentFileAllowed(file) {
 }
 
 /**
- * Check if user can use local file uploads.
- * Subscription gating removed — always allowed.
+ * Check if user can upload local files.
+ * Reads attachments_per_entry from WP tier settings via gmSub.
+ * Falls back to true when GM_SUBSCRIPTION is not available (single-user mode).
  */
 function canUseLocalUpload() {
-    return true;
+    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
+        return gmSub.attachmentsPerEntry() > 0;
+    }
+    return true; // single-user / no subscription data → allow
 }
 
 /**
- * Check if user can use Google Drive attachments.
- * Only gated by whether Google Drive is enabled in config.
+ * Check if user can use Google Drive.
+ * Same tier gate as local upload, plus app-level config flag.
  */
 function canUseGoogleDrive() {
     if (typeof GM_CONFIG === 'undefined' || !GM_CONFIG.googleDriveEnabled) {
         return false;
+    }
+    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
+        return gmSub.attachmentsPerEntry() > 0;
     }
     return true;
 }
@@ -55,8 +62,10 @@ function getAttachmentLimits() {
     let maxCount  = 2;
     let maxSizeMB = 5;
 
-    // Read limit from GM_CONFIG (set by config.php ENTRY_MAX_ATTACHMENTS) — no tier gating
-    if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachments) {
+    // Prefer WP tier limit (gmSub), fall back to GM_CONFIG constant
+    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
+        maxCount = gmSub.attachmentsPerEntry(); // 0 = not allowed on this tier
+    } else if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachments) {
         maxCount = GM_CONFIG.maxAttachments;
     } else if (typeof ATTACH_MAX_COUNT !== 'undefined') {
         maxCount = ATTACH_MAX_COUNT;

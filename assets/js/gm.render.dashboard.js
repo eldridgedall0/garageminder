@@ -1802,9 +1802,13 @@ function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container)
     maxCount = 2; // Default
   }
   
-  // Upload allowed for all users — no subscription gating
-  const canDrive = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled === true);
-  const canLocal = true;
+  // Tier-aware: reads attachments_per_entry from WP tier settings via gmSub
+  const canDrive = (typeof canUseGoogleDrive === 'function')
+    ? canUseGoogleDrive()
+    : (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.googleDriveEnabled === true);
+  const canLocal = (typeof canUseLocalUpload === 'function')
+    ? canUseLocalUpload()
+    : true;
   
   const remainingSlots = Math.max(0, maxCount - (currentCount || 0));
   

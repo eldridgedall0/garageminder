@@ -243,10 +243,22 @@ async function saveEntryFromAccordion($card) {
     console.warn('[Entry Edit] saveData error (still attempting upload):', err);
   }
 
-  // Upload files — no subscription gating
+  // Upload files — gated by WP tier attachments_per_entry setting
   if (hasFiles && typeof uploadEntryFiles === 'function') {
-    console.log('[Entry Edit] Starting upload for entry:', entry.id);
-    await uploadEntryFiles(entry.id, filesToUpload);
+    if (typeof canUseLocalUpload === 'function' && !canUseLocalUpload()) {
+      if (typeof showUpgradeModal === 'function') {
+        showUpgradeModal({
+          title: 'Attachments Require an Upgrade',
+          message: `File attachments are not available on the ${typeof gmSub !== 'undefined' ? gmSub.tierName() : 'current'} plan.`,
+          feature: 'attachments',
+        });
+      } else {
+        showToast('File attachments are not available on your current plan.');
+      }
+    } else {
+      console.log('[Entry Edit] Starting upload for entry:', entry.id);
+      await uploadEntryFiles(entry.id, filesToUpload);
+    }
   }
   
   // Reload data from server to get updated attachments
