@@ -111,40 +111,25 @@ async function addOrUpdateEntryFromForm() {
   resetRemindersForEntry(entry);
   
   try {
-    // Save data first
     await saveData();
-    
-    // FIXED: Handle local file uploads AFTER entry is saved (same as gm.features.attachments.js)
-    if (hasLocalFiles) {
-      if (typeof canUseLocalUpload === 'function' && canUseLocalUpload()) {
-        console.log('[Entry] Starting local file upload for entry:', entry.id);
-        if (typeof uploadEntryFiles === 'function') {
-          await uploadEntryFiles(entry.id, filesToUpload);
-        } else {
-          console.error('[Entry] uploadEntryFiles function not found');
-          showToast("File upload function not available");
-        }
-      } else if (typeof canUseLocalUpload === 'function' && !canUseLocalUpload()) {
-        console.log('[Entry] Local upload not allowed for user');
-        showToast("Local uploads require a paid subscription. Use Google Drive instead.");
-      } else {
-        // canUseLocalUpload doesn't exist, try upload anyway (single-user mode)
-        console.log('[Entry] canUseLocalUpload not found, attempting upload');
-        if (typeof uploadEntryFiles === 'function') {
-          await uploadEntryFiles(entry.id, filesToUpload);
-        }
-      }
-    }
-    
-    // Handle pending Google Drive files after entry is saved
-    if (hasGDriveFiles && typeof window.attachGoogleDriveFiles === 'function') {
-      console.log('[Entry] Attaching Google Drive files to entry:', entry.id);
-      await window.attachGoogleDriveFiles(pendingGDriveFiles, entry.id);
-    }
-    
   } catch (err) {
-    console.error("Error saving entry:", err);
-    showToast("Error saving entry");
+    if (err && (err.message === 'Authentication required' || err.message === 'offline_edit_blocked')) {
+      showToast("Error saving entry");
+      return;
+    }
+    console.warn('[Entry] saveData error:', err);
+  }
+
+  // Upload local files — ATTACH_MAX_COUNT (from config.php ENTRY_MAX_ATTACHMENTS,
+  // resolved per-user from WP tier settings) gates the count inside uploadEntryFiles.
+  if (hasLocalFiles && typeof uploadEntryFiles === 'function') {
+    await uploadEntryFiles(entry.id, filesToUpload);
+  }
+
+  // Handle pending Google Drive files
+  if (hasGDriveFiles && typeof window.attachGoogleDriveFiles === 'function') {
+    console.log('[Entry] Attaching Google Drive files to entry:', entry.id);
+    await window.attachGoogleDriveFiles(pendingGDriveFiles, entry.id);
   }
   
   // Clear file input
