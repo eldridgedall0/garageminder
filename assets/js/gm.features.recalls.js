@@ -57,6 +57,55 @@ function updateSafetyStatus() {
 }
 
 /**
+ * Call NHTSA recalls API directly from the browser.
+ * api.nhtsa.gov blocks server-side requests from shared hosting IPs
+ * but allows browser requests (no CORS restrictions on this endpoint).
+ *
+ * @param {string} vin 17-character VIN
+ * @returns {Promise<{count, hasRecalls, recalls, nhtsaUrl, checkedAt}>}
+ */
+async function fetchRecallsFromNHTSA(vin) {
+  const nhtsaUrl = 'https://api.nhtsa.gov/recalls/recallsByVin?vin=' + encodeURIComponent(vin);
+  
+  const response = await fetch(nhtsaUrl);
+  
+  if (!response.ok) {
+    throw new Error('NHTSA API returned status ' + response.status + '. Please try again later or check manually at nhtsa.gov/recalls.');
+  }
+  
+  const data = await response.json();
+  
+  // Validate response shape: { Count: N, Message: "...", results: [...] }
+  if (!('Count' in data) && !('results' in data)) {
+    throw new Error('Unexpected response from NHTSA API. Please try again later.');
+  }
+  
+  const rawRecalls = Array.isArray(data.results) ? data.results : [];
+  
+  // Normalise field names (NHTSA uses PascalCase)
+  const recalls = rawRecalls.map(r => ({
+    id:           r.NHTSACampaignNumber ?? r.nhtsaCampaignNumber ?? r.CampaignNumber ?? 'N/A',
+    component:    r.Component    ?? r.component    ?? 'Unknown Component',
+    summary:      r.Summary      ?? r.summary      ?? 'No summary available',
+    consequence:  r.Consequence  ?? r.consequence  ?? '',
+    remedy:       r.Remedy       ?? r.remedy       ?? '',
+    date:         r.ReportReceivedDate ?? r.reportReceivedDate ?? '',
+    manufacturer: r.Manufacturer ?? r.manufacturer ?? '',
+    url:          'https://www.nhtsa.gov/recalls?vin=' + encodeURIComponent(vin),
+  }));
+  
+  return {
+    success:    true,
+    vin:        vin,
+    count:      recalls.length,
+    hasRecalls: recalls.length > 0,
+    recalls:    recalls,
+    checkedAt:  new Date().toISOString().replace('T', ' ').substring(0, 19),
+    nhtsaUrl:   'https://www.nhtsa.gov/recalls?vin=' + encodeURIComponent(vin),
+  };
+}
+
+/**
  * Check recalls for current vehicle
  * @param {boolean} showModal - Whether to show the modal after checking (default: true)
  */
@@ -76,12 +125,7 @@ async function checkVehicleRecalls(showModal = true) {
   try {
     $btn.text('Checking...').prop('disabled', true);
     
-    const response = await fetch('check-recalls.php?vin=' + encodeURIComponent(vehicle.vin));
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.message || 'Failed to check recalls');
-    }
+    const result = await fetchRecallsFromNHTSA(vehicle.vin);
     
     // Cache the result
     setVehicleRecallCache(vehicle.id, result);
