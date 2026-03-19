@@ -234,32 +234,19 @@ async function saveEntryFromAccordion($card) {
   resetRemindersForEntry(entry);
   
   try {
-    // Save data first
     await saveData();
-    
-    // FIXED: Handle file uploads AFTER entry is saved
-    if (hasFiles) {
-      if (typeof canUseLocalUpload === 'function' && canUseLocalUpload()) {
-        console.log('[Entry Edit] Starting upload for entry:', entry.id);
-        if (typeof uploadEntryFiles === 'function') {
-          await uploadEntryFiles(entry.id, filesToUpload);
-        } else {
-          console.error('[Entry Edit] uploadEntryFiles function not found');
-        }
-      } else if (typeof canUseLocalUpload === 'function' && !canUseLocalUpload()) {
-        console.log('[Entry Edit] Local upload not allowed for user');
-        showToast("Local uploads require a paid subscription. Use Google Drive instead.");
-      } else {
-        // canUseLocalUpload doesn't exist, try upload anyway
-        console.log('[Entry Edit] canUseLocalUpload not found, attempting upload');
-        if (typeof uploadEntryFiles === 'function') {
-          await uploadEntryFiles(entry.id, filesToUpload);
-        }
-      }
-    }
   } catch (err) {
-    console.error("Error saving entry:", err);
-    showToast("Error saving entry");
+    if (err && (err.message === 'Authentication required' || err.message === 'offline_edit_blocked')) {
+      showToast("Error saving entry");
+      return;
+    }
+    console.warn('[Entry Edit] saveData error (still attempting upload):', err);
+  }
+
+  // Upload files — no subscription gating
+  if (hasFiles && typeof uploadEntryFiles === 'function') {
+    console.log('[Entry Edit] Starting upload for entry:', entry.id);
+    await uploadEntryFiles(entry.id, filesToUpload);
   }
   
   // Reload data from server to get updated attachments
