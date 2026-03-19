@@ -27,6 +27,42 @@
 (function () {
   'use strict';
 
+  // ─── Dev flag: OFFLINE_STORAGE_ENABLED ────────────────────────────────────
+  // Controlled by define('OFFLINE_STORAGE_ENABLED', true/false) in config.php,
+  // exposed to JS via GM_CONFIG.offlineStorageEnabled in index.php.
+  // When false: all public API methods are no-ops — IDB is never touched,
+  // no snapshot is saved, no queue is maintained, no banner is shown.
+  // The service worker still caches static files (that's the SW's own concern);
+  // this flag only controls the data-layer (IDB snapshot + sync queue).
+  if (
+    typeof GM_CONFIG !== 'undefined' &&
+    GM_CONFIG.offlineStorageEnabled === false
+  ) {
+    var _noop = function() { return Promise.resolve(null); };
+    window.gmOffline = {
+      isOffline:              function() { return false; },
+      saveSnapshot:           _noop,
+      loadSnapshot:           _noop,
+      getDataVersion:         _noop,
+      updateSnapshotVersion:  _noop,
+      queuePendingAdd:        _noop,
+      hasPendingQueue:        function() { return Promise.resolve(false); },
+      getPendingQueue:        function() { return Promise.resolve([]); },
+      getPendingCount:        function() { return Promise.resolve(0); },
+      clearQueue:             _noop,
+      syncPendingQueue:       _noop,
+      verifyCacheHealth:      function() {},
+      notifyOfflineReady:     function() {},
+      showBanner:             function() {},
+      hideBanner:             function() {},
+      notifyUpdateAvailable:  function() {},
+      probeConnectivity:      function() { return Promise.resolve(true); },
+      onSaveSuccess:          _noop,
+    };
+    console.info('[gmOffline] Offline storage disabled (OFFLINE_STORAGE_ENABLED=false)');
+    return; // Exit IIFE — nothing else in this module runs
+  }
+
   // ─── Constants ────────────────────────────────────────────────────────────
 
   const IDB_NAME    = 'gm_offline';

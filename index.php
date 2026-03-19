@@ -787,6 +787,9 @@ ob_end_clean();
 // This is the single signal that triggers cache invalidation on deploy.
 // To push an update to all users: bump APP_VERSION in config.php.
 (function() {
+  // Skip all SW communication when offline storage is disabled (dev mode)
+  if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.offlineStorageEnabled === false) return;
+
   var swVersion = (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.appVersion)
     ? GM_CONFIG.appVersion : '2.5.0';
 

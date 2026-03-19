@@ -38,8 +38,25 @@
       return;
     }
 
-    // Register service worker
-    registerServiceWorker();
+    // Register service worker (skipped when OFFLINE_STORAGE_ENABLED=false in config.php)
+    if (typeof GM_CONFIG === 'undefined' || GM_CONFIG.offlineStorageEnabled !== false) {
+      registerServiceWorker();
+    } else {
+      // Dev mode: unregister any existing SW so no stale caches survive a reload
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          regs.forEach(function(reg) { reg.unregister(); });
+          if (regs.length) console.info('[PWA] SW unregistered (OFFLINE_STORAGE_ENABLED=false)');
+        });
+        // Also wipe any leftover caches from previous sessions
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            names.forEach(function(name) { caches.delete(name); });
+            if (names.length) console.info('[PWA] Caches cleared (OFFLINE_STORAGE_ENABLED=false)');
+          });
+        }
+      }
+    }
 
     // Listen for install prompt (Chrome, Edge, Samsung Internet)
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
