@@ -75,46 +75,19 @@ try {
         }
     }
     
-    // Check current attachment count
+    // Check current attachment count against config.php constant (no tier gating)
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM `entry_attachments` WHERE `entry_id` = :id");
     $stmt->execute([':id' => $entryId]);
     $currentCount = (int) $stmt->fetchColumn();
 
-    // Resolve per-entry attachment limit from WP tier settings.
-    // gm_get_user_limits() reads 'attachments_per_entry' from the tmw_tier_values WP option.
-    // Falls back to ENTRY_MAX_ATTACHMENTS constant when WP is unavailable.
-    if ($userId !== 'default' && function_exists('gm_get_user_limits')) {
-        $limits         = gm_get_user_limits($userId);
-        $maxAttachments = (int) ($limits['attachments_per_entry'] ?? 0);
-        // Floor: never go below the config.php constant so a WP load failure
-        // never silently blocks all uploads.
-        if ($maxAttachments <= 0 && defined('ENTRY_MAX_ATTACHMENTS') && ENTRY_MAX_ATTACHMENTS > 0) {
-            $maxAttachments = (int) ENTRY_MAX_ATTACHMENTS;
-        }
-    } else {
-        $maxAttachments = defined('ENTRY_MAX_ATTACHMENTS') ? (int) ENTRY_MAX_ATTACHMENTS : 2;
-    }
-
+    $maxAttachments = defined('ENTRY_MAX_ATTACHMENTS') ? (int) ENTRY_MAX_ATTACHMENTS : 2;
     $remainingSlots = max(0, $maxAttachments - $currentCount);
 
-    if ($maxAttachments <= 0) {
-        http_response_code(403);
-        echo json_encode([
-            'success'     => false,
-            'error'       => 'attachment_limit_reached',
-            'message'     => 'File attachments are not available on your current plan.',
-            'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('attachments') : '',
-        ]);
-        exit;
-    }
-
     if ($remainingSlots <= 0) {
-        http_response_code(403);
+        http_response_code(400);
         echo json_encode([
-            'success'     => false,
-            'error'       => 'attachment_limit_reached',
-            'message'     => "Maximum {$maxAttachments} attachment(s) per entry on your current plan.",
-            'upgrade_url' => function_exists('gm_get_upgrade_url') ? gm_get_upgrade_url('attachments') : '',
+            'success' => false,
+            'message' => "Maximum attachments ({$maxAttachments}) already reached for this entry.",
         ]);
         exit;
     }
