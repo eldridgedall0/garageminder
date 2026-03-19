@@ -109,7 +109,7 @@ try {
             'manufacturer' => $recall['Manufacturer']
                            ?? $recall['manufacturer']
                            ?? '',
-            'url'          => 'https://www.nhtsa.gov/recalls?vin=' . urlencode($vin),
+            'url'          => 'https://www.nhtsa.gov/recalls?vymm=' . urlencode($vin),
         ];
     }
 
