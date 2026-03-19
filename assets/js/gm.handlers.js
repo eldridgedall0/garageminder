@@ -74,24 +74,7 @@ $(function() {
   
   // Full backup - Download JSON with data + embedded attachments
   $("#backup-export-full").on("click", async function() {
-    // ── Subscription gate — full backup requires 'advanced' export level ──
-    // WP admin export_level values: 'none' | 'basic' | 'advanced'
-    if (typeof gmSub !== 'undefined' && window.GM_SUBSCRIPTION) {
-      const sub = window.GM_SUBSCRIPTION;
-      const canBulk = sub.features && (
-        sub.features.export_bulk === true ||
-        gmSub.exportLevel() === 'advanced' ||
-        gmSub.exportLevel() === 'bulk'
-      );
-      if (!canBulk) {
-        showUpgradeModal({
-          title: 'Full Backup Requires a Higher Plan',
-          message: `Full data backup with attachments is not available on the ${gmSub.tierName()} plan. Upgrade to unlock this feature.`,
-          feature: 'export_bulk',
-        });
-        return;
-      }
-    }
+    // No tier restriction on full backup
 
     const $btn = $(this);
     const originalText = $btn.html();
