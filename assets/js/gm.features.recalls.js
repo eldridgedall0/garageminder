@@ -62,7 +62,7 @@ function checkVehicleRecalls(showModal = true) {
     return;
   }
 
-  const nhtsaUrl = 'https://www.nhtsa.gov/recalls?vin=' + encodeURIComponent(vehicle.vin.trim());
+  const nhtsaUrl = 'https://www.nhtsa.gov/recalls?vymm=' + encodeURIComponent(vehicle.vin.trim());
   window.open(nhtsaUrl, '_blank', 'noopener,noreferrer');
 }
 
