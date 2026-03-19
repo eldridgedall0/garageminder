@@ -1867,19 +1867,6 @@ function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container)
       });
     
     $uploadArea.append($localBtn, $localInput);
-  } else if (canDrive) {
-    // Show upgrade hint for free users who can use Google Drive
-    const $upgradeHint = $('<div>')
-      .addClass('attachment-upgrade-hint text-muted')
-      .html('<i class="bi bi-lock"></i> <a href="javascript:void(0)" class="upgrade-link">Upgrade</a> to upload files directly');
-    
-    $upgradeHint.find('.upgrade-link').on('click', function() {
-      if (typeof GM_AUTH_URLS !== 'undefined' && GM_AUTH_URLS.subscribe_url) {
-        window.location.href = GM_AUTH_URLS.subscribe_url;
-      }
-    });
-    
-    $uploadArea.append($upgradeHint);
   }
   
   // If neither Google Drive nor Local is available, show a basic file input

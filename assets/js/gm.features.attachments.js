@@ -156,26 +156,27 @@ async function addOrUpdateEntryFromForm() {
   try {
     // IMPORTANT: Wait for save to complete before uploading files
     await saveData();
-    
-    // Handle local file uploads after entry is saved
-    if (hasFiles) {
-      if (canUseLocalUpload()) {
-        console.log('[Attachments] Starting upload for entry:', payload.id);
-        await uploadEntryFiles(payload.id, filesToUpload);  // Pass the array, not fileInput.files
-      } else {
-        console.log('[Attachments] Local upload not allowed for user');
-        showToast("Local uploads require a paid subscription. Use Google Drive instead.");
-      }
-    }
-    
-    // Handle pending Google Drive files after entry is saved
-    if (hasGDriveFiles && typeof window.attachGoogleDriveFiles === 'function') {
-      console.log('Attaching pending Google Drive files to entry:', payload.id);
-      await window.attachGoogleDriveFiles(pendingGDriveFiles, payload.id);
-    }
   } catch (err) {
-    console.error("Error saving entry:", err);
-    showToast("Error saving entry");
+    // If save failed for a reason other than auth, log but still attempt upload
+    // so attachment files aren't silently lost on plan-limit or conflict errors.
+    if (err && (err.message === 'Authentication required' || err.message === 'offline_edit_blocked')) {
+      console.error("Error saving entry:", err);
+      showToast("Error saving entry");
+      return;
+    }
+    console.warn("[Attachments] saveData error (will still attempt upload):", err);
+  }
+
+  // Upload files regardless of saveData result — the entry record exists in data
+  if (hasFiles) {
+    console.log('[Attachments] Starting upload for entry:', payload.id);
+    await uploadEntryFiles(payload.id, filesToUpload);
+  }
+
+  // Handle pending Google Drive files
+  if (hasGDriveFiles && typeof window.attachGoogleDriveFiles === 'function') {
+    console.log('Attaching pending Google Drive files to entry:', payload.id);
+    await window.attachGoogleDriveFiles(pendingGDriveFiles, payload.id);
   }
 
   $("#entry-files").val("");
@@ -209,11 +210,7 @@ async function uploadEntryFiles(entryId, fileList) {
     return;
   }
 
-  // Check if user can upload locally
-  if (!canUseLocalUpload()) {
-    showToast("Local uploads require a paid subscription");
-    return;
-  }
+  // No subscription gating — all authenticated users can upload
 
   const { maxCount, maxSizeMB, maxBytes } = getAttachmentLimits();
   
@@ -336,20 +333,18 @@ async function saveEntryFromAccordion($card) {
   try {
     // IMPORTANT: Wait for save to complete before uploading files
     await saveData();
-    
-    // Handle new local file uploads after entry is saved
-    if (hasFiles) {
-      if (canUseLocalUpload()) {
-        console.log('[Attachments Edit] Starting upload for entry:', entry.id);
-        await uploadEntryFiles(entry.id, filesToUpload);  // Pass the array, not fileInput.files
-      } else {
-        console.log('[Attachments Edit] Local upload not allowed for user');
-        showToast("Local uploads require a paid subscription. Use Google Drive instead.");
-      }
-    }
   } catch (err) {
-    console.error("Error saving entry:", err);
-    showToast("Error saving entry");
+    if (err && (err.message === 'Authentication required' || err.message === 'offline_edit_blocked')) {
+      console.error("Error saving entry:", err);
+      showToast("Error saving entry");
+      return;
+    }
+    console.warn("[Attachments Edit] saveData error (will still attempt upload):", err);
+  }
+
+  if (hasFiles) {
+    console.log('[Attachments Edit] Starting upload for entry:', entry.id);
+    await uploadEntryFiles(entry.id, filesToUpload);
   }
 
   // Reload data from server
@@ -697,19 +692,6 @@ function renderAttachmentUploadArea(entryId, currentCount, maxCount, $container)
       });
     
     $uploadArea.append($localBtn, $localInput);
-  } else if (canDrive) {
-    // Show upgrade hint for free users
-    const $upgradeHint = $('<div>')
-      .addClass('attachment-upgrade-hint text-muted')
-      .html('<i class="bi bi-lock"></i> <a href="javascript:void(0)" class="upgrade-link">Upgrade</a> to upload files directly');
-    
-    $upgradeHint.find('.upgrade-link').on('click', function() {
-      if (typeof GM_AUTH_URLS !== 'undefined' && GM_AUTH_URLS.subscribe_url) {
-        window.location.href = GM_AUTH_URLS.subscribe_url;
-      }
-    });
-    
-    $uploadArea.append($upgradeHint);
   }
   
   // Show allowed file types
