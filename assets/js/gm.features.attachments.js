@@ -33,6 +33,15 @@ function isAttachmentFileAllowed(file) {
  * Subscription gating removed — always allowed.
  */
 function canUseLocalUpload() {
+    // ATTACH_MAX_COUNT is set by index.php from the ENTRY_MAX_ATTACHMENTS PHP constant.
+    // config.php resolves that constant from the user's WP tier (attachments_per_entry).
+    // 0 means this tier does not allow attachments — no other files need changing.
+    if (typeof ATTACH_MAX_COUNT !== 'undefined' && ATTACH_MAX_COUNT <= 0) {
+        return false;
+    }
+    if (typeof GM_CONFIG !== 'undefined' && GM_CONFIG.maxAttachments !== undefined && GM_CONFIG.maxAttachments <= 0) {
+        return false;
+    }
     return true;
 }
 
