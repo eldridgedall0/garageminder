@@ -3,9 +3,8 @@
  * VIN Recall Check using NHTSA API
  * Checks for open safety recalls by VIN
  *
- * NHTSA API Documentation:
- *   VIN recall lookup: https://api.nhtsa.gov/recalls/recallsByVin?vin=VIN
- *   VIN decode:        https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/VIN?format=json
+ * NHTSA VIN recall endpoint: https://api.nhtsa.gov/recalls/recallsByVin?vin=VIN
+ * Response shape: { "Count": N, "Message": "...", "results": [...] }
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -46,74 +45,44 @@ try {
     }
 
     // =========================================================
-    // Step 2: Recall lookup — try methods in order of accuracy
+    // Step 2: VIN-specific recall lookup ONLY
+    //
+    // We intentionally do NOT fall back to make/model/year lookup.
+    // That endpoint returns every recall ever issued for a model
+    // regardless of whether it applies to this specific vehicle,
+    // producing false positives (e.g. 12 results instead of 1).
     // =========================================================
-    $recalls    = [];
-    $apiWorked  = false;
-
-    // ------------------------------------------------------------------
-    // Method 1: recallsByVin  (VIN-specific — most accurate)
-    // Correct endpoint: /recalls/recallsByVin?vin=VIN
-    // ------------------------------------------------------------------
+    $httpStatus   = 0;
     $vinRecallUrl = 'https://api.nhtsa.gov/recalls/recallsByVin?vin=' . urlencode($vin);
-    $response = makeApiRequest($vinRecallUrl);
+    $rawResponse  = makeApiRequest($vinRecallUrl, $httpStatus);
 
-    if ($response !== false) {
-        $data = json_decode($response, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            // Response shape: { "Count": N, "Message": "...", "results": [...] }
-            if (isset($data['results']) && is_array($data['results'])) {
-                $recalls   = $data['results'];
-                $apiWorked = true;
-                error_log("NHTSA recalls/recallsByVin returned " . count($recalls) . " results for $vin");
-            } elseif (isset($data['Count']) && $data['Count'] === 0) {
-                // Explicit zero — API worked, no recalls
-                $recalls   = [];
-                $apiWorked = true;
-                error_log("NHTSA recalls/recallsByVin returned 0 results for $vin");
-            }
-        }
-    }
-
-    // ------------------------------------------------------------------
-    // Method 2: recallsByVehicle with make/model/year (broader — may
-    // include recalls not specific to this VIN's production window, but
-    // better than nothing when Method 1 fails or returns nothing and
-    // we suspect there should be recalls)
-    // ------------------------------------------------------------------
-    if (!$apiWorked && $vehicleInfo
-        && !empty($vehicleInfo['make'])
-        && !empty($vehicleInfo['model'])
-        && !empty($vehicleInfo['year'])
-    ) {
-        $makeModelUrl = 'https://api.nhtsa.gov/recalls/recallsByVehicle?' . http_build_query([
-            'make'       => $vehicleInfo['make'],
-            'model'      => $vehicleInfo['model'],
-            'modelYear'  => $vehicleInfo['year'],
-        ]);
-
-        $response = makeApiRequest($makeModelUrl);
-
-        if ($response !== false) {
-            $data = json_decode($response, true);
-            if (json_last_error() === JSON_ERROR_NONE && isset($data['results']) && is_array($data['results'])) {
-                $recalls   = $data['results'];
-                $apiWorked = true;
-                error_log("NHTSA recallsByVehicle (make/model/year) returned " . count($recalls) . " results for $vin");
-            }
-        }
-    }
-
-    if (!$apiWorked) {
+    if ($rawResponse === false) {
         throw new Exception(
-            'Unable to connect to NHTSA recall database. Please try again later or check the VIN manually at nhtsa.gov/recalls'
+            'Could not reach the NHTSA recall database (HTTP ' . $httpStatus . '). ' .
+            'Please try again later or check manually at nhtsa.gov/recalls.'
         );
     }
 
+    $data = json_decode($rawResponse, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('Received an invalid response from the NHTSA API. Please try again later.');
+    }
+
+    // The API returns { "Count": 0, "Message": "...", "results": [] } for no recalls.
+    // It returns { "Count": N, "Message": "...", "results": [...] } when recalls exist.
+    // Both are valid success responses — "no recalls" is not an error.
+    if (!array_key_exists('Count', $data) && !array_key_exists('results', $data)) {
+        throw new Exception(
+            'Unexpected response from NHTSA API. Please try again later or check manually at nhtsa.gov/recalls.'
+        );
+    }
+
+    $recalls     = isset($data['results']) && is_array($data['results']) ? $data['results'] : [];
     $recallCount = count($recalls);
 
     // =========================================================
-    // Step 3: Normalise recall records (API field names vary)
+    // Step 3: Normalise recall records
     // =========================================================
     $formattedRecalls = [];
     foreach ($recalls as $recall) {
@@ -127,7 +96,6 @@ try {
                            ?? 'Unknown Component',
             'summary'      => $recall['Summary']
                            ?? $recall['summary']
-                           ?? $recall['Consequence']
                            ?? 'No summary available',
             'consequence'  => $recall['Consequence']
                            ?? $recall['consequence']
@@ -175,10 +143,13 @@ try {
 /**
  * Make an API request with proper error handling.
  *
- * @param  string $url URL to request
- * @return string|false Response body or false on failure
+ * @param  string   $url        URL to request
+ * @param  int|null &$httpStatus HTTP status code (passed by reference)
+ * @return string|false Response body, or false on failure
  */
-function makeApiRequest(string $url) {
+function makeApiRequest(string $url, ?int &$httpStatus = null) {
+    $httpStatus = 0;
+
     if (function_exists('curl_init')) {
         $ch = curl_init();
         curl_setopt_array($ch, [
@@ -195,29 +166,21 @@ function makeApiRequest(string $url) {
             ],
         ]);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
+        $response   = curl_exec($ch);
+        $httpStatus = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError  = curl_error($ch);
         curl_close($ch);
 
-        error_log("NHTSA API Request: $url — HTTP $httpCode");
+        error_log("NHTSA API Request: $url — HTTP $httpStatus");
 
         if ($response === false) {
             error_log("CURL Error: $curlError");
             return false;
         }
 
-        if ($httpCode === 200) {
+        // 200 = success; 404 with a JSON body = valid "not found" from NHTSA
+        if ($httpStatus === 200 || $httpStatus === 404) {
             return $response;
-        }
-
-        // 400/404 can carry a parseable JSON body — attempt to use it
-        if ($httpCode === 400 || $httpCode === 404) {
-            $data = json_decode($response, true);
-            if ($data !== null) {
-                return $response;
-            }
-            return false;
         }
 
         return false;
@@ -238,5 +201,12 @@ function makeApiRequest(string $url) {
     ]);
 
     $response = @file_get_contents($url, false, $context);
+
+    if ($response !== false && isset($http_response_header)) {
+        if (preg_match('/HTTP\/\S+\s+(\d+)/', $http_response_header[0] ?? '', $m)) {
+            $httpStatus = (int) $m[1];
+        }
+    }
+
     return $response !== false ? $response : false;
 }
