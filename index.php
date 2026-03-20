@@ -368,20 +368,10 @@ ob_end_clean();
             </div>
           </div>
 
-          <div class="settings-help" style="margin-bottom:6px;">
-            Each reminder can use mileage and/or time intervals. Status shows
-            <strong>"due in X <span class="unit-label">mi</span> or Y days, whichever comes first."</strong>
-          </div>
-
           <div class="reminders-list" id="reminders-list"></div>
 
           <div class="settings-section" style="margin-top:10px;">
             <h3>Add new reminder</h3>
-            <div class="settings-help">
-              For the currently selected vehicle. Service name can be chosen from your
-              service types or typed manually. Intervals default from the per-vehicle
-              template when available.
-            </div>
             <!-- UPDATED REMINDER FORM FOR index.php -->
 <!-- Replace the existing <form id="reminder-form"> section (around line 385) with this: -->
 

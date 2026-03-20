@@ -106,8 +106,6 @@
   border-radius: var(--gm-radius-lg);
   border: 1px solid var(--gm-border);
   background: var(--gm-bg-elevated);
-  max-height: 400px;
-  overflow-y: auto;
 }
 
 .reminder-card {
