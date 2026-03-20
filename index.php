@@ -88,6 +88,7 @@ ob_end_clean();
   <link rel="stylesheet" href="assets/css/gm.27-export-modal.css">
   <link rel="stylesheet" href="assets/css/gm.60-subscription.css">
   <link rel="stylesheet" href="assets/css/gm.28-preloader.css" />
+  <link rel="stylesheet" href="assets/css/gm.29-mobile-improvements.css">
   
   <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32.png">
