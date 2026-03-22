@@ -81,6 +81,7 @@ function openVehicleReportExportModal() {
     '<label class="export-checkbox"><input type="checkbox" id="export-inc-costsummary" ' + chkTrue(p.includeCostSummary) + '><span>Cost Summary</span></label>' +
     '<label class="export-checkbox"><input type="checkbox" id="export-inc-reminders" ' + chk(p.includeReminders) + '><span>Upcoming Maintenance</span></label>' +
     '<label class="export-checkbox"><input type="checkbox" id="export-inc-history" ' + chk(p.includeHistory) + '><span>Service History</span></label>' +
+    '<label class="export-checkbox"><input type="checkbox" id="export-inc-showcosts" ' + chk(p.showCosts) + '><span>Show Costs</span></label>' +
     '<label class="export-checkbox"><input type="checkbox" id="export-inc-nextdue" ' + chk(p.includeNextDue) + '><span>Next Service Due</span></label>' +
     '<label class="export-checkbox"><input type="checkbox" id="export-inc-servicesummary" ' + chkTrue(p.includeServiceSummary) + '><span>Service Type Summary</span></label>' +
     '</div></div>' +
@@ -147,6 +148,7 @@ function loadExportPreferences() {
     includeReminders: true,
     includeHistory: true,
     includeNextDue: true,
+    showCosts: true,
     includeServiceSummary: false,
     showVin: true,
     showPlate: true,
@@ -182,6 +184,7 @@ function getExportOptions() {
     includeReminders:     getChk('export-inc-reminders', true),
     includeHistory:       getChk('export-inc-history', true),
     includeNextDue:       getChk('export-inc-nextdue', true),
+    showCosts:            getChk('export-inc-showcosts', true),
     includeServiceSummary:getChk('export-inc-servicesummary', false),
     showVin:              getChk('export-vd-vin', true),
     showPlate:            getChk('export-vd-plate', true),
@@ -822,43 +825,98 @@ function generateCleanPDF(rpt, safeName, logoData) {
     sectionHeader('Service History');
     y += 2;
 
-    rpt.timeline.slice().reverse().forEach(function(entry) {
-      // Estimate card height before drawing to decide page break
-      var servicesWithNotes = entry.services.filter(function(sv) { return sv.note && sv.note.trim(); });
-      var hasNotes    = entry.notes && entry.notes.trim();
-      var hasNextDue  = opts.includeNextDue && formatNextDue(entry, unit);
-      var hasAttach   = entry.attachments && entry.attachments.length > 0;
+    // Pre-calculate card height so the whole card can be placed on a fresh page
+    // if it won't fit. Each measure call is dry-run (no drawing).
+    function measureCard(entry) {
+      var h = 0;
+      var innerW = contentWidth - 8;
 
-      // Rough height estimate: header(7) + services(entry.services.length*6) + notes + footer
-      var estimatedH = 10 + (entry.services.length * 6) + (servicesWithNotes.length * 8) +
-                       (hasNotes ? 12 : 0) + ((hasNextDue || hasAttach) ? 8 : 0) + 6;
-      checkPage(Math.min(estimatedH, 60)); // avoid over-checking; cards that span pages draw fine
+      // Header row: date + odo + cost — single line
+      h += 10;
 
-      var cardX     = margin;
-      var cardStartY= y;
-      var innerX    = cardX + 4;
-      var innerW    = contentWidth - 8;
+      // Separator line after header
+      h += 2;
 
-      // — Card header bar —
-      doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-      doc.rect(cardX, y, contentWidth, 8, 'F');
-      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-      doc.setTextColor(white[0], white[1], white[2]);
-      doc.text(entry.dateFormatted, innerX, y + 5.5);
-      if (entry.odometerFormatted !== '–') {
-        doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-        doc.text(entry.odometerFormatted, pageWidth / 2, y + 5.5, { align: 'center' });
+      // Services
+      entry.services.forEach(function(svc) {
+        var nameMaxW = opts.showCosts ? innerW - 30 : innerW - 6;
+        var nameLines = doc.splitTextToSize(svc.name, nameMaxW);
+        h += nameLines.length > 1 ? (nameLines.length * 4.5) : 5.5;
+        if (svc.note && svc.note.trim()) {
+          var noteLines = doc.splitTextToSize(svc.note.trim(), innerW - 10);
+          h += noteLines.length * 4 + 1;
+        }
+        h += 1;
+      });
+      h += 2;
+
+      // Entry notes
+      if (entry.notes && entry.notes.trim()) {
+        h += 7; // label + separator
+        var noteLines = doc.splitTextToSize(entry.notes.trim(), innerW - 2);
+        h += noteLines.length * 4.5 + 2;
       }
-      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-      doc.text(entry.totalCostFormatted, pageWidth - margin - 4, y + 5.5, { align: 'right' });
-      y += 8;
 
-      // — Services area —
-      var servAreaStart = y;
+      // Footer: next due
+      var hasNextDue = opts.includeNextDue && formatNextDue(entry, unit);
+      if (hasNextDue) h += 7;
+
+      // Footer: attachments
+      if (entry.attachments && entry.attachments.length > 0) {
+        h += 6; // label
+        entry.attachments.forEach(function(att) {
+          if (!att.name) return;
+          var attLines = doc.splitTextToSize('\u00BB ' + att.name, innerW - 4);
+          h += attLines.length * 4;
+        });
+      }
+
+      h += 6; // bottom gap between cards
+      return h;
+    }
+
+    rpt.timeline.slice().reverse().forEach(function(entry) {
+      var cardH   = measureCard(entry);
+      var innerX  = margin + 4;
+      var innerW  = contentWidth - 8;
+      var hasNotes   = entry.notes && entry.notes.trim();
+      var hasNextDue = opts.includeNextDue && formatNextDue(entry, unit);
+      var hasAttach  = entry.attachments && entry.attachments.length > 0;
+
+      // If entire card fits on remaining space, keep it together.
+      // If it's taller than a full page, let it flow naturally (can't avoid splits).
+      var fullPageH = pageHeight - 33; // usable area
+      if (cardH <= fullPageH) {
+        checkPage(cardH);
+      }
+      // else: card is bigger than a page, just let it flow line by line below
+
+      // — Card header: plain, no background —
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.text(entry.dateFormatted, innerX, y + 4);
+
+      if (entry.odometerFormatted !== '–') {
+        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal');
+        doc.setTextColor(mediumGray[0], mediumGray[1], mediumGray[2]);
+        doc.text(entry.odometerFormatted, pageWidth / 2, y + 4, { align: 'center' });
+      }
+
+      if (opts.showCosts && entry.totalCostFormatted !== '–') {
+        doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+        doc.text(entry.totalCostFormatted, pageWidth - margin - 4, y + 4, { align: 'right' });
+      }
+      y += 7;
+
+      // Thin separator line under header
+      doc.setDrawColor(veryLightGray[0], veryLightGray[1], veryLightGray[2]);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y, pageWidth - margin, y);
       y += 3;
 
+      // — Services —
       entry.services.forEach(function(svc) {
-        checkPage(12);
         // Bullet dot
         doc.setFillColor(mediumGray[0], mediumGray[1], mediumGray[2]);
         doc.circle(innerX + 1.5, y + 1.5, 1.2, 'F');
@@ -866,38 +924,36 @@ function generateCleanPDF(rpt, safeName, logoData) {
         // Service name
         doc.setFontSize(9); doc.setFont('helvetica', 'bold');
         doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-        var nameMaxW = innerW - 30;
+        var nameMaxW  = opts.showCosts ? innerW - 30 : innerW - 6;
         var nameLines = doc.splitTextToSize(svc.name, nameMaxW);
         doc.text(nameLines, innerX + 5, y + 2.5);
 
-        // Per-service cost (right-aligned)
-        if (svc.cost != null) {
+        // Per-service cost (right-aligned, conditional)
+        if (opts.showCosts && svc.cost != null) {
           doc.setFontSize(9); doc.setFont('helvetica', 'normal');
           doc.setTextColor(mediumGray[0], mediumGray[1], mediumGray[2]);
-          doc.text('$' + Number(svc.cost).toFixed(2), cardX + contentWidth - 4, y + 2.5, { align: 'right' });
+          doc.text('$' + Number(svc.cost).toFixed(2), margin + contentWidth - 4, y + 2.5, { align: 'right' });
         }
         y += nameLines.length > 1 ? (nameLines.length * 4.5) : 5.5;
 
-        // Per-service note (indented, italic)
+        // Per-service note
         if (svc.note && svc.note.trim()) {
-          checkPage(10);
           doc.setFontSize(7.5); doc.setFont('helvetica', 'italic');
           doc.setTextColor(mediumGray[0], mediumGray[1], mediumGray[2]);
           var noteLines = doc.splitTextToSize(svc.note.trim(), innerW - 10);
           doc.text(noteLines, innerX + 8, y + 1.5);
           y += noteLines.length * 4 + 1;
         }
-        y += 1; // inter-service gap
+        y += 1;
       });
 
       y += 2;
 
       // — Entry notes block —
       if (hasNotes) {
-        checkPage(14);
         doc.setDrawColor(veryLightGray[0], veryLightGray[1], veryLightGray[2]);
         doc.setLineWidth(0.2);
-        doc.line(innerX, y, cardX + contentWidth - 4, y);
+        doc.line(innerX, y, margin + contentWidth - 4, y);
         y += 3;
         doc.setFontSize(6.5); doc.setFont('helvetica', 'bold');
         doc.setTextColor(lightGray[0], lightGray[1], lightGray[2]);
@@ -906,22 +962,16 @@ function generateCleanPDF(rpt, safeName, logoData) {
         doc.setFontSize(8); doc.setFont('helvetica', 'normal');
         doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
         var entryNoteLines = doc.splitTextToSize(entry.notes.trim(), innerW - 2);
-        // split across pages if needed
-        entryNoteLines.forEach(function(line) {
-          checkPage(5);
-          doc.text(line, innerX, y);
-          y += 4.5;
-        });
-        y += 2;
+        doc.text(entryNoteLines, innerX, y);
+        y += entryNoteLines.length * 4.5 + 2;
       }
 
-      // — Card footer: next due + attachments —
-      var hasFooter = hasNextDue || hasAttach;
-      if (hasFooter) {
-        checkPage(10);
-        doc.setFillColor(accentBg[0], accentBg[1], accentBg[2]);
-        // footer strip will be drawn after we know height — use text first
-        var footerY = y;
+      // — Footer: next due + attachments —
+      if (hasNextDue || hasAttach) {
+        y += 1;
+        doc.setDrawColor(veryLightGray[0], veryLightGray[1], veryLightGray[2]);
+        doc.setLineWidth(0.2);
+        doc.line(innerX, y, margin + contentWidth - 4, y);
         y += 3;
 
         if (hasNextDue) {
@@ -930,44 +980,32 @@ function generateCleanPDF(rpt, safeName, logoData) {
           doc.text('NEXT DUE', innerX, y + 1);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-          doc.text(hasNextDue, innerX + 18, y + 1);
+          doc.text(hasNextDue, innerX + 20, y + 1);
           y += 5;
         }
 
         if (hasAttach) {
-          checkPage(8);
           doc.setFontSize(7); doc.setFont('helvetica', 'bold');
           doc.setTextColor(mediumGray[0], mediumGray[1], mediumGray[2]);
           doc.text('ATTACHMENTS', innerX, y + 1);
           y += 4;
           entry.attachments.forEach(function(att) {
             if (!att.name) return;
-            checkPage(5);
             doc.setFontSize(7.5); doc.setFont('helvetica', 'normal');
             doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-            // paperclip-like prefix
             var attLines = doc.splitTextToSize('\u00BB ' + att.name, innerW - 4);
             doc.text(attLines, innerX + 2, y + 1);
             y += attLines.length * 4;
           });
         }
-
-        // Now draw the shaded footer rect behind what we wrote
-        doc.setFillColor(accentBg[0], accentBg[1], accentBg[2]);
-        // We can't go back and fill behind text in jsPDF easily,
-        // so instead we draw a left-border accent line
-        doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2]);
-        doc.setLineWidth(0.3);
-        doc.line(margin, footerY, margin, y);
-
-        y += 2;
       }
 
-      // — Card outer border —
+      // Bottom separator between cards (replaces card border)
+      y += 3;
       doc.setDrawColor(veryLightGray[0], veryLightGray[1], veryLightGray[2]);
       doc.setLineWidth(0.3);
-      doc.rect(cardX, cardStartY, contentWidth, y - cardStartY, 'S');
-      y += 5; // gap between cards
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 6;
     });
   }
 
@@ -1046,12 +1084,12 @@ function exportVehicleReportWord(options) {
     '.cost-card-value { font-size: 11pt; font-weight: bold; color: #333; margin-top: 4px }',
 
     // Entry cards
-    '.entry-card { border: 1px solid #dcdcdc; margin-bottom: 12px; page-break-inside: avoid }',
-    '.entry-header { background: #333; color: #fff; padding: 7px 12px; display: table; width: 100% }',
-    '.entry-header-date { display: table-cell; font-size: 10pt; font-weight: bold; vertical-align: middle }',
-    '.entry-header-odo  { display: table-cell; font-size: 9pt; text-align: center; vertical-align: middle; color: #ccc }',
-    '.entry-header-cost { display: table-cell; font-size: 10pt; font-weight: bold; text-align: right; vertical-align: middle }',
-    '.entry-services { padding: 10px 14px 4px }',
+    '.entry-card { margin-bottom: 16px; page-break-inside: avoid }',
+    '.entry-header { padding: 6px 0 5px; display: table; width: 100%; border-bottom: 1px solid #dcdcdc }',
+    '.entry-header-date { display: table-cell; font-size: 10pt; font-weight: bold; color: #333; vertical-align: middle }',
+    '.entry-header-odo  { display: table-cell; font-size: 9pt; text-align: center; vertical-align: middle; color: #888 }',
+    '.entry-header-cost { display: table-cell; font-size: 10pt; font-weight: bold; color: #333; text-align: right; vertical-align: middle }',
+    '.entry-services { padding: 8px 0 4px }',
     '.service-item { padding: 4px 0; border-bottom: 1px solid #f0f0f0 }',
     '.service-item:last-child { border-bottom: none }',
     '.service-row { display: table; width: 100% }',
@@ -1061,12 +1099,12 @@ function exportVehicleReportWord(options) {
     '.service-bullet { color: #999; margin-right: 5px }',
 
     // Entry notes
-    '.entry-notes-block { padding: 8px 14px; border-top: 1px solid #eee; background: #fafafa }',
+    '.entry-notes-block { padding: 8px 0; border-top: 1px solid #eee }',
     '.entry-notes-label { font-size: 7pt; color: #aaa; text-transform: uppercase; margin-bottom: 3px }',
     '.entry-notes-text  { font-size: 9pt; color: #333; line-height: 1.5; white-space: pre-wrap; word-break: break-word }',
 
     // Entry footer (next due + attachments)
-    '.entry-footer { padding: 7px 14px; border-top: 1px solid #eee; background: #f7f7f7 }',
+    '.entry-footer { padding: 7px 0; border-top: 1px solid #eee }',
     '.entry-footer-row { display: table; width: 100%; margin-bottom: 4px }',
     '.entry-footer-row:last-child { margin-bottom: 0 }',
     '.entry-footer-label { display: table-cell; font-size: 7pt; font-weight: bold; color: #aaa; text-transform: uppercase; width: 90px; vertical-align: top; padding-top: 1px }',
@@ -1151,7 +1189,7 @@ function exportVehicleReportWord(options) {
 
   // Service History — card layout
   if (opts.includeHistory && rpt.timeline.length > 0) {
-    html += '<div class="section"><div class="section-header">Service History</div><div class="section-body" style="padding:10px 0 4px;">';
+    html += '<div class="section"><div class="section-header">Service History</div><div class="section-body">';
 
     rpt.timeline.slice().reverse().forEach(function(entry) {
       // Card
@@ -1161,7 +1199,7 @@ function exportVehicleReportWord(options) {
       html += '<div class="entry-header">' +
         '<div class="entry-header-date">' + escapeHtml(entry.dateFormatted) + '</div>' +
         '<div class="entry-header-odo">'  + (entry.odometerFormatted !== '–' ? escapeHtml(entry.odometerFormatted) : '') + '</div>' +
-        '<div class="entry-header-cost">' + escapeHtml(entry.totalCostFormatted) + '</div>' +
+        '<div class="entry-header-cost">' + (opts.showCosts && entry.totalCostFormatted !== '–' ? escapeHtml(entry.totalCostFormatted) : '') + '</div>' +
         '</div>';
 
       // Services
@@ -1171,7 +1209,7 @@ function exportVehicleReportWord(options) {
           html += '<div class="service-item">';
           html += '<div class="service-row">';
           html += '<div class="service-name-cell"><span class="service-bullet">&#9679;</span>' + escapeHtml(svc.name) + '</div>';
-          html += '<div class="service-cost-cell">' + (svc.cost != null ? '$' + Number(svc.cost).toFixed(2) : '') + '</div>';
+          html += '<div class="service-cost-cell">' + (opts.showCosts && svc.cost != null ? '$' + Number(svc.cost).toFixed(2) : '') + '</div>';
           html += '</div>';
           if (svc.note && svc.note.trim()) {
             html += '<div class="service-note">' + escapeHtml(svc.note.trim()) + '</div>';
